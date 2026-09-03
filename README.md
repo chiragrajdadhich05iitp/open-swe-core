@@ -1,143 +1,50 @@
-🖥️ Running Locally
-Open two terminal tabs to run both backend and frontend concurrently:
+# Open-SWE Core: Autonomous Asynchronous Coding Agent ⚡
 
-Terminal 1: LangGraph Backend Server
-PowerShell
-uv run langgraph dev --allow-blocking
-Runs the local execution engine and LangGraph API endpoint (default: http://127.0.0.1:2024).
-
-Terminal 2: Agent Dashboard Web UI
-PowerShell
-pnpm dev
-Launches the interactive web console at http://localhost:3000.
-
-🧪 Verified Workflow & Example Run
-The setup includes verified local verification cycles:
-
-Task Planning: Deconstructs user specifications into concrete code modifications.
-
-File Generation: Writes clean, typed code directly into the workspace root.
-
-Automated Verification: Automatically writes test suites and executes them with test runners (e.g., TestClient, pytest) before presenting the solution.
-
-Plaintext
-Prompt: "Create a FastAPI server in app.py with a /health route and test it."
-Result: 
-  ✔ Created app.py with FastAPI /health endpoint
-  ✔ Verified with TestClient (Status HTTP 200, {"status": "healthy"})
-👤 Author & Maintainer
-Chirag Dah
-
-Built & Configured with Open-SWE, LangGraph & modern LLM toolchains.
-
-📄 License
-This project is licensed under the terms specified in the LICENSE file.
-"""
-
-with open("README.md", "w", encoding="utf-8") as f:
-f.write(readme_content)
-
-print("README.md generated successfully.")
-
-
-```text?code_stdout&code_event_index=1
-README.md generated successfully.
-
-Your Markdown file is ready
-[file-tag: code-generated-file-81b46ddb-3bd4-4308-9d61-6143fe6e1a1d]
-
-File Content Preview:
-Markdown
-# Open-SWE: Autonomous Asynchronous Coding Agent 🚀
-
-An autonomous software engineering agent built on top of **LangGraph**, **LangSmith**, and modern asynchronous Python runtime environments. Open-SWE is designed to plan, edit, execute, and verify codebases autonomously within sandboxed developer environments.
+An asynchronous, graph-orchestrated software engineering agent environment designed to plan, generate, execute, and verify code within isolated developer workspaces. Built with a focus on deep observability, test-driven validation, and seamless human-in-the-loop interaction.
 
 ---
 
-## 🌟 Highlights & Architecture
+## 🌟 Architecture & Key Capabilities
 
-- **Graph-Driven Execution**: Orchestrated using **LangGraph** workflows with explicit human-in-the-loop and verification cycles.
-- **Deep Observability**: Out-of-the-box support for **LangSmith Studio** for real-time state tracking, trace debugging, and run analytics.
-- **Asynchronous & Non-Blocking**: High-throughput task queues powered by Python's `asyncio` loop with dev-mode blocking bypass (`--allow-blocking`).
-- **Modern Dev Toolchain**: Built with high-speed toolchains:
-  - **uv** for blazing fast Python virtual environments and dependency management.
-  - **pnpm** and **Vite** for the reactive frontend dashboard.
-
----
-
-## 🛠️ Tech Stack
-
-- **Backend**: Python 3.12+, LangGraph, LangGraph CLI, LangChain, FastAPI, Uvicorn
-- **Frontend Dashboard**: Vite, React, TanStack Router, TanStack Query
-- **Package Managers**: `uv` (Python), `pnpm` (Node/TypeScript)
-- **Supported LLMs**: OpenAI (GPT-4o, o-series), Anthropic (Claude 3.5 Sonnet)
+- **Graph-Driven Workflow**: Stateful task orchestration powered by **LangGraph**, enabling cyclical execution, automated error recovery, and structured planning.
+- **Deep Observability & Tracing**: Real-time run tracking, prompt inspection, and token analytics integrated natively with **LangSmith**.
+- **Dual-Engine Execution**: Asynchronous task scheduling with non-blocking event loops (`--allow-blocking` dev runtime support).
+- **Automated Verification Loop**: Generates targeted tests (e.g., via `TestClient`, `pytest`) and verifies output correctness before presenting code changes.
+- **Modern Dev Toolchain**: Fully isolated Python runtime managed with **uv** and a reactive Vite/React developer dashboard managed with **pnpm**.
 
 ---
 
-## 🚀 Quick Start Guide
+## 🛠️ System Architecture & Tech Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Agent Orchestration** | LangGraph, LangChain, Python 3.12+ (asyncio) |
+| **Observability & Eval** | LangSmith Studio, OpenTelemetry |
+| **Frontend Console** | React, Vite, TanStack Router, TanStack Query |
+| **Environment Tooling**| `uv` (Fast Python package manager), `pnpm` |
+| **Supported LLMs** | OpenAI (GPT-4o, o-series), Anthropic (Claude 3.5 Sonnet) |
+
+---
+
+## 🚀 Getting Started
 
 ### 1. Prerequisites
-Ensure you have the following installed:
-- [Python 3.11+](https://www.python.org/)
-- [uv](https://github.com/astral-sh/uv) (`pip install uv` or via standalone installer)
-- [Node.js](https://nodejs.org/) & [pnpm](https://pnpm.io/) (`npm install -g pnpm`)
+Ensure you have the following installed locally:
+- **Python 3.11+**
+- [uv](https://docs.astral.sh/uv/) for Python package management
+- [Node.js](https://nodejs.org/) & [pnpm](https://pnpm.io/) for the dashboard UI
 
-### 2. Installation & Environment Setup
+### 2. Installation
 
-Clone the repository and set up dependencies:
+Clone the repository and set up the local environment:
 
 ```bash
 # Clone the repository
-git clone [https://github.com/](https://github.com/)<your-username>/open-swe.git
-cd open-swe
+git clone [https://github.com/chiragrajdadhich05iitp/open-swe-core.git](https://github.com/chiragrajdadhich05iitp/open-swe-core.git)
+cd open-swe-core
 
-# Install Python dependencies with uv
+# Sync Python virtual environment & dependencies
 uv sync
 
-# Install frontend UI dependencies
+# Install frontend dependencies
 pnpm install
-3. Environment Variables
-Create a .env file in the root directory:
-
-Code snippet
-# LangSmith Observability
-LANGSMITH_API_KEY=your_langsmith_key_here
-LANGCHAIN_TRACING_V2=true
-
-# Model Providers
-OPENAI_API_KEY=your_openai_api_key_here
-# ANTHROPIC_API_KEY=your_anthropic_api_key_here
-🖥️ Running Locally
-Open two terminal tabs to run both backend and frontend concurrently:
-
-Terminal 1: LangGraph Backend Server
-PowerShell
-uv run langgraph dev --allow-blocking
-Runs the local execution engine and LangGraph API endpoint (default: http://127.0.0.1:2024).
-
-Terminal 2: Agent Dashboard Web UI
-PowerShell
-pnpm dev
-Launches the interactive web console at http://localhost:3000.
-
-🧪 Verified Workflow & Example Run
-The setup includes verified local verification cycles:
-
-Task Planning: Deconstructs user specifications into concrete code modifications.
-
-File Generation: Writes clean, typed code directly into the workspace root.
-
-Automated Verification: Automatically writes test suites and executes them with test runners (e.g., TestClient, pytest) before presenting the solution.
-
-Plaintext
-Prompt: "Create a FastAPI server in app.py with a /health route and test it."
-Result: 
-  ✔ Created app.py with FastAPI /health endpoint
-  ✔ Verified with TestClient (Status HTTP 200, {"status": "healthy"})
-👤 Author & Maintainer
-Chirag Raj Dadhich
-
-Built & Configured with Open-SWE, LangGraph & modern LLM toolchains.
-
-📄 License
-This project is licensed under the terms specified in the LICENSE file.
