@@ -13,7 +13,9 @@ from urllib.parse import urlparse
 try:
     from stagehand import AsyncStagehand  # type: ignore[import-not-found,import-untyped]
 except ImportError:
-    from stagehand import Stagehand as AsyncStagehand  # type: ignore[import-not-found,import-untyped]
+    from stagehand import (
+        Stagehand as AsyncStagehand,  # type: ignore[import-not-found,import-untyped]
+    )
 
 _CLIENT: Any = None
 _SESSION: Any = None
