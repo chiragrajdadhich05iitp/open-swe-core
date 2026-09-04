@@ -1,3 +1,4 @@
+# pyright: reportCallIssue=false, reportAttributeAccessIssue=false
 import asyncio
 import base64
 import contextlib

@@ -1,3 +1,4 @@
+# pyright: reportArgumentType=false
 """Tests for ModelFallbackMiddleware."""
 
 from typing import Any, cast
