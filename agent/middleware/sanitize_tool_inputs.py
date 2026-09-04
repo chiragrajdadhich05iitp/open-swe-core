@@ -45,7 +45,9 @@ def _sanitize_read_file_args(args: dict[str, Any]) -> dict[str, Any]:
             original = sanitized[field]
             coerced = _coerce_int(original)
             if coerced is not None and coerced != original:
-                logger.warning("Coercing read_file.%s from %r to %d", field, original, coerced)
+                logger.warning(
+                    "Coercing read_file.%s from %r to %d", field, original, coerced
+                )
                 sanitized[field] = coerced
     return sanitized
 

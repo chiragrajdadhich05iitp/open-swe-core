@@ -38,7 +38,12 @@ class _FakeCrons:
     ) -> dict[str, str]:
         cron_id = f"cron-{len(self.created) + 1}"
         self.created.append(
-            {"cron_id": cron_id, "thread_id": thread_id, "assistant_id": assistant_id, **kwargs}
+            {
+                "cron_id": cron_id,
+                "thread_id": thread_id,
+                "assistant_id": assistant_id,
+                **kwargs,
+            }
         )
         return {"cron_id": cron_id}
 
@@ -50,7 +55,9 @@ class _FakeCrons:
         offset: int = 0,
         **_: Any,
     ) -> list[dict[str, Any]]:
-        self.search_calls.append({"metadata": metadata, "limit": limit, "offset": offset})
+        self.search_calls.append(
+            {"metadata": metadata, "limit": limit, "offset": offset}
+        )
         items = [
             c
             for c in self._crons
@@ -130,7 +137,9 @@ def _input_message(message_id: str, *, kind: str, sender: str) -> dict[str, str]
     }
 
 
-async def test_schedule_thread_wakeup_rejects_zero_delay(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_schedule_thread_wakeup_rejects_zero_delay(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(wakeup_tool, "get_config", _config)
     result = await wakeup_tool.schedule_thread_wakeup(0)
     assert result["success"] is False
@@ -167,7 +176,9 @@ async def test_schedule_thread_wakeup_rejects_missing_thread_id(
     assert "thread_id" in result["error"].lower()
 
 
-async def test_schedule_thread_wakeup_creates_cron(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_schedule_thread_wakeup_creates_cron(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     captured: dict[str, Any] = {}
 
     async def fake_create_wakeup_cron(
@@ -205,8 +216,14 @@ async def test_schedule_thread_wakeup_creates_cron(monkeypatch: pytest.MonkeyPat
     assert captured["prompt"] == "Check CI status"
     assert captured["configurable"]["thread_id"] == "test-thread-123"
     assert captured["configurable"]["source"] == "slack"
-    assert captured["configurable"]["repo"] == {"owner": "langchain-ai", "name": "open-swe"}
-    assert captured["configurable"]["slack_thread"] == {"channel_id": "C1", "thread_ts": "1.0"}
+    assert captured["configurable"]["repo"] == {
+        "owner": "langchain-ai",
+        "name": "open-swe",
+    }
+    assert captured["configurable"]["slack_thread"] == {
+        "channel_id": "C1",
+        "thread_ts": "1.0",
+    }
     assert captured["configurable"]["github_login"] == "johannes117"
 
     now = datetime.now(UTC)
@@ -231,7 +248,9 @@ async def test_wakeup_cron_includes_trace_correlation_and_completion_webhook(
 
     client = type("Client", (), {"crons": _Crons()})()
     monkeypatch.setattr(wakeup_tool, "get_client", lambda url: client)
-    monkeypatch.setattr(wakeup_tool, "COMPLETION_WEBHOOK_URL", "https://app/webhooks/run-complete")
+    monkeypatch.setattr(
+        wakeup_tool, "COMPLETION_WEBHOOK_URL", "https://app/webhooks/run-complete"
+    )
 
     result = await wakeup_tool._create_wakeup_cron(
         thread_id="thread-1",
@@ -289,7 +308,12 @@ async def test_schedule_thread_wakeup_defaults_prompt_and_omits_none_configurabl
     ) -> dict[str, Any]:
         captured["configurable"] = configurable
         captured["prompt"] = prompt
-        return {"success": True, "cron_id": "cron-1", "scheduled_for": "", "thread_id": thread_id}
+        return {
+            "success": True,
+            "cron_id": "cron-1",
+            "scheduled_for": "",
+            "thread_id": thread_id,
+        }
 
     monkeypatch.setattr(wakeup_tool, "get_config", _config)
     monkeypatch.setattr(wakeup_tool, "_create_wakeup_cron", fake_create_wakeup_cron)
@@ -325,7 +349,9 @@ async def test_schedule_allows_ten_wakeups_then_rejects_the_eleventh(
     assert client.threads.metadata[wakeup_tool._WAKEUP_COUNT_METADATA_KEY] == 10
 
 
-async def test_new_human_message_resets_wakeup_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_new_human_message_resets_wakeup_limit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     human = _input_message("user-1", kind="human", sender="slack:U1")
     client = _FakeClient([], messages=[human])
     generation = wakeup_tool._latest_human_generation([human])
@@ -348,10 +374,15 @@ async def test_new_human_message_resets_wakeup_limit(monkeypatch: pytest.MonkeyP
 
     assert result["success"] is True
     assert client.threads.metadata[wakeup_tool._WAKEUP_COUNT_METADATA_KEY] == 1
-    assert client.threads.metadata[wakeup_tool._WAKEUP_GENERATION_METADATA_KEY] != generation
+    assert (
+        client.threads.metadata[wakeup_tool._WAKEUP_GENERATION_METADATA_KEY]
+        != generation
+    )
 
 
-async def test_system_wakeup_does_not_reset_wakeup_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_system_wakeup_does_not_reset_wakeup_limit(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     human = _input_message("user-1", kind="human", sender="slack:U1")
     client = _FakeClient(
         [],
@@ -397,7 +428,9 @@ async def test_schedule_does_not_create_cron_when_budget_cannot_be_recorded(
     assert not client.crons.created
 
 
-async def test_parallel_schedules_share_one_wakeup_budget(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_parallel_schedules_share_one_wakeup_budget(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     human = _input_message("user-1", kind="human", sender="slack:U1")
     generation = wakeup_tool._latest_human_generation([human])
     client = _FakeClient(
@@ -484,7 +517,9 @@ async def test_purge_deletes_only_expired_wakeups() -> None:
 async def test_purge_paginates(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(wakeup_tool, "_PURGE_PAGE_SIZE", 2)
     now = datetime(2026, 6, 30, 22, 0, tzinfo=UTC)
-    client = _FakeClient([_wakeup_cron(f"expired-{i}", now - timedelta(hours=1)) for i in range(3)])
+    client = _FakeClient(
+        [_wakeup_cron(f"expired-{i}", now - timedelta(hours=1)) for i in range(3)]
+    )
 
     deleted = await wakeup_tool.purge_expired_wakeup_crons(client, now=now)
 
@@ -494,7 +529,9 @@ async def test_purge_paginates(monkeypatch: pytest.MonkeyPatch) -> None:
     assert [c["offset"] for c in client.crons.search_calls] == [0, 2]
 
 
-async def test_best_effort_purge_swallows_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_best_effort_purge_swallows_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     async def boom(*_: Any, **__: Any) -> int:
         raise RuntimeError("search failed")
 

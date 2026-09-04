@@ -208,7 +208,11 @@ def _render_source_guidance(source: str, slack_context: bool) -> str:
     elif source == "github":
         guidance = GITHUB_SOURCE_GUIDANCE
     elif source == "schedule":
-        guidance = SCHEDULE_SLACK_SOURCE_GUIDANCE if slack_context else SCHEDULE_SOURCE_GUIDANCE
+        guidance = (
+            SCHEDULE_SLACK_SOURCE_GUIDANCE
+            if slack_context
+            else SCHEDULE_SOURCE_GUIDANCE
+        )
     elif source == "dashboard":
         guidance = DASHBOARD_SOURCE_GUIDANCE
     else:
@@ -583,19 +587,30 @@ def construct_system_prompt(
         plan_review_url=plan_url or "(the dashboard plan-review page)",
         plan_mode_entry_guidance=PLAN_MODE_ENTRY_GUIDANCE,
         plan_mode_section=(
-            PLAN_MODE_SECTION.format(plan_url=plan_url or "(plan-review link unavailable)")
+            PLAN_MODE_SECTION.format(
+                plan_url=plan_url or "(plan-review link unavailable)"
+            )
             if plan_mode
             else ""
         ),
         default_prompt_section=default_prompt_section,
         repository_scope_section=(
-            _render_repository_scope_section() if source in {"dashboard", "slack"} else ""
+            _render_repository_scope_section()
+            if source in {"dashboard", "slack"}
+            else ""
         ),
         corridor_prompt_section=CORRIDOR_PROMPT if corridor_enabled else "",
-        commit_pr_section=COMMIT_PR_SECTION + (DESKTOP_PR_SECTION if source == "desktop" else ""),
-        repo_instructions_section=_render_repo_instructions_section(repo_custom_instructions),
-        environment_section=_render_environment_section(environment_name, environment_instructions),
-        admin_environment_section=ADMIN_ENVIRONMENT_SECTION if admin_environments else "",
+        commit_pr_section=COMMIT_PR_SECTION
+        + (DESKTOP_PR_SECTION if source == "desktop" else ""),
+        repo_instructions_section=_render_repo_instructions_section(
+            repo_custom_instructions
+        ),
+        environment_section=_render_environment_section(
+            environment_name, environment_instructions
+        ),
+        admin_environment_section=(
+            ADMIN_ENVIRONMENT_SECTION if admin_environments else ""
+        ),
         shared_base_section=(
             "- If a user asks to change the managed workspace environment, direct them to start "
             "an admin thread in the Web UI and require them to be a workspace admin. Admin threads "

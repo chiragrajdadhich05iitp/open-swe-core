@@ -68,7 +68,9 @@ async def read_user_settings() -> dict[str, Any]:
     logins, unresolved_count, error = await resolve_thread_participant_logins(config)
     if error or not logins:
         return {"success": False, "error": error or "No verified participants found"}
-    participants = await asyncio.gather(*(_settings_for_login(login) for login in sorted(logins)))
+    participants = await asyncio.gather(
+        *(_settings_for_login(login) for login in sorted(logins))
+    )
     return {
         "success": True,
         "participants": list(participants),

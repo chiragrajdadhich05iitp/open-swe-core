@@ -52,9 +52,13 @@ class ModelCallTimeoutMiddleware(AgentMiddleware):
         handler: Callable[[ModelRequest], Awaitable[ModelResponse]],
     ) -> ModelResponse:
         try:
-            return await asyncio.wait_for(handler(request), timeout=self._timeout_seconds)
+            return await asyncio.wait_for(
+                handler(request), timeout=self._timeout_seconds
+            )
         except TimeoutError as exc:
-            logger.warning("Model call exceeded %ss deadline; aborting", self._timeout_seconds)
+            logger.warning(
+                "Model call exceeded %ss deadline; aborting", self._timeout_seconds
+            )
             raise ModelCallTimeoutError(
                 f"Model call exceeded the {self._timeout_seconds}s deadline"
             ) from exc

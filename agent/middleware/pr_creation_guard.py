@@ -17,7 +17,9 @@ _SHELL_EXECUTABLES = {"bash", "dash", "sh", "zsh"}
 _MAX_SHELL_EXPANSION_DEPTH = 3
 _SHELL_EXPANSION_DEPTH_LIMIT_TOKEN = "__pr_creation_guard_shell_expansion_depth_limit__"
 _GITHUB_PULLS_ENDPOINT = re.compile(r"(?:^|/)repos/[^/\s]+/[^/\s]+/pulls/?$")
-_GITHUB_PULLS_URL = re.compile(r"https://api\.github\.com/repos/[^/\s]+/[^/\s]+/pulls/?")
+_GITHUB_PULLS_URL = re.compile(
+    r"https://api\.github\.com/repos/[^/\s]+/[^/\s]+/pulls/?"
+)
 _BLOCK_ERROR = (
     "New pull requests must be opened with the open_pull_request tool so the PR is "
     "attributed to the triggering user. If open_pull_request failed, surface that "
@@ -93,7 +95,9 @@ def _expand_nested_shell_tokens(tokens: list[str], depth: int = 0) -> list[str]:
         inner_command = _shell_command_argument(tokens, index)
         if inner_command is None:
             continue
-        expanded.extend(_expand_nested_shell_tokens(_split_shell_tokens(inner_command), depth + 1))
+        expanded.extend(
+            _expand_nested_shell_tokens(_split_shell_tokens(inner_command), depth + 1)
+        )
     return expanded
 
 
@@ -177,7 +181,9 @@ def _gh_api_uses_post_or_body(subtokens: list[str]) -> bool:
                 return True
         if token.startswith("--method=") and token.split("=", 1)[1].upper() == "POST":
             return True
-        if token in body_flags or any(token.startswith(f"{flag}=") for flag in body_flags):
+        if token in body_flags or any(
+            token.startswith(f"{flag}=") for flag in body_flags
+        ):
             return True
     return False
 
@@ -217,10 +223,15 @@ def _contains_direct_pull_create(tokens: list[str]) -> bool:
                 and idx + 1 < len(subtokens)
                 and subtokens[idx + 1].upper() == "POST"
             )
-            or (token.startswith("--request=") and token.split("=", 1)[1].upper() == "POST")
+            or (
+                token.startswith("--request=")
+                and token.split("=", 1)[1].upper() == "POST"
+            )
             for idx, token in enumerate(subtokens)
         )
-        has_body = any(token in {"-d", "--data", "--data-raw", "--json"} for token in subtokens)
+        has_body = any(
+            token in {"-d", "--data", "--data-raw", "--json"} for token in subtokens
+        )
         if has_post or has_body:
             return True
     return False
@@ -257,7 +268,9 @@ class PullRequestCreationGuardMiddleware(AgentMiddleware):
 
     state_schema = AgentState
 
-    def _blocked_message_for_request(self, request: ToolCallRequest) -> ToolMessage | None:
+    def _blocked_message_for_request(
+        self, request: ToolCallRequest
+    ) -> ToolMessage | None:
         if _tool_name(request) not in {"execute", "background_execute"}:
             return None
         command = _tool_args(request).get("command")

@@ -21,7 +21,12 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
 )
-from fastapi.responses import JSONResponse, RedirectResponse, Response, StreamingResponse
+from fastapi.responses import (
+    JSONResponse,
+    RedirectResponse,
+    Response,
+    StreamingResponse,
+)
 from pydantic import BaseModel, Field
 
 from ..utils.thread_ops import langgraph_url
@@ -426,7 +431,10 @@ def _set_slack_state_cookie(response: Response, nonce: str) -> None:
 def _clear_slack_state_cookie(response: Response) -> None:
     secure, _ = _cookie_security()
     response.delete_cookie(
-        SLACK_STATE_COOKIE_NAME, path="/dashboard/api/slack", samesite="lax", secure=secure
+        SLACK_STATE_COOKIE_NAME,
+        path="/dashboard/api/slack",
+        samesite="lax",
+        secure=secure,
     )
 
 
@@ -446,7 +454,10 @@ def _set_notion_state_cookie(response: Response, nonce: str) -> None:
 def _clear_notion_state_cookie(response: Response) -> None:
     secure, _ = _cookie_security()
     response.delete_cookie(
-        NOTION_STATE_COOKIE_NAME, path="/dashboard/api/notion", samesite="lax", secure=secure
+        NOTION_STATE_COOKIE_NAME,
+        path="/dashboard/api/notion",
+        samesite="lax",
+        secure=secure,
     )
 
 
@@ -472,8 +483,14 @@ async def auth_login(
     )
     api_base_url = _api_base_url()
     if desktop:
-        forwarded_proto = request.headers.get("x-forwarded-proto", "").partition(",")[0].strip()
-        scheme = forwarded_proto if forwarded_proto in {"http", "https"} else request.url.scheme
+        forwarded_proto = (
+            request.headers.get("x-forwarded-proto", "").partition(",")[0].strip()
+        )
+        scheme = (
+            forwarded_proto
+            if forwarded_proto in {"http", "https"}
+            else request.url.scheme
+        )
         api_base_url = str(request.base_url.replace(scheme=scheme)).rstrip("/")
     redirect_uri = f"{api_base_url}/dashboard/api/auth/callback"
     query = urlencode(
@@ -506,7 +523,9 @@ async def auth_callback(request: Request, code: str, state: str) -> Response:
         # cookies blocked) or the state was issued for a different session.
         raise HTTPException(400, "oauth state mismatch — please retry login")
 
-    redirect_to = sanitize_redirect_to(state_payload.get("redirect_to")) or _frontend_base_url()
+    redirect_to = (
+        sanitize_redirect_to(state_payload.get("redirect_to")) or _frontend_base_url()
+    )
 
     token_data = await exchange_code(code)
     access_token = token_data.get("access_token")
@@ -533,11 +552,15 @@ async def auth_callback(request: Request, code: str, state: str) -> Response:
             avatar_url=user.get("avatar_url"),
             challenge=challenge,
         )
-        response = RedirectResponse(desktop_callback_url(port, handoff), status_code=302)
+        response = RedirectResponse(
+            desktop_callback_url(port, handoff), status_code=302
+        )
         _clear_state_cookie(response)
         return response
 
-    session_jwt = issue_session(login=login, email=email, avatar_url=user.get("avatar_url"))
+    session_jwt = issue_session(
+        login=login, email=email, avatar_url=user.get("avatar_url")
+    )
     response = RedirectResponse(redirect_to, status_code=302)
     _set_session_cookie(response, session_jwt)
     _clear_state_cookie(response)
@@ -791,7 +814,9 @@ async def notion_callback(
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
 
-    redirect_to = sanitize_redirect_to(state_payload.get("redirect_to")) or _frontend_base_url()
+    redirect_to = (
+        sanitize_redirect_to(state_payload.get("redirect_to")) or _frontend_base_url()
+    )
     response = RedirectResponse(redirect_to, status_code=302)
     _clear_notion_state_cookie(response)
     return response
@@ -839,7 +864,9 @@ async def slack_callback(
     ):
         raise HTTPException(400, "oauth state mismatch — please retry")
 
-    redirect_to = sanitize_redirect_to(state_payload.get("redirect_to")) or _frontend_base_url()
+    redirect_to = (
+        sanitize_redirect_to(state_payload.get("redirect_to")) or _frontend_base_url()
+    )
     redirect_uri = f"{_api_base_url()}/dashboard/api/slack/callback"
 
     access_token = await exchange_slack_code(code, redirect_uri)
@@ -1072,7 +1099,11 @@ def _next_link_url(link_header: str | None) -> str | None:
     # GitHub Link header is comma-separated: '<url>; rel="next", <url>; rel="last"'
     for part in link_header.split(","):
         segments = [s.strip() for s in part.split(";")]
-        if len(segments) >= 2 and 'rel="next"' in segments[1] and segments[0].startswith("<"):
+        if (
+            len(segments) >= 2
+            and 'rel="next"' in segments[1]
+            and segments[0].startswith("<")
+        ):
             return segments[0][1:-1]
     return None
 
@@ -1113,7 +1144,9 @@ async def _paginate(
             logger.warning("GitHub API timed out while paginating %s", next_url)
             raise HTTPException(503, "github API request timed out") from exc
         except httpx.RequestError as exc:
-            logger.warning("GitHub API request failed while paginating %s: %s", next_url, exc)
+            logger.warning(
+                "GitHub API request failed while paginating %s: %s", next_url, exc
+            )
             raise HTTPException(502, "github API request failed") from exc
         try:
             r.raise_for_status()
@@ -1164,7 +1197,9 @@ async def _fetch_user_installations_and_repos(
                 raise
             token = await get_valid_access_token(login, force_refresh=True)
             if not token:
-                raise HTTPException(401, "github token expired, re-login required") from exc
+                raise HTTPException(
+                    401, "github token expired, re-login required"
+                ) from exc
             headers["Authorization"] = f"Bearer {token}"
             installations = await _paginate(
                 client,
@@ -1187,7 +1222,9 @@ async def _fetch_user_installations_and_repos(
             except HTTPException as exc:
                 if exc.status_code in _SKIPPABLE_INSTALLATION_REPO_STATUS_CODES:
                     logger.warning(
-                        "Skipping installation %s repository list: %s", inst_id, exc.detail
+                        "Skipping installation %s repository list: %s",
+                        inst_id,
+                        exc.detail,
                     )
                     continue
                 raise
@@ -1206,7 +1243,9 @@ async def accessible_repo_full_names(login: str) -> frozenset[str]:
     """
     _, repositories = await _fetch_user_installations_and_repos(login)
     return frozenset(
-        repo["full_name"].lower() for repo in repositories if isinstance(repo.get("full_name"), str)
+        repo["full_name"].lower()
+        for repo in repositories
+        if isinstance(repo.get("full_name"), str)
     )
 
 
@@ -1257,11 +1296,15 @@ async def list_repos(
 async def api_list_review_styles(
     session: dict[str, Any] = _SESSION_DEP,
 ) -> list[ReviewStyle]:
-    records = await _filter_repo_models_for_user(session["sub"], await REVIEW_STYLES.list_all())
+    records = await _filter_repo_models_for_user(
+        session["sub"], await REVIEW_STYLES.list_all()
+    )
     return [
-        await sync_review_style_run_status(record.full_name)
-        if record.status == "running"
-        else record
+        (
+            await sync_review_style_run_status(record.full_name)
+            if record.status == "running"
+            else record
+        )
         for record in records
     ]
 
@@ -1494,7 +1537,9 @@ async def api_review_chat_commands(
     return Response(content=content, status_code=status_code, media_type=media_type)
 
 
-@router.post("/reviews/{owner}/{repo}/{pr_number}/chat/threads/{thread_id}/stream/events")
+@router.post(
+    "/reviews/{owner}/{repo}/{pr_number}/chat/threads/{thread_id}/stream/events"
+)
 async def api_review_chat_stream_events(
     owner: str,
     repo: str,
@@ -1650,7 +1695,9 @@ async def api_delete_review_style(
 async def api_list_agent_instructions(
     session: dict[str, Any] = _SESSION_DEP,
 ) -> list[AgentInstructions]:
-    return await _filter_repo_models_for_user(session["sub"], await AGENT_INSTRUCTIONS.list_all())
+    return await _filter_repo_models_for_user(
+        session["sub"], await AGENT_INSTRUCTIONS.list_all()
+    )
 
 
 @router.post("/agent-instructions")
@@ -1840,7 +1887,9 @@ async def api_list_threads(
 ) -> list[dict[str, Any]]:
     if all and not _session_is_admin(session):
         raise HTTPException(403, "admin only")
-    return await list_dashboard_threads(session["sub"], email=session.get("email"), include_all=all)
+    return await list_dashboard_threads(
+        session["sub"], email=session.get("email"), include_all=all
+    )
 
 
 @router.get("/threads/projects")
@@ -1865,7 +1914,9 @@ async def api_list_thread_projects(
 async def api_list_pinned_threads(
     session: dict[str, Any] = _SESSION_DEP,
 ) -> list[dict[str, Any]]:
-    return await list_dashboard_pinned_threads(session["sub"], email=session.get("email"))
+    return await list_dashboard_pinned_threads(
+        session["sub"], email=session.get("email")
+    )
 
 
 @router.post("/threads/{thread_id}/pin", status_code=204)
@@ -1937,7 +1988,9 @@ class PullRequestChecksRef(BaseModel):
 
 
 class PullRequestChecksRequest(BaseModel):
-    pullRequests: list[PullRequestChecksRef] = Field(default_factory=list, max_length=50)
+    pullRequests: list[PullRequestChecksRef] = Field(
+        default_factory=list, max_length=50
+    )
 
 
 @router.post("/threads/pull-request-checks")
@@ -2025,7 +2078,9 @@ async def api_thread_terminal_connection(
     response: Response,
     session: dict[str, Any] = _SESSION_DEP,
 ) -> dict[str, str]:
-    await get_dashboard_terminal_sandbox(thread_id, session["sub"], email=session.get("email"))
+    await get_dashboard_terminal_sandbox(
+        thread_id, session["sub"], email=session.get("email")
+    )
     response.headers["Cache-Control"] = "no-store"
     return {
         "url": _cloud_terminal_websocket_url(thread_id),
@@ -2036,9 +2091,13 @@ async def api_thread_terminal_connection(
     }
 
 
-async def _cloud_terminal(websocket: WebSocket, thread_id: str, session: dict[str, Any]) -> None:
+async def _cloud_terminal(
+    websocket: WebSocket, thread_id: str, session: dict[str, Any]
+) -> None:
     if os.environ.get("SANDBOX_TYPE", "langsmith") != "langsmith":
-        await websocket.close(code=1008, reason="Cloud terminal requires a LangSmith sandbox")
+        await websocket.close(
+            code=1008, reason="Cloud terminal requires a LangSmith sandbox"
+        )
         return
     try:
         sandbox_id, repo_name = await get_dashboard_terminal_sandbox(
@@ -2075,9 +2134,13 @@ async def _cloud_terminal(websocket: WebSocket, thread_id: str, session: dict[st
         async def output() -> None:
             assert handle is not None
             async for chunk in handle:
-                await websocket.send_text(json.dumps({"type": "output", "data": chunk.data}))
+                await websocket.send_text(
+                    json.dumps({"type": "output", "data": chunk.data})
+                )
             result = await handle.result
-            await websocket.send_text(json.dumps({"type": "exit", "exitCode": result.exit_code}))
+            await websocket.send_text(
+                json.dumps({"type": "exit", "exitCode": result.exit_code})
+            )
 
         async def input_() -> None:
             assert handle is not None
@@ -2085,7 +2148,9 @@ async def _cloud_terminal(websocket: WebSocket, thread_id: str, session: dict[st
                 message = await websocket.receive_json()
                 if not isinstance(message, dict):
                     continue
-                if message.get("type") == "input" and isinstance(message.get("data"), str):
+                if message.get("type") == "input" and isinstance(
+                    message.get("data"), str
+                ):
                     data = message["data"]
                     if len(data.encode()) <= 64 * 1024:
                         await handle.send_input(data)
@@ -2100,7 +2165,9 @@ async def _cloud_terminal(websocket: WebSocket, thread_id: str, session: dict[st
                         and 1 <= rows <= 500
                         and handle.pid is not None
                     ):
-                        await sandbox.run(f"stty cols {cols} rows {rows} < /proc/{handle.pid}/fd/0")
+                        await sandbox.run(
+                            f"stty cols {cols} rows {rows} < /proc/{handle.pid}/fd/0"
+                        )
 
         output_task = asyncio.create_task(output())
         input_task = asyncio.create_task(input_())
@@ -2115,7 +2182,9 @@ async def _cloud_terminal(websocket: WebSocket, thread_id: str, session: dict[st
     except WebSocketDisconnect:
         pass
     except Exception as exc:  # noqa: BLE001
-        logger.warning("Cloud terminal failed for thread %s: %s", thread_id, type(exc).__name__)
+        logger.warning(
+            "Cloud terminal failed for thread %s: %s", thread_id, type(exc).__name__
+        )
         try:
             await websocket.send_text(
                 json.dumps({"type": "error", "message": "Cloud terminal disconnected"})
@@ -2205,7 +2274,9 @@ async def api_send_thread_message(
     body: ThreadMessageBody,
     session: dict[str, Any] = _SESSION_DEP,
 ) -> dict[str, Any]:
-    return await send_dashboard_message(thread_id, session["sub"], body, email=session.get("email"))
+    return await send_dashboard_message(
+        thread_id, session["sub"], body, email=session.get("email")
+    )
 
 
 @router.post("/threads/{thread_id}/resolve")
@@ -2246,7 +2317,9 @@ async def api_cancel_thread(
     thread_id: str,
     session: dict[str, Any] = _SESSION_DEP,
 ) -> dict[str, Any]:
-    return await cancel_dashboard_thread(thread_id, session["sub"], email=session.get("email"))
+    return await cancel_dashboard_thread(
+        thread_id, session["sub"], email=session.get("email")
+    )
 
 
 @router.post("/admin/threads/{thread_id}/cancel")
@@ -2347,7 +2420,10 @@ async def api_stream_thread(
 
     async def event_generator():
         async for chunk in stream_dashboard_thread(
-            thread_id, session["sub"], email=session.get("email"), last_event_id=last_event_id
+            thread_id,
+            session["sub"],
+            email=session.get("email"),
+            last_event_id=last_event_id,
         ):
             yield chunk
 

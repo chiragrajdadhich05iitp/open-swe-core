@@ -52,7 +52,9 @@ async def require_repo_access_for_user(login: str, full_name: str) -> str:
     return token
 
 
-async def repo_config_for_user(login: str, full_name: str | None) -> dict[str, str] | None:
+async def repo_config_for_user(
+    login: str, full_name: str | None
+) -> dict[str, str] | None:
     if not isinstance(full_name, str) or not full_name.strip():
         return None
     try:

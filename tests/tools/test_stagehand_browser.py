@@ -22,7 +22,9 @@ class Backend:
 
 
 @pytest.mark.asyncio
-async def test_browser_navigate_runs_in_thread_sandbox(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_browser_navigate_runs_in_thread_sandbox(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     backend = Backend()
 
     async def get_backend(_thread_id: str) -> Backend:

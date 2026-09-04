@@ -25,8 +25,16 @@ async def list_findings(status_filter: str | None = None) -> dict[str, Any]:
     Returns:
         Dictionary with ``findings`` (list) and ``count`` (int).
     """
-    if status_filter is not None and status_filter not in {"open", "resolved", "dismissed"}:
-        return {"findings": [], "count": 0, "error": f"Invalid status_filter: {status_filter}"}
+    if status_filter is not None and status_filter not in {
+        "open",
+        "resolved",
+        "dismissed",
+    }:
+        return {
+            "findings": [],
+            "count": 0,
+            "error": f"Invalid status_filter: {status_filter}",
+        }
 
     thread_id = get_thread_id_from_runtime()
     try:

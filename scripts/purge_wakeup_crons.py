@@ -37,7 +37,11 @@ def _load_dotenv_if_available() -> None:
 
 
 def _resolve_url(arg_url: str | None) -> str:
-    url = arg_url or os.environ.get("LANGGRAPH_URL") or os.environ.get("LANGGRAPH_URL_PROD")
+    url = (
+        arg_url
+        or os.environ.get("LANGGRAPH_URL")
+        or os.environ.get("LANGGRAPH_URL_PROD")
+    )
     if not url:
         raise RuntimeError("Set --url or LANGGRAPH_URL / LANGGRAPH_URL_PROD")
     return url
@@ -56,7 +60,9 @@ async def _run(url: str, api_key: str | None, dry_run: bool) -> None:
     now = datetime.now(UTC)
     if dry_run:
         expired = await find_expired_wakeup_cron_ids(client, now=now)
-        logger.info("[dry-run] %d expired thread_wakeup cron(s) would be deleted", len(expired))
+        logger.info(
+            "[dry-run] %d expired thread_wakeup cron(s) would be deleted", len(expired)
+        )
         for cron_id in expired:
             logger.info("  %s", cron_id)
         return

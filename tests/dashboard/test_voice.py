@@ -40,7 +40,9 @@ def test_voice_route_requires_authentication(monkeypatch: pytest.MonkeyPatch) ->
     assert response.status_code == 401
 
 
-async def test_transcribe_audio_validates_and_forwards(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_transcribe_audio_validates_and_forwards(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     with pytest.raises(HTTPException, match="Unsupported audio format"):
         await voice.transcribe_audio(_request(b"audio", "text/plain"))
 

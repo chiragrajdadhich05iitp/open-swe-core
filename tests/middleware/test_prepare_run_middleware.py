@@ -43,7 +43,8 @@ async def test_prepare_latch_skips_second_call():
     assert (
         await middleware.abefore_agent(
             cast(
-                AgentState, {"messages": [], "run_prepared": True, "run_prepared_for": fingerprint}
+                AgentState,
+                {"messages": [], "run_prepared": True, "run_prepared_for": fingerprint},
             ),
             cast(Runtime[None], MagicMock()),
         )
@@ -57,7 +58,10 @@ async def test_prepare_latch_reruns_when_fingerprint_changes():
     middleware = DummyPrepareMiddleware()
 
     assert await middleware.abefore_agent(
-        cast(AgentState, {"messages": [], "run_prepared": True, "run_prepared_for": "stale"}),
+        cast(
+            AgentState,
+            {"messages": [], "run_prepared": True, "run_prepared_for": "stale"},
+        ),
         cast(Runtime[None], MagicMock()),
     )
     assert middleware.calls == 1
@@ -111,7 +115,9 @@ def _sender_message(sender_id: str, text: str = "ship it") -> HumanMessage:
     return HumanMessage(content=cast(str, content))
 
 
-def _sender_context_introduction(sender_id: str, sender_context: str = "sender") -> HumanMessage:
+def _sender_context_introduction(
+    sender_id: str, sender_context: str = "sender"
+) -> HumanMessage:
     content = system_introduction(
         {
             "id": "system:sender-context",
@@ -135,7 +141,9 @@ def test_sender_context_arrives_as_its_own_message():
     assert len(messages) == 2
     introduction = ElementTree.fromstring(cast(str, messages[0]["content"]))
     assert introduction.findtext("subject_id") == "github:ramon"
-    assert introduction.findtext("context_hash") == hashlib.sha256(b"sender").hexdigest()
+    assert (
+        introduction.findtext("context_hash") == hashlib.sha256(b"sender").hexdigest()
+    )
     envelope = ElementTree.fromstring(cast(str, messages[-1]["content"]))
     assert envelope.attrib["sender"] == "system:sender-context"
     assert envelope.attrib["kind"] == "system"
@@ -171,7 +179,10 @@ def test_sender_context_is_added_when_same_sender_context_changes():
     assert len(messages) == 2
     introduction = ElementTree.fromstring(cast(str, messages[0]["content"]))
     assert introduction.findtext("subject_id") == "github:ramon"
-    assert introduction.findtext("context_hash") == hashlib.sha256(b"new sender").hexdigest()
+    assert (
+        introduction.findtext("context_hash")
+        == hashlib.sha256(b"new sender").hexdigest()
+    )
 
 
 def test_sender_context_is_added_for_new_sender():
@@ -240,7 +251,9 @@ async def test_ttl_cache_single_flight_and_stale_while_error():
         await asyncio.sleep(0)
         return calls
 
-    results = await asyncio.gather(*(ttl_cache.cached("k", 60, loader) for _ in range(10)))
+    results = await asyncio.gather(
+        *(ttl_cache.cached("k", 60, loader) for _ in range(10))
+    )
     assert results == [1] * 10
     assert calls == 1
 

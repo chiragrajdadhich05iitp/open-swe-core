@@ -19,7 +19,9 @@ def _call_positions(message: AIMessage) -> dict[str, int]:
     positions: dict[str, int] = {}
     for position, tool_call in enumerate(message.tool_calls or []):
         call_id = (
-            tool_call.get("id") if isinstance(tool_call, dict) else getattr(tool_call, "id", None)
+            tool_call.get("id")
+            if isinstance(tool_call, dict)
+            else getattr(tool_call, "id", None)
         )
         if isinstance(call_id, str) and call_id and call_id not in positions:
             positions[call_id] = position

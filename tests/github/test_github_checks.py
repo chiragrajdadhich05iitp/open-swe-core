@@ -112,7 +112,9 @@ async def test_complete_review_check_run_patches_completed(
 
     assert ok is True
     assert _FakeAsyncClient.last_patch is not None
-    assert _FakeAsyncClient.last_patch["url"].endswith("/repos/acme/widgets/check-runs/42")
+    assert _FakeAsyncClient.last_patch["url"].endswith(
+        "/repos/acme/widgets/check-runs/42"
+    )
     body = _FakeAsyncClient.last_patch["json"]
     assert body["status"] == "completed"
     assert body["conclusion"] == "neutral"
@@ -170,7 +172,9 @@ async def test_settle_review_check_run_noop_without_tracked_id(
         completed.append(kwargs)
         return True
 
-    monkeypatch.setattr(reviewer_publish, "get_thread_metadata", fake_get_thread_metadata)
+    monkeypatch.setattr(
+        reviewer_publish, "get_thread_metadata", fake_get_thread_metadata
+    )
     monkeypatch.setattr(reviewer_publish, "complete_review_check_run", fake_complete)
 
     await reviewer_publish.settle_review_check_run(
@@ -202,9 +206,13 @@ async def test_settle_review_check_run_completes_and_clears(
     async def fake_set_metadata(thread_id: str, **kwargs: Any) -> None:
         metadata_writes.append({"thread_id": thread_id, **kwargs})
 
-    monkeypatch.setattr(reviewer_publish, "get_thread_metadata", fake_get_thread_metadata)
+    monkeypatch.setattr(
+        reviewer_publish, "get_thread_metadata", fake_get_thread_metadata
+    )
     monkeypatch.setattr(reviewer_publish, "complete_review_check_run", fake_complete)
-    monkeypatch.setattr(reviewer_publish, "set_reviewer_thread_metadata", fake_set_metadata)
+    monkeypatch.setattr(
+        reviewer_publish, "set_reviewer_thread_metadata", fake_set_metadata
+    )
 
     await reviewer_publish.settle_review_check_run(
         thread_id="t1",
@@ -241,9 +249,13 @@ async def test_settle_review_check_run_keeps_id_on_patch_failure(
     async def fake_set_metadata(thread_id: str, **kwargs: Any) -> None:
         metadata_writes.append({"thread_id": thread_id, **kwargs})
 
-    monkeypatch.setattr(reviewer_publish, "get_thread_metadata", fake_get_thread_metadata)
+    monkeypatch.setattr(
+        reviewer_publish, "get_thread_metadata", fake_get_thread_metadata
+    )
     monkeypatch.setattr(reviewer_publish, "complete_review_check_run", fake_complete)
-    monkeypatch.setattr(reviewer_publish, "set_reviewer_thread_metadata", fake_set_metadata)
+    monkeypatch.setattr(
+        reviewer_publish, "set_reviewer_thread_metadata", fake_set_metadata
+    )
 
     await reviewer_publish.settle_review_check_run(
         thread_id="t1",

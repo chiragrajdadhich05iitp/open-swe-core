@@ -26,8 +26,14 @@ def _stub_resolve_review_head_sha() -> Iterator[None]:
         return head if isinstance(head, str) else ""
 
     with (
-        patch("agent.tools.add_finding.resolve_review_head_sha", AsyncMock(side_effect=_head)),
-        patch("agent.tools.update_finding.resolve_review_head_sha", AsyncMock(side_effect=_head)),
+        patch(
+            "agent.tools.add_finding.resolve_review_head_sha",
+            AsyncMock(side_effect=_head),
+        ),
+        patch(
+            "agent.tools.update_finding.resolve_review_head_sha",
+            AsyncMock(side_effect=_head),
+        ),
     ):
         yield
 
@@ -94,7 +100,9 @@ async def test_add_finding_rejects_out_of_diff_lines() -> None:
 
     with (
         patch("agent.tools.add_finding.get_config", return_value=_config()),
-        patch("agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"
+        ),
         patch("agent.tools.add_finding.append_finding", side_effect=fake_append),
     ):
         result = await add_finding(
@@ -131,7 +139,9 @@ async def test_add_finding_accepts_left_side_anchor_on_old_line() -> None:
     }
     with (
         patch("agent.tools.add_finding.get_config", return_value=config),
-        patch("agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"
+        ),
         patch("agent.tools.add_finding.append_finding", new_callable=AsyncMock),
     ):
         result = await add_finding(
@@ -164,7 +174,9 @@ async def test_add_finding_left_anchor_outside_old_side_set_rejected() -> None:
     }
     with (
         patch("agent.tools.add_finding.get_config", return_value=config),
-        patch("agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"
+        ),
         patch("agent.tools.add_finding.append_finding", new_callable=AsyncMock),
     ):
         result = await add_finding(
@@ -207,7 +219,9 @@ async def test_add_finding_persists_to_thread_metadata() -> None:
 
     with (
         patch("agent.tools.add_finding.get_config", return_value=_config()),
-        patch("agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"
+        ),
         patch("agent.tools.add_finding.append_finding", side_effect=fake_append),
     ):
         result = await add_finding(
@@ -247,7 +261,9 @@ async def test_add_finding_uses_resolved_head_sha_for_provenance() -> None:
 
     with (
         patch("agent.tools.add_finding.get_config", return_value=_config()),
-        patch("agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"
+        ),
         patch(
             "agent.tools.add_finding.resolve_review_head_sha",
             AsyncMock(return_value="freshhead"),
@@ -273,7 +289,9 @@ async def test_add_finding_uses_resolved_head_sha_for_provenance() -> None:
 async def test_add_finding_allows_file_level_with_no_lines() -> None:
     with (
         patch("agent.tools.add_finding.get_config", return_value=_config()),
-        patch("agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"
+        ),
         patch(
             "agent.tools.add_finding.append_finding",
             new_callable=AsyncMock,
@@ -313,9 +331,17 @@ async def test_resolve_finding_thread_resolves_all_known_threads() -> None:
             "agent.tools.resolve_finding_thread.get_config",
             return_value=_config(repo={"owner": "o", "name": "r"}, pr_number=7),
         ),
-        patch("agent.tools.resolve_finding_thread.get_github_token", return_value="token"),
-        patch("agent.tools.resolve_finding_thread.get_thread_id_from_runtime", return_value="tid"),
-        patch("agent.tools.resolve_finding_thread.get_finding", AsyncMock(return_value=finding)),
+        patch(
+            "agent.tools.resolve_finding_thread.get_github_token", return_value="token"
+        ),
+        patch(
+            "agent.tools.resolve_finding_thread.get_thread_id_from_runtime",
+            return_value="tid",
+        ),
+        patch(
+            "agent.tools.resolve_finding_thread.get_finding",
+            AsyncMock(return_value=finding),
+        ),
         patch("agent.tools.resolve_finding_thread.resolve_review_thread", resolve),
         patch("agent.tools.resolve_finding_thread.reply_to_review_comment", reply),
         patch("agent.tools.resolve_finding_thread.update_finding_fields", update),
@@ -330,9 +356,13 @@ async def test_resolve_finding_thread_resolves_all_known_threads() -> None:
         "THREAD_1",
         "THREAD_2",
     ]
-    assert [call.kwargs["review_comment_id"] for call in reply.await_args_list] == [11, 12]
+    assert [call.kwargs["review_comment_id"] for call in reply.await_args_list] == [
+        11,
+        12,
+    ]
     assert all(
-        call.kwargs["body"] == "Fixed in the latest commit" for call in reply.await_args_list
+        call.kwargs["body"] == "Fixed in the latest commit"
+        for call in reply.await_args_list
     )
     assert update.await_args is not None
     updates = update.await_args.args[2]
@@ -376,12 +406,17 @@ async def test_update_finding_updates_title() -> None:
 
     with (
         patch("agent.tools.update_finding.get_config", return_value=_config()),
-        patch("agent.tools.update_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.update_finding.get_thread_id_from_runtime",
+            return_value="tid-1",
+        ),
         patch(
             "agent.tools.update_finding.list_findings",
             AsyncMock(return_value=[_existing_finding()]),
         ),
-        patch("agent.tools.update_finding.update_finding_fields", side_effect=fake_update),
+        patch(
+            "agent.tools.update_finding.update_finding_fields", side_effect=fake_update
+        ),
     ):
         result = await update_finding(finding_id="f_a", title="new generated title")
 
@@ -399,7 +434,9 @@ async def test_add_finding_drops_long_suggestion() -> None:
     long_suggestion = "\n".join(f"line_{i}" for i in range(6))
     with (
         patch("agent.tools.add_finding.get_config", return_value=_config()),
-        patch("agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"
+        ),
         patch("agent.tools.add_finding.append_finding", side_effect=fake_append),
     ):
         result = await add_finding(
@@ -430,7 +467,9 @@ async def test_add_finding_keeps_short_suggestion() -> None:
     short_suggestion = "a\nb\nc\nd"  # exactly 4 lines — at the cap
     with (
         patch("agent.tools.add_finding.get_config", return_value=_config()),
-        patch("agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"
+        ),
         patch("agent.tools.add_finding.append_finding", side_effect=fake_append),
     ):
         result = await add_finding(
@@ -460,7 +499,9 @@ async def test_add_finding_preserves_multi_line_range() -> None:
 
     with (
         patch("agent.tools.add_finding.get_config", return_value=_config()),
-        patch("agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"
+        ),
         patch("agent.tools.add_finding.append_finding", side_effect=fake_append),
     ):
         result = await add_finding(
@@ -490,12 +531,17 @@ async def test_update_finding_rejects_long_suggestion_without_clobbering() -> No
     long_suggestion = "\n".join(f"line_{i}" for i in range(6))
     with (
         patch("agent.tools.update_finding.get_config", return_value=_config()),
-        patch("agent.tools.update_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.update_finding.get_thread_id_from_runtime",
+            return_value="tid-1",
+        ),
         patch(
             "agent.tools.update_finding.list_findings",
             AsyncMock(return_value=[_existing_finding()]),
         ),
-        patch("agent.tools.update_finding.update_finding_fields", side_effect=fake_update),
+        patch(
+            "agent.tools.update_finding.update_finding_fields", side_effect=fake_update
+        ),
     ):
         result = await update_finding(
             finding_id="f_a",
@@ -514,7 +560,10 @@ async def test_update_finding_long_suggestion_only_returns_failure() -> None:
     long_suggestion = "\n".join(f"line_{i}" for i in range(6))
     with (
         patch("agent.tools.update_finding.get_config", return_value=_config()),
-        patch("agent.tools.update_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.update_finding.get_thread_id_from_runtime",
+            return_value="tid-1",
+        ),
     ):
         result = await update_finding(finding_id="f_a", suggestion=long_suggestion)
 
@@ -532,12 +581,17 @@ async def test_update_finding_empty_string_clears_suggestion() -> None:
 
     with (
         patch("agent.tools.update_finding.get_config", return_value=_config()),
-        patch("agent.tools.update_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.update_finding.get_thread_id_from_runtime",
+            return_value="tid-1",
+        ),
         patch(
             "agent.tools.update_finding.list_findings",
             AsyncMock(return_value=[_existing_finding()]),
         ),
-        patch("agent.tools.update_finding.update_finding_fields", side_effect=fake_update),
+        patch(
+            "agent.tools.update_finding.update_finding_fields", side_effect=fake_update
+        ),
     ):
         result = await update_finding(finding_id="f_a", suggestion="")
 
@@ -554,12 +608,17 @@ async def test_update_finding_passes_through_fields() -> None:
 
     with (
         patch("agent.tools.update_finding.get_config", return_value=_config()),
-        patch("agent.tools.update_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.update_finding.get_thread_id_from_runtime",
+            return_value="tid-1",
+        ),
         patch(
             "agent.tools.update_finding.list_findings",
             AsyncMock(return_value=[_existing_finding()]),
         ),
-        patch("agent.tools.update_finding.update_finding_fields", side_effect=fake_update),
+        patch(
+            "agent.tools.update_finding.update_finding_fields", side_effect=fake_update
+        ),
     ):
         result = await update_finding(
             finding_id="f_a",
@@ -575,24 +634,39 @@ async def test_update_finding_passes_through_fields() -> None:
     assert updates["resolution_note"] == "addressed by new commit"
 
 
-async def test_update_finding_resolves_github_thread_when_pr_context_available() -> None:
+async def test_update_finding_resolves_github_thread_when_pr_context_available() -> (
+    None
+):
     cfg = _config(repo={"owner": "o", "name": "r"}, pr_number=7)
     with (
         patch("agent.tools.update_finding.get_config", return_value=cfg),
-        patch("agent.tools.update_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.update_finding.get_thread_id_from_runtime",
+            return_value="tid-1",
+        ),
         patch(
             "agent.tools.update_finding.list_findings",
-            AsyncMock(return_value=[_existing_finding(github_review_thread_ids=["THREAD_1"])]),
+            AsyncMock(
+                return_value=[_existing_finding(github_review_thread_ids=["THREAD_1"])]
+            ),
         ),
         patch("agent.tools.resolve_finding_thread.get_config", return_value=cfg),
-        patch("agent.tools.resolve_finding_thread.get_github_token", return_value="token"),
-        patch("agent.tools.update_finding.update_finding_fields", AsyncMock()) as update,
+        patch(
+            "agent.tools.resolve_finding_thread.get_github_token", return_value="token"
+        ),
+        patch(
+            "agent.tools.update_finding.update_finding_fields", AsyncMock()
+        ) as update,
         patch(
             "agent.tools.resolve_finding_thread._resolve_finding_thread_async",
             new_callable=AsyncMock,
             return_value={
                 "success": True,
-                "finding": {"id": "f_a", "status": "resolved", "surface_state": "resolved"},
+                "finding": {
+                    "id": "f_a",
+                    "status": "resolved",
+                    "surface_state": "resolved",
+                },
                 "resolved_thread_count": 1,
             },
         ) as resolve_async,
@@ -614,14 +688,23 @@ async def test_update_finding_leaves_open_when_github_resolution_fails() -> None
     cfg = _config(repo={"owner": "o", "name": "r"}, pr_number=7)
     with (
         patch("agent.tools.update_finding.get_config", return_value=cfg),
-        patch("agent.tools.update_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.update_finding.get_thread_id_from_runtime",
+            return_value="tid-1",
+        ),
         patch(
             "agent.tools.update_finding.list_findings",
-            AsyncMock(return_value=[_existing_finding(github_review_thread_ids=["THREAD_1"])]),
+            AsyncMock(
+                return_value=[_existing_finding(github_review_thread_ids=["THREAD_1"])]
+            ),
         ),
         patch("agent.tools.resolve_finding_thread.get_config", return_value=cfg),
-        patch("agent.tools.resolve_finding_thread.get_github_token", return_value="token"),
-        patch("agent.tools.update_finding.update_finding_fields", AsyncMock()) as update,
+        patch(
+            "agent.tools.resolve_finding_thread.get_github_token", return_value="token"
+        ),
+        patch(
+            "agent.tools.update_finding.update_finding_fields", AsyncMock()
+        ) as update,
         patch(
             "agent.tools.resolve_finding_thread._resolve_finding_thread_async",
             new_callable=AsyncMock,
@@ -639,7 +722,10 @@ async def test_update_finding_leaves_open_when_github_resolution_fails() -> None
 
     assert result["success"] is False
     assert "left open" in result["error"]
-    assert result["github_resolution"]["error"] == "Could not resolve GitHub review thread id"
+    assert (
+        result["github_resolution"]["error"]
+        == "Could not resolve GitHub review thread id"
+    )
     resolve_async.assert_awaited_once()
     update.assert_not_awaited()
 
@@ -654,12 +740,17 @@ async def test_update_finding_resolves_hidden_finding_locally() -> None:
     cfg = _config(repo={"owner": "o", "name": "r"}, pr_number=7)
     with (
         patch("agent.tools.update_finding.get_config", return_value=cfg),
-        patch("agent.tools.update_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.update_finding.get_thread_id_from_runtime",
+            return_value="tid-1",
+        ),
         patch(
             "agent.tools.update_finding.list_findings",
             AsyncMock(return_value=[_existing_finding()]),
         ),
-        patch("agent.tools.update_finding.update_finding_fields", side_effect=fake_update),
+        patch(
+            "agent.tools.update_finding.update_finding_fields", side_effect=fake_update
+        ),
         patch(
             "agent.tools.resolve_finding_thread._resolve_finding_thread_async",
             new_callable=AsyncMock,
@@ -690,7 +781,9 @@ async def test_list_findings_filters_by_status() -> None:
 
     cfg = _config()
     with (
-        patch("agent.tools.list_findings.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.list_findings.get_thread_id_from_runtime", return_value="tid-1"
+        ),
         patch("agent.tools.list_findings.list_findings_async", side_effect=fake_list),
         patch("agent.tools.add_finding.get_config", return_value=cfg),
     ):
@@ -707,7 +800,9 @@ async def test_list_findings_returns_all_when_filter_omitted() -> None:
         return findings
 
     with (
-        patch("agent.tools.list_findings.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.list_findings.get_thread_id_from_runtime", return_value="tid-1"
+        ),
         patch("agent.tools.list_findings.list_findings_async", side_effect=fake_list),
     ):
         result = await list_findings()
@@ -725,7 +820,9 @@ async def test_add_finding_returns_structured_error_when_thread_missing() -> Non
 
     with (
         patch("agent.tools.add_finding.get_config", return_value=_config()),
-        patch("agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.add_finding.get_thread_id_from_runtime", return_value="tid-1"
+        ),
         patch("agent.tools.add_finding.append_finding", side_effect=fake_append),
     ):
         result = await add_finding(
@@ -752,12 +849,17 @@ async def test_update_finding_returns_structured_error_when_thread_missing() -> 
 
     with (
         patch("agent.tools.update_finding.get_config", return_value=_config()),
-        patch("agent.tools.update_finding.get_thread_id_from_runtime", return_value="tid-1"),
+        patch(
+            "agent.tools.update_finding.get_thread_id_from_runtime",
+            return_value="tid-1",
+        ),
         patch(
             "agent.tools.update_finding.list_findings",
             AsyncMock(return_value=[_existing_finding()]),
         ),
-        patch("agent.tools.update_finding.update_finding_fields", side_effect=fake_update),
+        patch(
+            "agent.tools.update_finding.update_finding_fields", side_effect=fake_update
+        ),
     ):
         result = await update_finding(finding_id="f_a", status="resolved", note="fixed")
 

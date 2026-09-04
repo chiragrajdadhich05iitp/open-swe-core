@@ -115,7 +115,9 @@ async def write_plan_to_sandbox(
         await backend.awrite(path, content)
         return path
     except Exception:
-        logger.warning("Could not write plan file to sandbox for %s", thread_id, exc_info=True)
+        logger.warning(
+            "Could not write plan file to sandbox for %s", thread_id, exc_info=True
+        )
         return path
 
 
@@ -157,7 +159,11 @@ async def set_plan_status(
     else:
         record["html"] = ""
     plan_file_path = existing.get("plan_file_path")
-    if not entering_plan_after_share and isinstance(plan_file_path, str) and plan_file_path:
+    if (
+        not entering_plan_after_share
+        and isinstance(plan_file_path, str)
+        and plan_file_path
+    ):
         record["plan_file_path"] = plan_file_path
     metadata: dict[str, Any] = {"plan_status": status}
     if status == PLAN_STATUS_APPROVED and approved_by is not None:
@@ -185,7 +191,9 @@ def format_plan_comments(comments: list[dict[str, Any]]) -> str:
         body = str(comment.get("body", "")).strip()
         if not body:
             continue
-        author = html.escape(str(comment.get("author") or "reviewer").strip(), quote=True)
+        author = html.escape(
+            str(comment.get("author") or "reviewer").strip(), quote=True
+        )
         anchor = comment.get("anchor")
         anchor = anchor if isinstance(anchor, dict) else {}
         exact = str(anchor.get("exact") or "").strip()
@@ -194,7 +202,9 @@ def format_plan_comments(comments: list[dict[str, Any]]) -> str:
         context = "\n".join(part for part in (prefix, exact, suffix) if part)
         fields = []
         if context:
-            fields.append(f"<surrounding-context>{html.escape(context)}</surrounding-context>")
+            fields.append(
+                f"<surrounding-context>{html.escape(context)}</surrounding-context>"
+            )
         if exact:
             fields.append(f"<highlighted-text>{html.escape(exact)}</highlighted-text>")
         fields.append(f"<reviewer-feedback>{html.escape(body)}</reviewer-feedback>")

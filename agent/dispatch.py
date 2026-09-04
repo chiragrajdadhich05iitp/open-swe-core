@@ -68,7 +68,9 @@ V2_RUN_STREAM_MODES: tuple[str, ...] = (
 )
 
 
-def _dispatch_input(content: ContentBlocks, source: str, configurable: dict[str, Any]) -> RunInput:
+def _dispatch_input(
+    content: ContentBlocks, source: str, configurable: dict[str, Any]
+) -> RunInput:
     surface: Surface = (
         source
         if source in {"slack", "linear", "github", "web", "desktop", "eval"}
@@ -104,7 +106,9 @@ def _dispatch_input(content: ContentBlocks, source: str, configurable: dict[str,
             channel: ChannelIdentity = {"id": channel_id, "platform": "slack"}
             channel_context = slack_thread.get("channel_context")
             if isinstance(channel_context, dict):
-                name = channel_context.get("name") or channel_context.get("name_normalized")
+                name = channel_context.get("name") or channel_context.get(
+                    "name_normalized"
+                )
                 topic = channel_context.get("topic")
                 purpose = channel_context.get("purpose")
                 if isinstance(name, str) and name:
@@ -162,7 +166,9 @@ def _dispatch_input(content: ContentBlocks, source: str, configurable: dict[str,
 # (completion.verify_run_complete_token). Secret unset, or URL relative/loopback
 # → no webhook attached (the completion reply is best-effort; it must never
 # break run creation).
-_COMPLETION_WEBHOOK_BASE = os.environ.get("COMPLETION_WEBHOOK_URL") or "/webhooks/run-complete"
+_COMPLETION_WEBHOOK_BASE = (
+    os.environ.get("COMPLETION_WEBHOOK_URL") or "/webhooks/run-complete"
+)
 _RUN_COMPLETE_SECRET = os.environ.get("RUN_COMPLETE_WEBHOOK_SECRET")
 
 
@@ -222,7 +228,9 @@ def prepare_run_config(
     configurable[EVENT_STREAMING_V2_CONFIG_KEY] = True
     run_config["configurable"] = configurable
     existing_metadata = run_config.get("metadata")
-    merged_metadata = dict(existing_metadata) if isinstance(existing_metadata, dict) else {}
+    merged_metadata = (
+        dict(existing_metadata) if isinstance(existing_metadata, dict) else {}
+    )
     if metadata is not None:
         merged_metadata.update(metadata)
     merged_metadata["prepare_run_id"] = configurable["prepare_run_id"]
@@ -300,7 +308,9 @@ async def dispatch_agent_run(
     if input is not None and any(
         value is not None for value in (content, context, people, channels, systems)
     ):
-        raise ValueError("prebuilt input cannot be combined with content or source identities")
+        raise ValueError(
+            "prebuilt input cannot be combined with content or source identities"
+        )
     if input is None:
         if content is None:
             raise ValueError("content is required when input is not provided")

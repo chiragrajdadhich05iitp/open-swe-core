@@ -103,7 +103,10 @@ async def test_rate_limit_defers_append_until_retry_after(monkeypatch) -> None:
     clock = 10.0
     monkeypatch.setattr(slack_thinking, "monotonic", lambda: clock)
     append = AsyncMock(
-        side_effect=[slack_thinking.SlackStreamError("rate_limited", retry_after=30), None]
+        side_effect=[
+            slack_thinking.SlackStreamError("rate_limited", retry_after=30),
+            None,
+        ]
     )
     monkeypatch.setattr(slack_thinking, "append_slack_stream", append)
     stream = slack_thinking.SlackThinkingStream(

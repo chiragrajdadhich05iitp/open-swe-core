@@ -75,7 +75,9 @@ async def fetch_agents_md(
             try:
                 response = await client.get(url, headers=headers, params={"ref": ref})
             except httpx.HTTPError:
-                logger.exception("Failed to fetch %s from %s/%s@%s", filename, owner, repo, ref)
+                logger.exception(
+                    "Failed to fetch %s from %s/%s@%s", filename, owner, repo, ref
+                )
                 return None
 
             if response.status_code == 404:
@@ -155,9 +157,13 @@ async def fetch_scoped_agents_md(
                 url = f"https://api.github.com/repos/{owner}/{repo}/contents/{url_path}"
                 try:
                     async with semaphore:
-                        response = await client.get(url, headers=headers, params={"ref": ref})
+                        response = await client.get(
+                            url, headers=headers, params={"ref": ref}
+                        )
                 except httpx.HTTPError:
-                    logger.exception("Failed to fetch %s from %s/%s@%s", path, owner, repo, ref)
+                    logger.exception(
+                        "Failed to fetch %s from %s/%s@%s", path, owner, repo, ref
+                    )
                     return None
                 if response.status_code == 404:
                     continue

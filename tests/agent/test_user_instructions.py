@@ -19,7 +19,9 @@ async def test_set_user_instructions_upserts_record() -> None:
     assert record["login"] == "octo"
     assert record["instructions"] == "Always run the linter."
     assert record["updated_by"] == "octo"
-    client.store.put_item.assert_awaited_once_with(["user_instructions"], "octo", record)
+    client.store.put_item.assert_awaited_once_with(
+        ["user_instructions"], "octo", record
+    )
 
 
 @pytest.mark.asyncio
@@ -76,4 +78,6 @@ async def test_save_user_instructions_writes_record() -> None:
     # thread's system prompt, which would invalidate its prefix cache.
     assert "Always run tests." in result["reminder"]
     assert result["reminder"].startswith("<system-reminder>")
-    mock_set.assert_awaited_once_with("octo", "Always run tests.", updated_by="open-swe")
+    mock_set.assert_awaited_once_with(
+        "octo", "Always run tests.", updated_by="open-swe"
+    )

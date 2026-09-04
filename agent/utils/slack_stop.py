@@ -12,7 +12,11 @@ from langgraph_sdk.client import LangGraphClient
 from agent.dispatch import dispatch_agent_run
 from agent.source_context import SourceContext
 
-from .slack import lookup_slack_run_mapping, lookup_slack_thread_id, store_slack_run_mapping
+from .slack import (
+    lookup_slack_run_mapping,
+    lookup_slack_thread_id,
+    store_slack_run_mapping,
+)
 from .slack_code_channels import CODE_CHANNEL_SESSION_TS, set_session_status
 from .slack_events import claim_slack_event
 
@@ -88,7 +92,9 @@ async def _active_run_ids(client: LangGraphClient, thread_id: str) -> list[str]:
     for status in ("pending", "running"):
         offset = 0
         while True:
-            runs = await client.runs.list(thread_id, status=status, limit=100, offset=offset)
+            runs = await client.runs.list(
+                thread_id, status=status, limit=100, offset=offset
+            )
             for run in runs:
                 run_id = _mapping_value(run, "run_id") or _mapping_value(run, "id")
                 if isinstance(run_id, str) and run_id:
@@ -162,7 +168,10 @@ async def _process_slack_stop_reaction(event: dict[str, Any], event_id: str) -> 
     channel_id = item.get("channel")
     message_ts = item.get("ts")
     if not (
-        isinstance(channel_id, str) and channel_id and isinstance(message_ts, str) and message_ts
+        isinstance(channel_id, str)
+        and channel_id
+        and isinstance(message_ts, str)
+        and message_ts
     ):
         return
     if not event_id:
@@ -202,7 +211,9 @@ async def _process_slack_stop_reaction(event: dict[str, Any], event_id: str) -> 
         metadata=_agent_version_metadata(),
         client=client,
     )
-    summary_run_id = _mapping_value(summary_run, "run_id") or _mapping_value(summary_run, "id")
+    summary_run_id = _mapping_value(summary_run, "run_id") or _mapping_value(
+        summary_run, "id"
+    )
     if isinstance(summary_run_id, str) and summary_run_id:
         triggering_user_id = slack_thread.get("triggering_user_id")
         await store_slack_run_mapping(
@@ -218,7 +229,9 @@ async def _process_slack_stop_reaction(event: dict[str, Any], event_id: str) -> 
         )
 
 
-async def process_slack_stop_reaction(event: dict[str, Any], event_id: str = "") -> None:
+async def process_slack_stop_reaction(
+    event: dict[str, Any], event_id: str = ""
+) -> None:
     try:
         await _process_slack_stop_reaction(event, event_id)
     except Exception:  # noqa: BLE001
@@ -230,7 +243,9 @@ async def _process_agent_session_stopped(event: dict[str, Any], event_id: str) -
     if not isinstance(channel_id, str) or not channel_id:
         return
     client = get_client(url=LANGGRAPH_URL)
-    thread_id = await lookup_slack_thread_id(client, channel_id, CODE_CHANNEL_SESSION_TS)
+    thread_id = await lookup_slack_thread_id(
+        client, channel_id, CODE_CHANNEL_SESSION_TS
+    )
     if not thread_id:
         return
     try:
@@ -239,17 +254,23 @@ async def _process_agent_session_stopped(event: dict[str, Any], event_id: str) -
         logger.debug("Ignoring session stop for unknown thread %s", thread_id)
         return
     if (
-        _matching_slack_context(_thread_metadata(thread), channel_id, CODE_CHANNEL_SESSION_TS)
+        _matching_slack_context(
+            _thread_metadata(thread), channel_id, CODE_CHANNEL_SESSION_TS
+        )
         is None
     ):
-        logger.warning("Ignoring session stop with mismatched thread metadata: %s", thread_id)
+        logger.warning(
+            "Ignoring session stop with mismatched thread metadata: %s", thread_id
+        )
         return
     if event_id and not await claim_slack_event(event_id):
         return
 
     run_ids = await _active_run_ids(client, thread_id)
     if run_ids:
-        await client.runs.cancel_many(thread_id=thread_id, run_ids=run_ids, action="interrupt")
+        await client.runs.cancel_many(
+            thread_id=thread_id, run_ids=run_ids, action="interrupt"
+        )
     await _clear_deferred_work(client, thread_id)
     await client.threads.update(
         thread_id=thread_id,
@@ -261,7 +282,9 @@ async def _process_agent_session_stopped(event: dict[str, Any], event_id: str) -
     await set_session_status(channel_id, "active")
 
 
-async def process_agent_session_stopped(event: dict[str, Any], event_id: str = "") -> None:
+async def process_agent_session_stopped(
+    event: dict[str, Any], event_id: str = ""
+) -> None:
     """Stop work immediately when Slack signals the session was stopped."""
     try:
         await _process_agent_session_stopped(event, event_id)

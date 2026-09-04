@@ -20,7 +20,9 @@ def _configurable() -> tuple[dict[str, Any], Mapping[str, Any]]:
     return dict(configurable) if isinstance(configurable, Mapping) else {}, config
 
 
-def _matches_configured_repo(configurable: dict[str, Any], owner: str, repo: str) -> bool:
+def _matches_configured_repo(
+    configurable: dict[str, Any], owner: str, repo: str
+) -> bool:
     configured = configurable.get("repo")
     if not isinstance(configured, Mapping):
         return True
@@ -28,7 +30,10 @@ def _matches_configured_repo(configurable: dict[str, Any], owner: str, repo: str
     configured_repo = configured.get("name")
     if not isinstance(configured_owner, str) or not isinstance(configured_repo, str):
         return False
-    return configured_owner.lower() == owner.lower() and configured_repo.lower() == repo.lower()
+    return (
+        configured_owner.lower() == owner.lower()
+        and configured_repo.lower() == repo.lower()
+    )
 
 
 def _run_config(configurable: dict[str, Any], thread_id: str) -> dict[str, Any]:
@@ -44,7 +49,9 @@ def _run_config(configurable: dict[str, Any], thread_id: str) -> dict[str, Any]:
         "agent_model_id",
         "agent_effort",
     )
-    result = {key: configurable[key] for key in allowed if configurable.get(key) is not None}
+    result = {
+        key: configurable[key] for key in allowed if configurable.get(key) is not None
+    }
     result["thread_id"] = thread_id
     return result
 
@@ -69,14 +76,20 @@ async def manage_baby_sit(
     """Start, stop, or record a flaky rerun for a `/baby-sit` PR watch."""
     pr_ref = parse_github_pr_url(pr_url)
     if pr_ref is None:
-        return {"success": False, "error": "pr_url must be a canonical GitHub pull request URL"}
+        return {
+            "success": False,
+            "error": "pr_url must be a canonical GitHub pull request URL",
+        }
 
     configurable, config = _configurable()
     thread_id = configurable.get("thread_id")
     if not isinstance(thread_id, str) or not thread_id:
         return {"success": False, "error": "No executable agent thread is available"}
     if not _matches_configured_repo(configurable, pr_ref.owner, pr_ref.repo):
-        return {"success": False, "error": "Pull request does not match this thread's repository"}
+        return {
+            "success": False,
+            "error": "Pull request does not match this thread's repository",
+        }
 
     key = watch_key(pr_ref.owner, pr_ref.repo, pr_ref.number)
     if action == "stop":
@@ -84,7 +97,10 @@ async def manage_baby_sit(
 
         watch = await WATCHES.get(key)
         if watch and watch.thread_id != thread_id:
-            return {"success": False, "error": "This watch belongs to another agent thread"}
+            return {
+                "success": False,
+                "error": "This watch belongs to another agent thread",
+            }
         stopped = await stop_watch(key)
         return {"success": True, "stopped": stopped, "watch_key": key}
 
@@ -125,7 +141,9 @@ async def manage_baby_sit(
     if not isinstance(pr_head_ref, str) or not pr_head_ref:
         return {"success": False, "error": "Pull request head branch is unavailable"}
 
-    installation_id = await get_github_app_installation_id_for_repo(pr_ref.owner, pr_ref.repo)
+    installation_id = await get_github_app_installation_id_for_repo(
+        pr_ref.owner, pr_ref.repo
+    )
     if installation_id is None:
         return {
             "success": False,

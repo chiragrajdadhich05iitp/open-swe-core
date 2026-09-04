@@ -66,7 +66,9 @@ def _eval_project() -> str:
     return os.environ.get("EVAL_LANGSMITH_PROJECT") or DEFAULT_EVAL_PROJECT
 
 
-def _resolve_eval_config(config: ReviewerEvalConfig | None = None) -> ReviewerEvalConfig:
+def _resolve_eval_config(
+    config: ReviewerEvalConfig | None = None,
+) -> ReviewerEvalConfig:
     resolved: ReviewerEvalConfig = {
         **DEFAULT_REVIEWER_EVAL_CONFIG,
         "langsmith_project": _eval_project(),

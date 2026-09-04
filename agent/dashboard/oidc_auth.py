@@ -123,16 +123,21 @@ async def admin_session_for_actions_oidc(token: str) -> dict[str, Any]:
     except jwt.PyJWTError as e:
         raise HTTPException(401, f"invalid GitHub Actions OIDC token: {e}") from e
     except Exception as e:  # noqa: BLE001 - JWKS fetch failures
-        raise HTTPException(502, f"could not verify GitHub Actions OIDC token: {e}") from e
+        raise HTTPException(
+            502, f"could not verify GitHub Actions OIDC token: {e}"
+        ) from e
 
     if not _subject_allowed(claims):
         logger.warning(
-            "Rejected GitHub Actions OIDC request for unlisted subject %r", claims.get("sub")
+            "Rejected GitHub Actions OIDC request for unlisted subject %r",
+            claims.get("sub"),
         )
         raise HTTPException(403, "workflow is not allowed to act as an admin")
 
     repository = claims.get("repository")
-    identity = repository if isinstance(repository, str) and repository else claims.get("sub")
+    identity = (
+        repository if isinstance(repository, str) and repository else claims.get("sub")
+    )
     return {
         "sub": f"actions:{identity}",
         "email": None,

@@ -43,7 +43,9 @@ async def _api_key_for(on_behalf_of: str) -> str:
     login = await resolve_participant(on_behalf_of)
     api_key = await get_currents_api_key(login)
     if not api_key:
-        raise ValueError(f"{login} has not connected Currents in their dashboard Profile tab.")
+        raise ValueError(
+            f"{login} has not connected Currents in their dashboard Profile tab."
+        )
     return api_key
 
 
@@ -161,7 +163,9 @@ def _make_tools() -> list[BaseTool]:
             logger.warning("currents_list_project_runs failed", exc_info=True)
             return {"success": False, "error": f"{type(e).__name__}: {e}"}
 
-    async def currents_get_instance(on_behalf_of: str, instance_id: str) -> dict[str, Any]:
+    async def currents_get_instance(
+        on_behalf_of: str, instance_id: str
+    ) -> dict[str, Any]:
         """Get a single Currents.dev spec file execution instance by ID.
 
         An instance represents one spec file's execution within a run,

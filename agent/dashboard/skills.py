@@ -32,7 +32,9 @@ class SkillCreate(BaseModel):
     def _valid_name(cls, value: str) -> str:
         value = value.strip()
         if not _SKILL_NAME_RE.fullmatch(value):
-            raise ValueError("name must use lowercase letters, numbers, and single hyphens")
+            raise ValueError(
+                "name must use lowercase letters, numbers, and single hyphens"
+            )
         return value
 
     @field_validator("description")
@@ -80,7 +82,10 @@ def _content(name: str, description: str, instructions: str) -> str:
 
 
 def _record(
-    name: str, description: str, instructions: str, existing: dict[str, Any] | None = None
+    name: str,
+    description: str,
+    instructions: str,
+    existing: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     now = now_iso()
     return {
@@ -99,7 +104,9 @@ async def _get_skill(namespace: list[str], name: str) -> dict[str, Any] | None:
     return await get_value(namespace, _key(name))
 
 
-async def _list_skills(namespace: list[str], *, limit: int, offset: int) -> dict[str, Any]:
+async def _list_skills(
+    namespace: list[str], *, limit: int, offset: int
+) -> dict[str, Any]:
     found = await search_values(namespace, limit=limit + 1, offset=offset)
     skills = sorted(found[:limit], key=lambda skill: skill.get("name", ""))
     return {
@@ -116,7 +123,9 @@ async def _create_skill(namespace: list[str], body: SkillCreate) -> dict[str, An
     return value
 
 
-async def _update_skill(namespace: list[str], name: str, body: SkillUpdate) -> dict[str, Any]:
+async def _update_skill(
+    namespace: list[str], name: str, body: SkillUpdate
+) -> dict[str, Any]:
     SkillCreate(name=name, description=body.description, instructions=body.instructions)
     existing = await _get_skill(namespace, name)
     if not existing:
@@ -154,7 +163,11 @@ async def delete_skill(login: str, name: str) -> None:
 
 
 def _encode_cursor(name: str) -> str:
-    return base64.urlsafe_b64encode(json.dumps({"name": name}).encode()).decode().rstrip("=")
+    return (
+        base64.urlsafe_b64encode(json.dumps({"name": name}).encode())
+        .decode()
+        .rstrip("=")
+    )
 
 
 def _decode_cursor(cursor: str | None) -> str:
@@ -165,7 +178,9 @@ def _decode_cursor(cursor: str | None) -> str:
     try:
         encoded = cursor.encode("ascii")
         payload = json.loads(
-            base64.b64decode(encoded + b"=" * (-len(encoded) % 4), altchars=b"-_", validate=True)
+            base64.b64decode(
+                encoded + b"=" * (-len(encoded) % 4), altchars=b"-_", validate=True
+            )
         )
     except (
         binascii.Error,
@@ -189,9 +204,13 @@ def _decode_cursor(cursor: str | None) -> str:
 
 async def list_organization_skills(*, limit: int, cursor: str | None) -> dict[str, Any]:
     after = _decode_cursor(cursor)
-    found = await search_values(_organization_namespace(), limit=MAX_ORGANIZATION_SKILLS + 1)
+    found = await search_values(
+        _organization_namespace(), limit=MAX_ORGANIZATION_SKILLS + 1
+    )
     if len(found) > MAX_ORGANIZATION_SKILLS:
-        raise HTTPException(409, "organization skill limit exceeded; delete a skill to continue")
+        raise HTTPException(
+            409, "organization skill limit exceeded; delete a skill to continue"
+        )
     skills = sorted(
         (value for value in found if value.get("name", "") > after),
         key=lambda skill: skill.get("name", ""),
@@ -199,12 +218,16 @@ async def list_organization_skills(*, limit: int, cursor: str | None) -> dict[st
     page = skills[:limit]
     return {
         "items": page,
-        "next_cursor": _encode_cursor(page[-1]["name"]) if len(skills) > limit else None,
+        "next_cursor": (
+            _encode_cursor(page[-1]["name"]) if len(skills) > limit else None
+        ),
     }
 
 
 async def create_organization_skill(body: SkillCreate) -> dict[str, Any]:
-    existing = await search_values(_organization_namespace(), limit=MAX_ORGANIZATION_SKILLS)
+    existing = await search_values(
+        _organization_namespace(), limit=MAX_ORGANIZATION_SKILLS
+    )
     if len(existing) >= MAX_ORGANIZATION_SKILLS:
         raise HTTPException(409, "organization skill limit reached")
     return await _create_skill(_organization_namespace(), body)

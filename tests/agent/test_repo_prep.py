@@ -24,7 +24,9 @@ class _FakeSandboxBackend:
     def id(self) -> str:
         return "fake-sandbox"
 
-    async def aexecute(self, command: str, *, timeout: int | None = None) -> ExecuteResponse:
+    async def aexecute(
+        self, command: str, *, timeout: int | None = None
+    ) -> ExecuteResponse:
         del timeout
         if self._raise:
             raise RuntimeError("sandbox unreachable")
@@ -32,7 +34,9 @@ class _FakeSandboxBackend:
         output = self._output
         if self._outputs is not None:
             output = self._outputs[len(self.commands) - 1]
-        return ExecuteResponse(output=output, exit_code=self._exit_code, truncated=False)
+        return ExecuteResponse(
+            output=output, exit_code=self._exit_code, truncated=False
+        )
 
 
 async def test_prepare_review_repo_clones_and_checks_out_head() -> None:
@@ -125,7 +129,9 @@ async def test_prepare_review_repo_returns_false_on_exception() -> None:
 async def test_materialize_trusted_skills_extracts_from_trusted_ref() -> None:
     backend = _FakeSandboxBackend(outputs=["/work/.review-skills/.agents/skills\n", ""])
     sources = await materialize_trusted_skills(
-        cast(SandboxBackendProtocol, backend), repo_dir="/work/widget", trusted_ref="def456"
+        cast(SandboxBackendProtocol, backend),
+        repo_dir="/work/widget",
+        trusted_ref="def456",
     )
     assert sources == ["/work/.review-skills/.agents/skills/"]
     assert len(backend.commands) == 2
@@ -146,7 +152,9 @@ async def test_materialize_trusted_skills_empty_without_ref() -> None:
 async def test_materialize_trusted_skills_empty_when_none_exist() -> None:
     backend = _FakeSandboxBackend(output="")
     sources = await materialize_trusted_skills(
-        cast(SandboxBackendProtocol, backend), repo_dir="/work/widget", trusted_ref="def456"
+        cast(SandboxBackendProtocol, backend),
+        repo_dir="/work/widget",
+        trusted_ref="def456",
     )
     assert sources == []
 
@@ -154,6 +162,8 @@ async def test_materialize_trusted_skills_empty_when_none_exist() -> None:
 async def test_materialize_trusted_skills_handles_exception() -> None:
     backend = _FakeSandboxBackend(raise_exc=True)
     sources = await materialize_trusted_skills(
-        cast(SandboxBackendProtocol, backend), repo_dir="/work/widget", trusted_ref="def456"
+        cast(SandboxBackendProtocol, backend),
+        repo_dir="/work/widget",
+        trusted_ref="def456",
     )
     assert sources == []

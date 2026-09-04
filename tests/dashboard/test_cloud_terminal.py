@@ -27,7 +27,9 @@ def test_terminal_ticket_is_short_lived_and_thread_bound(monkeypatch) -> None:
 def test_terminal_ticket_rejects_expired_tokens(monkeypatch) -> None:
     monkeypatch.setenv("DASHBOARD_JWT_SECRET", "test-secret-with-at-least-32-bytes")
     monkeypatch.setattr(oauth.time, "time", lambda: 0)
-    ticket = oauth.issue_terminal_ticket(login="alice", email=None, thread_id="thread-1")
+    ticket = oauth.issue_terminal_ticket(
+        login="alice", email=None, thread_id="thread-1"
+    )
 
     with pytest.raises(HTTPException) as exc_info:
         oauth.decode_terminal_ticket(ticket, thread_id="thread-1")
@@ -42,7 +44,9 @@ def test_cloud_terminal_url_uses_direct_langgraph_origin(monkeypatch) -> None:
     )
 
 
-async def test_terminal_connection_requires_owner_before_issuing_ticket(monkeypatch) -> None:
+async def test_terminal_connection_requires_owner_before_issuing_ticket(
+    monkeypatch,
+) -> None:
     monkeypatch.setenv("DASHBOARD_JWT_SECRET", "test-secret-with-at-least-32-bytes")
     monkeypatch.setenv("LANGGRAPH_URL", "https://agent.example")
     get_sandbox = AsyncMock(return_value=("sandbox-1", "repo"))
@@ -57,17 +61,22 @@ async def test_terminal_connection_requires_owner_before_issuing_ticket(monkeypa
 
     get_sandbox.assert_awaited_once_with("thread-1", "alice", email="alice@example.com")
     assert response.headers["cache-control"] == "no-store"
-    assert connection["url"] == ("wss://agent.example/dashboard/api/threads/thread-1/terminal")
+    assert connection["url"] == (
+        "wss://agent.example/dashboard/api/threads/thread-1/terminal"
+    )
     assert connection["protocol"] == "open-swe-terminal"
     assert connection["ticket"] not in connection["url"]
     assert (
-        oauth.decode_terminal_ticket(connection["ticket"], thread_id="thread-1")["sub"] == "alice"
+        oauth.decode_terminal_ticket(connection["ticket"], thread_id="thread-1")["sub"]
+        == "alice"
     )
 
 
 def test_cloud_terminal_session_reads_ticket_from_subprotocol(monkeypatch) -> None:
     monkeypatch.setenv("DASHBOARD_JWT_SECRET", "test-secret-with-at-least-32-bytes")
-    ticket = oauth.issue_terminal_ticket(login="alice", email=None, thread_id="thread-1")
+    ticket = oauth.issue_terminal_ticket(
+        login="alice", email=None, thread_id="thread-1"
+    )
     websocket = cast(
         WebSocket,
         SimpleNamespace(
@@ -91,9 +100,13 @@ def test_cloud_terminal_session_reads_ticket_from_subprotocol(monkeypatch) -> No
     assert exc_info.value.status_code == 401
 
 
-def test_cloud_terminal_route_accepts_ticket_without_dashboard_cookie(monkeypatch) -> None:
+def test_cloud_terminal_route_accepts_ticket_without_dashboard_cookie(
+    monkeypatch,
+) -> None:
     monkeypatch.setenv("DASHBOARD_JWT_SECRET", "test-secret-with-at-least-32-bytes")
-    ticket = oauth.issue_terminal_ticket(login="alice", email=None, thread_id="thread-1")
+    ticket = oauth.issue_terminal_ticket(
+        login="alice", email=None, thread_id="thread-1"
+    )
 
     async def fake_cloud_terminal(
         websocket: WebSocket, thread_id: str, session: dict[str, object]

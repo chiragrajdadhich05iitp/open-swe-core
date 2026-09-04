@@ -46,7 +46,9 @@ async def _resolve_thread_model_id(thread_id: str) -> str | None:
         model = metadata.get("model")
         return model if isinstance(model, str) and model else None
     except Exception:
-        logger.debug("Could not read thread metadata for model resolution", exc_info=True)
+        logger.debug(
+            "Could not read thread metadata for model resolution", exc_info=True
+        )
         return None
 
 
@@ -104,10 +106,14 @@ def _merge_text_blocks(blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     texts = [
         block["text"]
         for block in blocks
-        if block.get("type") == "text" and isinstance(block.get("text"), str) and block["text"]
+        if block.get("type") == "text"
+        and isinstance(block.get("text"), str)
+        and block["text"]
     ]
     others = [block for block in blocks if block.get("type") != "text"]
-    merged: list[dict[str, Any]] = [{"type": "text", "text": "\n\n".join(texts)}] if texts else []
+    merged: list[dict[str, Any]] = (
+        [{"type": "text", "text": "\n\n".join(texts)}] if texts else []
+    )
     return merged + others
 
 
@@ -121,7 +127,11 @@ def _flush_blocks(
             list[dict[str, Any]],
             build_input_messages(
                 _merge_text_blocks(blocks),
-                {"sender_id": _QUEUE_SYSTEM["id"], "surface": "automation", "kind": "system"},
+                {
+                    "sender_id": _QUEUE_SYSTEM["id"],
+                    "surface": "automation",
+                    "kind": "system",
+                },
                 systems=[_QUEUE_SYSTEM],
                 injected_dynamic_context_hashes=injected,
             ),
@@ -144,14 +154,18 @@ def _message_update(
     return {"messages": queued}
 
 
-async def _consume_pending_autofix_event(store: BaseStore, thread_id: str) -> str | None:
+async def _consume_pending_autofix_event(
+    store: BaseStore, thread_id: str
+) -> str | None:
     """Pull and clear a batched PR-babysitting event from the store (no thread fetch)."""
     namespace = ("autofix", thread_id)
     try:
         item = await store.aget(namespace, "pending_event")
     except Exception:  # noqa: BLE001
         logger.debug(
-            "Could not read pending auto-fix event for thread %s", thread_id, exc_info=True
+            "Could not read pending auto-fix event for thread %s",
+            thread_id,
+            exc_info=True,
         )
         return None
     if item is None or not item.value.get("reason"):
@@ -160,7 +174,9 @@ async def _consume_pending_autofix_event(store: BaseStore, thread_id: str) -> st
         await store.adelete(namespace, "pending_event")
     except Exception:  # noqa: BLE001
         logger.debug(
-            "Could not clear pending auto-fix event for thread %s", thread_id, exc_info=True
+            "Could not clear pending auto-fix event for thread %s",
+            thread_id,
+            exc_info=True,
         )
     message = (
         "A PR babysitting event arrived while you were already working on this PR. "
@@ -277,7 +293,9 @@ async def check_message_queue_before_model(  # noqa: PLR0911
                 "text" in content or "image_urls" in content or "images" in content
             ):
                 logger.debug("Queued message contains text + image URLs")
-                blocks = await _build_blocks_from_payload(content, model_id=resolved_model_id)
+                blocks = await _build_blocks_from_payload(
+                    content, model_id=resolved_model_id
+                )
                 sender = content.get("sender")
                 if isinstance(sender, dict) and isinstance(sender.get("id"), str):
                     person: PersonIdentity = {"id": sender["id"]}
@@ -304,7 +322,9 @@ async def check_message_queue_before_model(  # noqa: PLR0911
                     content_blocks.extend(blocks)
                 continue
             if isinstance(content, list):
-                logger.debug("Queued message contains %d content block(s)", len(content))
+                logger.debug(
+                    "Queued message contains %d content block(s)", len(content)
+                )
                 content_blocks.extend(content)
                 continue
             if isinstance(content, str) and content:

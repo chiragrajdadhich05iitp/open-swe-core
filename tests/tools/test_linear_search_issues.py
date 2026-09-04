@@ -64,7 +64,9 @@ async def test_search_issues_returns_results_and_pagination(
     }
 
 
-async def test_search_issues_filters_without_text(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_search_issues_filters_without_text(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     captured: dict[str, Any] = {}
 
     async def fake_graphql_request(
@@ -73,7 +75,9 @@ async def test_search_issues_filters_without_text(monkeypatch: pytest.MonkeyPatc
         captured.update({"query": query, "variables": variables})
         return {
             "issues": {
-                "nodes": [{"id": "issue-id", "identifier": "DCD-21", "title": "Fix filters"}],
+                "nodes": [
+                    {"id": "issue-id", "identifier": "DCD-21", "title": "Fix filters"}
+                ],
                 "totalCount": 1,
                 "pageInfo": {"hasNextPage": False, "endCursor": None},
             }
@@ -95,7 +99,9 @@ async def test_search_issues_filters_without_text(monkeypatch: pytest.MonkeyPatc
     assert result["issues"][0]["identifier"] == "DCD-21"
 
 
-async def test_search_issues_combines_filters_with_team(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_search_issues_combines_filters_with_team(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     captured: dict[str, Any] = {}
 
     async def fake_graphql_request(
@@ -141,7 +147,9 @@ async def test_search_issues_rejects_invalid_limit(
     assert result == {"error": "Search limit must be between 1 and 50"}
 
 
-async def test_search_issues_propagates_graphql_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_search_issues_propagates_graphql_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     async def fake_graphql_request(
         _query: str, _variables: dict[str, Any] | None = None
     ) -> dict[str, Any]:
@@ -152,7 +160,9 @@ async def test_search_issues_propagates_graphql_errors(monkeypatch: pytest.Monke
     assert await linear.search_issues("styling") == {"error": "rate limited"}
 
 
-async def test_linear_search_issues_tool_delegates(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_linear_search_issues_tool_delegates(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     captured: dict[str, Any] = {}
 
     async def fake_search_issues(**kwargs: Any) -> dict[str, Any]:

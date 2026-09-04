@@ -37,7 +37,9 @@ async def test_langsmith_cost_requires_correlated_fresh_aggregate(
     root_end = datetime(2026, 8, 18, 22, 0, tzinfo=UTC)
     client = _LangSmithClient(
         [SimpleNamespace(end_time=root_end)],
-        SimpleNamespace(total_cost=1.234, last_end_time=root_end + timedelta(seconds=1)),
+        SimpleNamespace(
+            total_cost=1.234, last_end_time=root_end + timedelta(seconds=1)
+        ),
     )
     monkeypatch.setattr(ls_utils, "_build_prod_langsmith_client", lambda: client)
     monkeypatch.setattr(
@@ -140,8 +142,12 @@ class _Runs:
     def __init__(self) -> None:
         self.created: list[dict[str, Any]] = []
 
-    async def create(self, thread_id: str | None, assistant_id: str, **kwargs: Any) -> None:
-        self.created.append({"thread_id": thread_id, "assistant_id": assistant_id, **kwargs})
+    async def create(
+        self, thread_id: str | None, assistant_id: str, **kwargs: Any
+    ) -> None:
+        self.created.append(
+            {"thread_id": thread_id, "assistant_id": assistant_id, **kwargs}
+        )
 
 
 class _Client:
@@ -161,7 +167,9 @@ def _state(attempt: int) -> dict[str, Any]:
     }
 
 
-async def test_refresh_schedules_bounded_stateless_retry(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_refresh_schedules_bounded_stateless_retry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     client: Any = _Client()
     monkeypatch.setattr(
         session_cost,
@@ -184,7 +192,9 @@ async def test_refresh_schedules_bounded_stateless_retry(monkeypatch: pytest.Mon
     assert "webhook" not in created
 
 
-async def test_refresh_stops_after_final_attempt(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_refresh_stops_after_final_attempt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     client: Any = _Client()
     monkeypatch.setattr(
         session_cost,

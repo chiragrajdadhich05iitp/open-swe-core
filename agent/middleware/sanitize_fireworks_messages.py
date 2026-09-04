@@ -50,7 +50,10 @@ def _sanitize_messages(messages: list[Any]) -> None:
         if not isinstance(message, AIMessage):
             continue
         additional_kwargs = message.additional_kwargs
-        if not isinstance(additional_kwargs, dict) or "function_call" not in additional_kwargs:
+        if (
+            not isinstance(additional_kwargs, dict)
+            or "function_call" not in additional_kwargs
+        ):
             continue
         # Drop the legacy field; modern tool calls live in `tool_calls` /
         # `additional_kwargs["tool_calls"]`, which the Fireworks serializer

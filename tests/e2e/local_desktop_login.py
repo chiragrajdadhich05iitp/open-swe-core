@@ -41,7 +41,9 @@ async def fake_exchange_code(code: str) -> dict[str, Any]:
     return {"access_token": "gho_local", "token_type": "bearer"}
 
 
-async def fake_fetch_github_user(access_token: str) -> tuple[dict[str, Any], str | None]:
+async def fake_fetch_github_user(
+    access_token: str,
+) -> tuple[dict[str, Any], str | None]:
     return {"login": LOGIN, "avatar_url": None}, EMAIL
 
 
@@ -63,14 +65,18 @@ app.include_router(routes.router)
 
 
 @app.get("/fake-gh/login/oauth/authorize")
-async def fake_github_authorize(redirect_uri: str, state: str, client_id: str = "") -> HTMLResponse:
+async def fake_github_authorize(
+    redirect_uri: str, state: str, client_id: str = ""
+) -> HTMLResponse:
     """Stand-in for GitHub's consent screen."""
     # Both values arrive in the query string, so pin the target to this
     # harness's own callback and escape what reaches the page.
     callback = f"{BASE_URL}/dashboard/api/auth/callback"
     if redirect_uri != callback:
         raise HTTPException(400, "unexpected redirect_uri")
-    target = escape(f"{callback}?code=fake-oauth-code&state={quote(state, safe='')}", quote=True)
+    target = escape(
+        f"{callback}?code=fake-oauth-code&state={quote(state, safe='')}", quote=True
+    )
     return HTMLResponse(
         f"""<!doctype html><meta charset=utf-8><title>Fake GitHub</title>
         <body style="font:16px system-ui;max-width:30rem;margin:4rem auto;text-align:center">

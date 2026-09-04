@@ -20,7 +20,9 @@ async def linear_webhook(  # noqa: PLR0911, PLR0912, PLR0915
     body = await request.body()
 
     signature = request.headers.get("Linear-Signature", "")
-    if not common.verify_linear_signature(body, signature, common.LINEAR_WEBHOOK_SECRET):
+    if not common.verify_linear_signature(
+        body, signature, common.LINEAR_WEBHOOK_SECRET
+    ):
         common.logger.warning("Invalid webhook signature")
         raise common.HTTPException(status_code=401, detail="Invalid signature")
 
@@ -96,7 +98,9 @@ async def linear_webhook(  # noqa: PLR0911, PLR0912, PLR0915
                 await common.resolve_login_from_email_async(comment_user_email)
             )
         except Exception:  # noqa: BLE001
-            common.logger.exception("Failed to apply dashboard default_repo for Linear user")
+            common.logger.exception(
+                "Failed to apply dashboard default_repo for Linear user"
+            )
             profile_repo = None
         if profile_repo:
             common.logger.info(
@@ -116,7 +120,9 @@ async def linear_webhook(  # noqa: PLR0911, PLR0912, PLR0915
         team_identifier = team_name.strip() if team_name else ""
         project_key = project_name.strip() if project_name else ""
 
-        repo_config = common.get_repo_config_from_team_mapping(team_identifier, project_key)
+        repo_config = common.get_repo_config_from_team_mapping(
+            team_identifier, project_key
+        )
 
         common.logger.debug(
             "Team/project lookup result",

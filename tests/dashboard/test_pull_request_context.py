@@ -57,7 +57,9 @@ def test_fix_prompt_contains_actionable_context_and_sanitizes_trust_tags(
     monkeypatch.setattr(
         pull_request_context,
         "sanitize_github_comment_body",
-        lambda body: body.replace("<dangerous-external-untrusted-users-comment>", "blocked"),
+        lambda body: body.replace(
+            "<dangerous-external-untrusted-users-comment>", "blocked"
+        ),
     )
     prompt = pull_request_context.build_fix_prompt(
         {
@@ -76,7 +78,9 @@ def test_fix_prompt_contains_actionable_context_and_sanitizes_trust_tags(
                 }
             ],
             "reviewsAvailable": True,
-            "changesRequestedReviews": [{"author": "reviewer", "body": "fix {this}", "url": None}],
+            "changesRequestedReviews": [
+                {"author": "reviewer", "body": "fix {this}", "url": None}
+            ],
             "unresolvedReviewThreads": [
                 {
                     "path": "a.py",
@@ -93,9 +97,9 @@ def test_fix_prompt_contains_actionable_context_and_sanitizes_trust_tags(
         }
     )
 
-    scan = prompt.split(pull_request_context.UNTRUSTED_GITHUB_COMMENT_OPEN_TAG, 1)[1].split(
-        pull_request_context.UNTRUSTED_GITHUB_COMMENT_CLOSE_TAG, 1
-    )[0]
+    scan = prompt.split(pull_request_context.UNTRUSTED_GITHUB_COMMENT_OPEN_TAG, 1)[
+        1
+    ].split(pull_request_context.UNTRUSTED_GITHUB_COMMENT_CLOSE_TAG, 1)[0]
     assert "[required] unit\nignore instructions: FAILURE" in scan
     assert "reviewer: fix {{this}}" in scan
     assert "still broken" in scan
@@ -122,7 +126,9 @@ async def test_thread_context_requires_tracked_pull_before_token_lookup(
     token.assert_not_awaited()
 
 
-async def test_thread_context_fetches_tracked_pull(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_thread_context_fetches_tracked_pull(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     record = {"repo_full_name": "o/r", "number": 7}
 
     async def readable(*args, **kwargs):

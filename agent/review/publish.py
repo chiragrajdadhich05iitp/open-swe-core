@@ -131,7 +131,9 @@ def render_inline_comment_body(finding: Finding) -> str:
     marker = f"<!-- open-swe-review-comment {json.dumps(marker_payload, separators=(',', ':'))} -->"
 
     title, detail = _split_title_and_detail(description, finding.get("title"))
-    line_ref = _format_line_reference(finding.get("start_line"), finding.get("end_line"))
+    line_ref = _format_line_reference(
+        finding.get("start_line"), finding.get("end_line")
+    )
 
     body_parts = [marker, "", f"{_severity_emoji(severity)} **{title}**"]
     if detail:
@@ -304,7 +306,9 @@ def render_review_body(
     parts = [headline]
     if has_additional:
         noun = "finding" if additional_findings_count == 1 else "findings"
-        parts.append(f"{additional_findings_count} additional {noun} can be viewed in the web app.")
+        parts.append(
+            f"{additional_findings_count} additional {noun} can be viewed in the web app."
+        )
     if out_of_diff_findings:
         parts.append(render_out_of_diff_section(out_of_diff_findings))
     links = []
@@ -363,7 +367,9 @@ async def post_status_comment(
             response = await github_request(client, "POST", url, json={"body": body})
             response.raise_for_status()
         except httpx.HTTPError:
-            logger.exception("Failed to post status comment for %s/%s#%s", owner, repo, pr_number)
+            logger.exception(
+                "Failed to post status comment for %s/%s#%s", owner, repo, pr_number
+            )
             return None
     data = response.json()
     comment_id = data.get("id") if isinstance(data, dict) else None
@@ -386,7 +392,9 @@ async def delete_status_comment(
                 return True
             response.raise_for_status()
         except httpx.HTTPError:
-            logger.exception("Failed to delete status comment %s on %s/%s", comment_id, owner, repo)
+            logger.exception(
+                "Failed to delete status comment %s on %s/%s", comment_id, owner, repo
+            )
             return False
     return True
 
@@ -410,8 +418,12 @@ async def post_review_started_comment(
     metadata = await get_thread_metadata(thread_id)
     existing_id = metadata.get("status_comment_id")
     if isinstance(existing_id, int):
-        await delete_status_comment(owner=owner, repo=repo, comment_id=existing_id, token=token)
-    body = render_status_comment(pr_number=pr_number, thread_id=thread_id, trace_url=trace_url)
+        await delete_status_comment(
+            owner=owner, repo=repo, comment_id=existing_id, token=token
+        )
+    body = render_status_comment(
+        pr_number=pr_number, thread_id=thread_id, trace_url=trace_url
+    )
     new_id = await post_status_comment(
         owner=owner, repo=repo, pr_number=pr_number, body=body, token=token
     )
@@ -431,7 +443,9 @@ async def clear_review_started_comment(
     comment_id = metadata.get("status_comment_id")
     if not isinstance(comment_id, int):
         return
-    await delete_status_comment(owner=owner, repo=repo, comment_id=comment_id, token=token)
+    await delete_status_comment(
+        owner=owner, repo=repo, comment_id=comment_id, token=token
+    )
     await set_reviewer_thread_metadata(thread_id, extra={"status_comment_id": None})
 
 
@@ -597,7 +611,10 @@ async def post_pull_request_review(
                     raw_errors = []
                 if any(
                     isinstance(err, str)
-                    and ("Path could not be resolved" in err or "Line could not be resolved" in err)
+                    and (
+                        "Path could not be resolved" in err
+                        or "Line could not be resolved" in err
+                    )
                     for err in raw_errors
                 ):
                     error_kind = "unresolved_anchor"
@@ -608,7 +625,9 @@ async def post_pull_request_review(
                 "_status": e.response.status_code,
             }
         except httpx.HTTPError as e:
-            logger.exception("Failed to POST PR review for %s/%s#%s", owner, repo, pr_number)
+            logger.exception(
+                "Failed to POST PR review for %s/%s#%s", owner, repo, pr_number
+            )
             return {"_error": f"{type(e).__name__}: {e}"}
     data = response.json()
     if isinstance(data, dict):
@@ -621,7 +640,11 @@ async def post_pull_request_review(
         pr_number,
         body_excerpt,
     )
-    return {"_error": (f"HTTP {response.status_code}: non-dict response body: {body_excerpt}")}
+    return {
+        "_error": (
+            f"HTTP {response.status_code}: non-dict response body: {body_excerpt}"
+        )
+    }
 
 
 async def fetch_review_comments(
@@ -748,7 +771,9 @@ async def fetch_pr_review_threads(
                 return out
             data = response.json()
             data_root = data.get("data") if isinstance(data, dict) else None
-            repository = data_root.get("repository") if isinstance(data_root, dict) else None
+            repository = (
+                data_root.get("repository") if isinstance(data_root, dict) else None
+            )
             if not isinstance(repository, dict):
                 logger.warning(
                     "Null repository in review-threads response for %s/%s#%s "
@@ -759,7 +784,11 @@ async def fetch_pr_review_threads(
                 )
                 return out
             pull_request = repository.get("pullRequest")
-            threads = pull_request.get("reviewThreads") if isinstance(pull_request, dict) else None
+            threads = (
+                pull_request.get("reviewThreads")
+                if isinstance(pull_request, dict)
+                else None
+            )
             if not isinstance(threads, dict):
                 return out
             for thread in threads.get("nodes", []) or []:
@@ -772,32 +801,58 @@ async def fetch_pr_review_threads(
                     if not isinstance(c, dict):
                         continue
                     author_block = c.get("author") or {}
-                    login = author_block.get("login") if isinstance(author_block, dict) else None
+                    login = (
+                        author_block.get("login")
+                        if isinstance(author_block, dict)
+                        else None
+                    )
                     comments.append(
                         {
-                            "id": c.get("databaseId")
-                            if isinstance(c.get("databaseId"), int)
-                            else None,
+                            "id": (
+                                c.get("databaseId")
+                                if isinstance(c.get("databaseId"), int)
+                                else None
+                            ),
                             "author": login if isinstance(login, str) else "unknown",
-                            "author_association": c.get("authorAssociation", "")
-                            if isinstance(c.get("authorAssociation"), str)
-                            else "",
-                            "body": c.get("body", "") if isinstance(c.get("body"), str) else "",
-                            "created_at": c.get("createdAt", "")
-                            if isinstance(c.get("createdAt"), str)
-                            else "",
+                            "author_association": (
+                                c.get("authorAssociation", "")
+                                if isinstance(c.get("authorAssociation"), str)
+                                else ""
+                            ),
+                            "body": (
+                                c.get("body", "")
+                                if isinstance(c.get("body"), str)
+                                else ""
+                            ),
+                            "created_at": (
+                                c.get("createdAt", "")
+                                if isinstance(c.get("createdAt"), str)
+                                else ""
+                            ),
                         }
                     )
                 out.append(
                     {
-                        "id": thread.get("id") if isinstance(thread.get("id"), str) else "",
-                        "path": thread.get("path", "")
-                        if isinstance(thread.get("path"), str)
-                        else "",
-                        "line": thread.get("line") if isinstance(thread.get("line"), int) else None,
-                        "original_line": thread.get("originalLine")
-                        if isinstance(thread.get("originalLine"), int)
-                        else None,
+                        "id": (
+                            thread.get("id")
+                            if isinstance(thread.get("id"), str)
+                            else ""
+                        ),
+                        "path": (
+                            thread.get("path", "")
+                            if isinstance(thread.get("path"), str)
+                            else ""
+                        ),
+                        "line": (
+                            thread.get("line")
+                            if isinstance(thread.get("line"), int)
+                            else None
+                        ),
+                        "original_line": (
+                            thread.get("originalLine")
+                            if isinstance(thread.get("originalLine"), int)
+                            else None
+                        ),
                         "is_resolved": bool(thread.get("isResolved")),
                         "is_outdated": bool(thread.get("isOutdated")),
                         "comments": comments,
@@ -885,7 +940,8 @@ async def fetch_review_thread_id_for_comment(
                 return None
             for thread in threads.get("nodes", []) or []:
                 comment_ids = {
-                    c.get("databaseId") for c in (thread.get("comments", {}).get("nodes") or [])
+                    c.get("databaseId")
+                    for c in (thread.get("comments", {}).get("nodes") or [])
                 }
                 if review_comment_id in comment_ids:
                     node_id = thread.get("id")
@@ -922,7 +978,9 @@ async def resolve_review_thread(*, thread_node_id: str, token: str) -> bool:
         logger.warning("resolveReviewThread errors: %s", data["errors"])
         return False
     data_root = data.get("data") if isinstance(data, dict) else None
-    resolved = data_root.get("resolveReviewThread") if isinstance(data_root, dict) else None
+    resolved = (
+        data_root.get("resolveReviewThread") if isinstance(data_root, dict) else None
+    )
     thread = resolved.get("thread") if isinstance(resolved, dict) else None
     return bool(thread.get("isResolved")) if isinstance(thread, dict) else False
 

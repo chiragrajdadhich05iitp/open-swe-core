@@ -20,10 +20,15 @@ async def recreate_sandbox() -> dict[str, Any]:
     try:
         config = get_config()
     except Exception as exc:
-        return {"success": False, "error": f"Unable to read the current run config: {exc}"}
+        return {
+            "success": False,
+            "error": f"Unable to read the current run config: {exc}",
+        }
 
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
-    thread_id = configurable.get("thread_id") if isinstance(configurable, dict) else None
+    thread_id = (
+        configurable.get("thread_id") if isinstance(configurable, dict) else None
+    )
     if not isinstance(thread_id, str) or not thread_id:
         return {"success": False, "error": "No thread_id in current run config"}
 

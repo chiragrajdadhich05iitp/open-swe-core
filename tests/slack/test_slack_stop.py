@@ -13,10 +13,14 @@ class FakeStore:
         self.deleted: list[tuple[tuple[str, ...], str]] = []
         self.fail_delete = False
 
-    async def get_item(self, namespace: tuple[str, ...], key: str) -> dict[str, Any] | None:
+    async def get_item(
+        self, namespace: tuple[str, ...], key: str
+    ) -> dict[str, Any] | None:
         return self.items.get((namespace, key))
 
-    async def put_item(self, namespace: tuple[str, ...], key: str, value: dict[str, Any]) -> None:
+    async def put_item(
+        self, namespace: tuple[str, ...], key: str, value: dict[str, Any]
+    ) -> None:
         self.items[(namespace, key)] = {"value": value}
 
     async def delete_item(self, namespace: tuple[str, ...], key: str) -> None:
@@ -59,7 +63,9 @@ class FakeRuns:
     ) -> None:
         if self.fail_cancel:
             raise RuntimeError("cancel failed")
-        self.cancelled.append({"thread_id": thread_id, "run_ids": run_ids, "action": action})
+        self.cancelled.append(
+            {"thread_id": thread_id, "run_ids": run_ids, "action": action}
+        )
 
 
 class FakeClient:
@@ -158,7 +164,9 @@ async def test_stop_reaction_on_mapped_reply_interrupts_all_runs_and_dispatches_
     client.store.items[(("queue", thread_id), "pending_messages")] = {
         "value": {"messages": [{"content": "later"}]}
     }
-    client.store.items[(("autofix", thread_id), "pending_event")] = {"value": {"reason": "ci"}}
+    client.store.items[(("autofix", thread_id), "pending_event")] = {
+        "value": {"reason": "ci"}
+    }
     dispatched, claimed = _patch_handler(monkeypatch, client)
 
     await process_slack_stop_reaction(_event("2.000"), event_id="EvStop")
@@ -179,7 +187,9 @@ async def test_stop_reaction_on_mapped_reply_interrupts_all_runs_and_dispatches_
     assert dispatched[0]["source"] == "slack"
     assert dispatched[0]["configurable"]["github_login"] == "owner"
     assert dispatched[0]["configurable"]["stop_summary"] is True
-    assert dispatched[0]["configurable"]["slack_thread"]["triggering_user_id"] == "UOWNER"
+    assert (
+        dispatched[0]["configurable"]["slack_thread"]["triggering_user_id"] == "UOWNER"
+    )
     assert "first and only user-facing action" in dispatched[0]["content"]
     assert "active runs were interrupted" in dispatched[0]["content"]
     thread_mapping = client.store.items[(("slack_run_map", "C123"), "thread:1.000")]
@@ -201,14 +211,18 @@ async def test_stop_reaction_on_root_dispatches_no_active_run_summary(
     assert "No active run was present" in dispatched[0]["content"]
 
 
-async def test_stop_reaction_from_non_owner_is_allowed(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_stop_reaction_from_non_owner_is_allowed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     client = FakeClient()
     _add_thread(client)
     _map_reply(client, "2.000")
     client.runs.by_status["running"] = [{"run_id": "run-running"}]
     dispatched, _ = _patch_handler(monkeypatch, client)
 
-    await process_slack_stop_reaction(_event("2.000", user_id="UNRELATED"), event_id="EvOtherUser")
+    await process_slack_stop_reaction(
+        _event("2.000", user_id="UNRELATED"), event_id="EvOtherUser"
+    )
 
     assert len(dispatched) == 1
     assert client.runs.cancelled[0]["run_ids"] == ["run-running"]
@@ -233,9 +247,9 @@ async def test_stop_reaction_ignores_mismatched_thread_metadata(
 ) -> None:
     client = FakeClient()
     thread_id = _add_thread(client)
-    client.threads.values[thread_id]["metadata"]["source_context"]["slack_thread"]["channel_id"] = (
-        "COTHER"
-    )
+    client.threads.values[thread_id]["metadata"]["source_context"]["slack_thread"][
+        "channel_id"
+    ] = "COTHER"
     _map_reply(client, "2.000")
     dispatched, claimed = _patch_handler(monkeypatch, client)
 

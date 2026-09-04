@@ -116,7 +116,9 @@ async def process_linear_issue(  # noqa: PLR0912, PLR0915
                 trigger_index,
             )
         else:
-            relevant_comments = common.get_recent_comments(comments, bot_message_prefixes)
+            relevant_comments = common.get_recent_comments(
+                comments, bot_message_prefixes
+            )
 
         if relevant_comments:
             for comment in relevant_comments:
@@ -126,7 +128,9 @@ async def process_linear_issue(  # noqa: PLR0912, PLR0915
                 body_image_urls = common.extract_image_urls(body)
                 if body_image_urls:
                     image_urls.extend(body_image_urls)
-                    image_urls_by_comment_id[str(comment.get("id", ""))] = body_image_urls
+                    image_urls_by_comment_id[str(comment.get("id", ""))] = (
+                        body_image_urls
+                    )
                     common.logger.debug(
                         "Found %d image URL(s) in comment by %s",
                         len(body_image_urls),
@@ -185,13 +189,17 @@ async def process_linear_issue(  # noqa: PLR0912, PLR0915
         ".changelog/README.md, and nearby docs before choosing the PR title/body format. "
         f"When you're done, commit and push your changes. {tag_instruction}"
     )
-    description_blocks: list[dict[str, Any]] = [cast(dict[str, Any], create_text_block(prompt))]
+    description_blocks: list[dict[str, Any]] = [
+        cast(dict[str, Any], create_text_block(prompt))
+    ]
     image_blocks_by_url: dict[str, dict[str, Any]] = {}
 
     # Resolve the GitHub login from the Linear email via the same user-mapping
     # store Slack uses, so PRs open *as the triggering user* and the thread is
     # tagged for the dashboard.
-    mapped_login = await common.resolve_login_from_email_async(user_email) if user_email else None
+    mapped_login = (
+        await common.resolve_login_from_email_async(user_email) if user_email else None
+    )
 
     image_model_override: tuple[str, str] | None = None
     if image_urls:
@@ -208,7 +216,9 @@ async def process_linear_issue(  # noqa: PLR0912, PLR0915
             )
             resolved_model_id = fallback_model_id
             image_model_override = (fallback_model_id, fallback_effort)
-        common.logger.info("Preparing %d image(s) for multimodal content", len(image_urls))
+        common.logger.info(
+            "Preparing %d image(s) for multimodal content", len(image_urls)
+        )
         common.logger.debug("Image URLs: %s", image_urls)
 
         async with httpx.AsyncClient(timeout=common.DEFAULT_HTTP_TIMEOUT) as client:
@@ -221,7 +231,9 @@ async def process_linear_issue(  # noqa: PLR0912, PLR0915
             for url in common.dedupe_urls(description_image_urls)
             if url in image_blocks_by_url
         )
-        common.logger.info("Built %d description content block(s)", len(description_blocks))
+        common.logger.info(
+            "Built %d description content block(s)", len(description_blocks)
+        )
 
     linear_project_id = ""
     linear_issue_number = ""
@@ -257,12 +269,18 @@ async def process_linear_issue(  # noqa: PLR0912, PLR0915
         github_login=mapped_login or "",
         user_email=user_email or "",
         title=title or identifier or "Linear issue",
-        source_context=SourceContext.parse({"linear_issue": configurable["linear_issue"]}),
+        source_context=SourceContext.parse(
+            {"linear_issue": configurable["linear_issue"]}
+        ),
     )
 
     run_messages = [
         system_introduction(
-            {"id": "system:linear-issue", "display_name": "Linear issue", "platform": "linear"}
+            {
+                "id": "system:linear-issue",
+                "display_name": "Linear issue",
+                "platform": "linear",
+            }
         ),
         system_input(
             description_blocks if len(description_blocks) > 1 else prompt,
@@ -285,7 +303,9 @@ async def process_linear_issue(  # noqa: PLR0912, PLR0915
     introduced: set[str] = set()
     for comment in included_comments:
         author = comment.get("user") or {}
-        author_key = author.get("id") or author.get("email") or author.get("name") or "unknown"
+        author_key = (
+            author.get("id") or author.get("email") or author.get("name") or "unknown"
+        )
         sender_id = f"linear:{str(author_key).replace(' ', '-')}"
         person: PersonIdentity = {"id": sender_id, "platform": "linear"}
         if author.get("name"):

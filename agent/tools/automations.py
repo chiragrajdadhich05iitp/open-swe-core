@@ -62,7 +62,10 @@ async def create_automation(
         return {"ok": False, "error": error}
     identity = _identity()
     if identity is None:
-        return {"ok": False, "error": "No GitHub identity is available for this admin thread."}
+        return {
+            "ok": False,
+            "error": "No GitHub identity is available for this admin thread.",
+        }
     login, email = identity
     try:
         record = await schedules.create_agent_schedule(
@@ -109,7 +112,10 @@ async def update_automation(
         return {"ok": False, "error": error}
     identity = _identity()
     if identity is None:
-        return {"ok": False, "error": "No GitHub identity is available for this admin thread."}
+        return {
+            "ok": False,
+            "error": "No GitHub identity is available for this admin thread.",
+        }
     if clear_repo and repo is not None:
         return {"ok": False, "error": "clear_repo cannot be combined with repo"}
     if clear_slack_channel and slack_channel_id is not None:

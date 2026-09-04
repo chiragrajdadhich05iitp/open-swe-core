@@ -22,7 +22,14 @@ def _make_request(messages: list[object]) -> ModelRequest[None]:
 def _ai_with_tool_call(call_id: str, name: str = "execute") -> AIMessage:
     return AIMessage(
         content="",
-        tool_calls=[{"name": name, "args": {"command": "ls"}, "id": call_id, "type": "tool_call"}],
+        tool_calls=[
+            {
+                "name": name,
+                "args": {"command": "ls"},
+                "id": call_id,
+                "type": "tool_call",
+            }
+        ],
     )
 
 
@@ -41,7 +48,9 @@ class TestRepairOrphanedToolCallsMiddleware:
         async def handler(_req: ModelRequest[None]) -> ModelResponse[Any]:
             return cast(ModelResponse[Any], response)
 
-        result = await RepairOrphanedToolCallsMiddleware().awrap_model_call(request, handler)
+        result = await RepairOrphanedToolCallsMiddleware().awrap_model_call(
+            request, handler
+        )
 
         assert result is response
         messages = request.messages
@@ -63,7 +72,9 @@ class TestRepairOrphanedToolCallsMiddleware:
         original = [HumanMessage(content="hi"), ai, tool]
         request = _make_request(list(original))
 
-        await RepairOrphanedToolCallsMiddleware().awrap_model_call(request, _noop_handler)
+        await RepairOrphanedToolCallsMiddleware().awrap_model_call(
+            request, _noop_handler
+        )
 
         assert request.messages == original
 
@@ -78,10 +89,15 @@ class TestRepairOrphanedToolCallsMiddleware:
         )
         request = _make_request([ai])
 
-        await RepairOrphanedToolCallsMiddleware().awrap_model_call(request, _noop_handler)
+        await RepairOrphanedToolCallsMiddleware().awrap_model_call(
+            request, _noop_handler
+        )
 
         messages = request.messages
-        assert [getattr(m, "tool_call_id", None) for m in messages[1:]] == ["call_1", "call_2"]
+        assert [getattr(m, "tool_call_id", None) for m in messages[1:]] == [
+            "call_1",
+            "call_2",
+        ]
         assert all(isinstance(m, ToolMessage) for m in messages[1:])
 
     @pytest.mark.asyncio
@@ -96,10 +112,14 @@ class TestRepairOrphanedToolCallsMiddleware:
         tool = ToolMessage(content="done", tool_call_id="call_1")
         request = _make_request([ai, tool])
 
-        await RepairOrphanedToolCallsMiddleware().awrap_model_call(request, _noop_handler)
+        await RepairOrphanedToolCallsMiddleware().awrap_model_call(
+            request, _noop_handler
+        )
 
         synthetic = [
-            m for m in request.messages if isinstance(m, ToolMessage) and m.status == "error"
+            m
+            for m in request.messages
+            if isinstance(m, ToolMessage) and m.status == "error"
         ]
         assert len(synthetic) == 1
         assert synthetic[0].tool_call_id == "call_2"
@@ -114,7 +134,9 @@ class TestRepairOrphanedToolCallsMiddleware:
             assert req is request
             return cast(ModelResponse[Any], response)
 
-        result = await RepairOrphanedToolCallsMiddleware().awrap_model_call(request, handler)
+        result = await RepairOrphanedToolCallsMiddleware().awrap_model_call(
+            request, handler
+        )
 
         assert result is response
         assert isinstance(request.messages[1], ToolMessage)

@@ -114,7 +114,9 @@ def _pull_request_state(node: object) -> PullRequestState:
     return {"checks": _checks_state(commit, rollup), "state": _pr_state(pull)}
 
 
-def _build_query(identities: Sequence[tuple[str, str, int]]) -> tuple[str, dict[str, Any]]:
+def _build_query(
+    identities: Sequence[tuple[str, str, int]]
+) -> tuple[str, dict[str, Any]]:
     declarations: list[str] = []
     selections: list[str] = []
     variables: dict[str, Any] = {}
@@ -162,7 +164,10 @@ async def get_pull_request_check_states(
     try:
         async with github_client(token=token) as client:
             response = await github_request(
-                client, "POST", GITHUB_GRAPHQL, json={"query": query, "variables": variables}
+                client,
+                "POST",
+                GITHUB_GRAPHQL,
+                json={"query": query, "variables": variables},
             )
             response.raise_for_status()
             payload = response.json()

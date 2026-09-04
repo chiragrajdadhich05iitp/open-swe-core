@@ -115,15 +115,18 @@ class TeamSettingsUpdate(TranscriptionSettingsUpdate):
 
     @model_validator(mode="after")
     def _validate_model_pairs(self) -> "TeamSettingsUpdate":
-        self.default_agent_model, self.default_agent_reasoning_effort = _normalize_stale_model_pair(
-            self.default_agent_model,
-            self.default_agent_reasoning_effort,
-        )
-        self.default_agent_subagent_model, self.default_agent_subagent_reasoning_effort = (
+        self.default_agent_model, self.default_agent_reasoning_effort = (
             _normalize_stale_model_pair(
-                self.default_agent_subagent_model,
-                self.default_agent_subagent_reasoning_effort,
+                self.default_agent_model,
+                self.default_agent_reasoning_effort,
             )
+        )
+        (
+            self.default_agent_subagent_model,
+            self.default_agent_subagent_reasoning_effort,
+        ) = _normalize_stale_model_pair(
+            self.default_agent_subagent_model,
+            self.default_agent_subagent_reasoning_effort,
         )
         self.default_reviewer_model, self.default_reviewer_reasoning_effort = (
             _normalize_stale_model_pair(
@@ -144,9 +147,11 @@ class TeamSettingsUpdate(TranscriptionSettingsUpdate):
                 self.default_grouping_reasoning_effort,
             )
         )
-        self.default_chat_model, self.default_chat_reasoning_effort = _normalize_stale_model_pair(
-            self.default_chat_model,
-            self.default_chat_reasoning_effort,
+        self.default_chat_model, self.default_chat_reasoning_effort = (
+            _normalize_stale_model_pair(
+                self.default_chat_model,
+                self.default_chat_reasoning_effort,
+            )
         )
         self.default_thread_title_model, self.default_thread_title_reasoning_effort = (
             _normalize_stale_model_pair(
@@ -163,7 +168,9 @@ class TeamSettingsUpdate(TranscriptionSettingsUpdate):
             "agent subagent",
         )
         _validate_model_effort_pair(
-            self.default_reviewer_model, self.default_reviewer_reasoning_effort, "reviewer"
+            self.default_reviewer_model,
+            self.default_reviewer_reasoning_effort,
+            "reviewer",
         )
         _validate_model_effort_pair(
             self.default_reviewer_subagent_model,
@@ -190,9 +197,15 @@ class TeamSettingsUpdate(TranscriptionSettingsUpdate):
             # gate_fable_model guard) so the stored record can't advertise Fable.
             for model_field, effort_field in (
                 ("default_agent_model", "default_agent_reasoning_effort"),
-                ("default_agent_subagent_model", "default_agent_subagent_reasoning_effort"),
+                (
+                    "default_agent_subagent_model",
+                    "default_agent_subagent_reasoning_effort",
+                ),
                 ("default_reviewer_model", "default_reviewer_reasoning_effort"),
-                ("default_reviewer_subagent_model", "default_reviewer_subagent_reasoning_effort"),
+                (
+                    "default_reviewer_subagent_model",
+                    "default_reviewer_subagent_reasoning_effort",
+                ),
                 ("default_grouping_model", "default_grouping_reasoning_effort"),
                 ("default_chat_model", "default_chat_reasoning_effort"),
                 ("default_thread_title_model", "default_thread_title_reasoning_effort"),
@@ -207,7 +220,9 @@ class TeamSettingsUpdate(TranscriptionSettingsUpdate):
         return self
 
 
-def _validate_model_effort_pair(model: str | None, effort: str | None, role: str) -> None:
+def _validate_model_effort_pair(
+    model: str | None, effort: str | None, role: str
+) -> None:
     if model is None and effort is None:
         return
     if model is None:

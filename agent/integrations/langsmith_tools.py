@@ -20,7 +20,9 @@ from ..dashboard.team_credentials import (
 from ..dashboard.team_credentials import (
     get_langsmith_credentials as get_team_langsmith_credentials,
 )
-from ..dashboard.user_credentials import get_langsmith_credentials as get_user_langsmith_credentials
+from ..dashboard.user_credentials import (
+    get_langsmith_credentials as get_user_langsmith_credentials,
+)
 from ..utils.thread_participants import resolve_participant
 
 logger = logging.getLogger(__name__)

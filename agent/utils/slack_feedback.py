@@ -55,7 +55,9 @@ async def _event_was_processed(
 ) -> bool:
     if not event_id:
         return False
-    item = await langgraph_client.store.get_item((_REACTION_EVENT_NAMESPACE, channel_id), event_id)
+    item = await langgraph_client.store.get_item(
+        (_REACTION_EVENT_NAMESPACE, channel_id), event_id
+    )
     return bool(item)
 
 
@@ -104,7 +106,9 @@ async def _update_reaction_state(
 
 def _score_reactions(reactions: set[str]) -> float | None:
     scores = {
-        FEEDBACK_REACTIONS[reaction] for reaction in reactions if reaction in FEEDBACK_REACTIONS
+        FEEDBACK_REACTIONS[reaction]
+        for reaction in reactions
+        if reaction in FEEDBACK_REACTIONS
     }
     if not scores:
         return None
@@ -161,7 +165,11 @@ async def process_slack_reaction(
     run_id = run_id_value
 
     triggering_user_id = mapping.get("triggering_user_id")
-    if isinstance(triggering_user_id, str) and triggering_user_id and triggering_user_id != user_id:
+    if (
+        isinstance(triggering_user_id, str)
+        and triggering_user_id
+        and triggering_user_id != user_id
+    ):
         # Only the user who triggered the run may give feedback on it. Other
         # reactors are ignored to keep eval signal clean in shared channels.
         logger.debug(
@@ -214,9 +222,13 @@ async def process_slack_reaction(
         await _mark_event_processed(langgraph_client, channel_id, event_id)
 
 
-async def process_slack_reaction_added(event: dict[str, Any], event_id: str = "") -> None:
+async def process_slack_reaction_added(
+    event: dict[str, Any], event_id: str = ""
+) -> None:
     await process_slack_reaction(event, event_id=event_id, added=True)
 
 
-async def process_slack_reaction_removed(event: dict[str, Any], event_id: str = "") -> None:
+async def process_slack_reaction_removed(
+    event: dict[str, Any], event_id: str = ""
+) -> None:
     await process_slack_reaction(event, event_id=event_id, added=False)

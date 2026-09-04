@@ -81,7 +81,9 @@ def test_create_e2b_sandbox_reconnects_by_id(monkeypatch):
     backend = module.create_e2b_sandbox("sbx_existing")
 
     assert backend.sandbox.sandbox_id == "sbx_existing"
-    assert _FakeSandbox.connect_calls == [("sbx_existing", {"timeout": 3600, "api_key": "api-key"})]
+    assert _FakeSandbox.connect_calls == [
+        ("sbx_existing", {"timeout": 3600, "api_key": "api-key"})
+    ]
     assert _FakeSandbox.create_calls == []
 
 

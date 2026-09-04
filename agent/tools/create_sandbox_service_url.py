@@ -25,7 +25,9 @@ async def create_sandbox_service_url(
 
     config = get_config()
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
-    thread_id = configurable.get("thread_id") if isinstance(configurable, dict) else None
+    thread_id = (
+        configurable.get("thread_id") if isinstance(configurable, dict) else None
+    )
     if not isinstance(thread_id, str) or not thread_id:
         raise ValueError("no thread_id in run config")
 

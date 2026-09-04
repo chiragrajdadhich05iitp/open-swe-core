@@ -28,7 +28,8 @@ def resolve_desktop_project(configurable: dict[str, Any]) -> str:
     allowed = {
         os.path.realpath(entry["cwd"] if isinstance(entry, dict) else entry)
         for entry in entries
-        if isinstance(entry, str) or (isinstance(entry, dict) and isinstance(entry.get("cwd"), str))
+        if isinstance(entry, str)
+        or (isinstance(entry, dict) and isinstance(entry.get("cwd"), str))
     }
     project = os.path.realpath(requested)
     if project not in allowed or not Path(project).is_dir():
@@ -60,7 +61,9 @@ async def desktop_artifact_routes(thread_id: str) -> dict[str, FilesystemBackend
     repository while leaving the virtual paths the model sees unchanged.
     """
     # The thread id becomes a path segment, so it may only be a plain name.
-    safe_id = re.sub(r"[^A-Za-z0-9._-]", "-", thread_id or "thread").lstrip(".") or "thread"
+    safe_id = (
+        re.sub(r"[^A-Za-z0-9._-]", "-", thread_id or "thread").lstrip(".") or "thread"
+    )
     root = _artifacts_root() / safe_id
     routes = {}
     for name in ("large_tool_results", "conversation_history"):

@@ -5,7 +5,11 @@ from agent.dashboard import thread_api
 
 class FakeThreads:
     def __init__(self, metadata: dict[str, Any], *, status: str = "idle") -> None:
-        self.thread = {"thread_id": "tid", "status": status, "metadata": metadata.copy()}
+        self.thread = {
+            "thread_id": "tid",
+            "status": status,
+            "metadata": metadata.copy(),
+        }
         self.updates: list[dict[str, Any]] = []
 
     async def get(self, thread_id: str) -> dict[str, Any]:
@@ -44,7 +48,9 @@ class FakeClient:
         self.runs = FakeRuns(run_status)
 
 
-async def test_list_dashboard_threads_refreshes_finished_run_status(monkeypatch) -> None:
+async def test_list_dashboard_threads_refreshes_finished_run_status(
+    monkeypatch,
+) -> None:
     client = FakeClient(
         {
             "source": "dashboard",
@@ -83,7 +89,9 @@ async def test_get_dashboard_thread_marks_finished_thread_viewed(monkeypatch) ->
     assert client.threads.thread["metadata"]["last_viewed_run_id"] == "run-1"
 
 
-async def test_get_dashboard_thread_marks_viewed_for_any_authenticated_user(monkeypatch) -> None:
+async def test_get_dashboard_thread_marks_viewed_for_any_authenticated_user(
+    monkeypatch,
+) -> None:
     client = FakeClient(
         {
             "source": "slack",
@@ -100,7 +108,9 @@ async def test_get_dashboard_thread_marks_viewed_for_any_authenticated_user(monk
     assert client.threads.thread["metadata"]["last_viewed_run_id"] == "run-1"
 
 
-async def test_get_dashboard_thread_skips_mark_viewed_when_disabled(monkeypatch) -> None:
+async def test_get_dashboard_thread_skips_mark_viewed_when_disabled(
+    monkeypatch,
+) -> None:
     client = FakeClient(
         {
             "source": "dashboard",
@@ -119,7 +129,9 @@ async def test_get_dashboard_thread_skips_mark_viewed_when_disabled(monkeypatch)
     assert "last_viewed_run_id" not in client.threads.thread["metadata"]
 
 
-async def test_get_dashboard_thread_does_not_mark_running_thread_viewed(monkeypatch) -> None:
+async def test_get_dashboard_thread_does_not_mark_running_thread_viewed(
+    monkeypatch,
+) -> None:
     client = FakeClient(
         {
             "source": "dashboard",

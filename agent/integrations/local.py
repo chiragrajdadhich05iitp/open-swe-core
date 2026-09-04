@@ -52,7 +52,11 @@ def create_local_sandbox(sandbox_id: str | None = None):
     root_dir = os.getenv("LOCAL_SANDBOX_ROOT_DIR", os.getcwd())
     os.makedirs(root_dir, exist_ok=True)
 
-    env = {key: value for key, value in os.environ.items() if key not in LOCAL_SHELL_ENV_EXCLUDE}
+    env = {
+        key: value
+        for key, value in os.environ.items()
+        if key not in LOCAL_SHELL_ENV_EXCLUDE
+    }
     if not os.getenv("GIT_CONFIG_GLOBAL"):
         env.update(_scoped_git_config_env(root_dir))
 

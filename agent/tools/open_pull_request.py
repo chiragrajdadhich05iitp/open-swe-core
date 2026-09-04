@@ -14,7 +14,11 @@ from ..dashboard.agent_usage import record_agent_pr_usage
 from ..dashboard.plan_store import get_plan_content
 from ..utils.dashboard_links import dashboard_plan_url, dashboard_thread_url
 from ..utils.github_comments import derive_pr_state
-from ..utils.slack import get_active_slack_thread, get_slack_permalink, parse_github_pr_url
+from ..utils.slack import (
+    get_active_slack_thread,
+    get_slack_permalink,
+    parse_github_pr_url,
+)
 from ..utils.slack_code_channels import (
     is_code_channel_session,
     repo_context_bar_items,
@@ -62,13 +66,20 @@ async def _resolve_pr_author_token() -> tuple[str | None, str]:
     source = configurable.get("source")
     github_login = configurable.get("github_login")
 
-    if source in _USER_TOKEN_SOURCES and isinstance(github_login, str) and github_login.strip():
+    if (
+        source in _USER_TOKEN_SOURCES
+        and isinstance(github_login, str)
+        and github_login.strip()
+    ):
         from ..dashboard.profiles import get_valid_access_token
 
         user_token = await get_valid_access_token(github_login.strip())
         if user_token:
             return user_token, "user"
-        logger.info("No valid user token for %s; opening PR as open-swe[bot]", github_login.strip())
+        logger.info(
+            "No valid user token for %s; opening PR as open-swe[bot]",
+            github_login.strip(),
+        )
 
     return await get_github_app_installation_token(), "bot"
 
@@ -286,7 +297,9 @@ def _branch_failure_payload(
     )
 
 
-async def _github_get(client: httpx.AsyncClient, token: str, path: str) -> httpx.Response:
+async def _github_get(
+    client: httpx.AsyncClient, token: str, path: str
+) -> httpx.Response:
     return await client.get(f"{GITHUB_API}{path}", headers=_auth_headers(token))
 
 
@@ -467,7 +480,9 @@ async def _fetch_pr_details(
     return data if isinstance(data, dict) else {}
 
 
-def _upsert_pull_request(records: object, record: dict[str, Any]) -> list[dict[str, Any]]:
+def _upsert_pull_request(
+    records: object, record: dict[str, Any]
+) -> list[dict[str, Any]]:
     existing = records if isinstance(records, list) else []
     repo = record.get("repo_full_name")
     number = record.get("number")
@@ -488,7 +503,11 @@ async def _thread_pull_requests(thread_id: str) -> list[dict[str, Any]]:
     try:
         thread = await get_client().threads.get(thread_id)
     except Exception:
-        logger.debug("Failed to read existing PR metadata for thread %s", thread_id, exc_info=True)
+        logger.debug(
+            "Failed to read existing PR metadata for thread %s",
+            thread_id,
+            exc_info=True,
+        )
         return []
     metadata = thread.get("metadata") if isinstance(thread, dict) else None
     if not isinstance(metadata, dict):
@@ -506,12 +525,20 @@ async def _thread_pull_requests(thread_id: str) -> list[dict[str, Any]]:
             "repo_full_name": f"{pr_ref.owner}/{pr_ref.repo}",
             "number": pr_number,
             "url": pr_url,
-            "title": metadata.get("pr_title") if isinstance(metadata.get("pr_title"), str) else "",
-            "state": metadata.get("pr_state")
-            if isinstance(metadata.get("pr_state"), str)
-            else "open",
+            "title": (
+                metadata.get("pr_title")
+                if isinstance(metadata.get("pr_title"), str)
+                else ""
+            ),
+            "state": (
+                metadata.get("pr_state")
+                if isinstance(metadata.get("pr_state"), str)
+                else "open"
+            ),
             "head_ref": (
-                metadata.get("branch_name") if isinstance(metadata.get("branch_name"), str) else ""
+                metadata.get("branch_name")
+                if isinstance(metadata.get("branch_name"), str)
+                else ""
             ),
             "base_ref": (
                 metadata.get("base_branch")
@@ -522,7 +549,9 @@ async def _thread_pull_requests(thread_id: str) -> list[dict[str, Any]]:
             "author_avatar_url": "",
             "created_at": "",
             "diff_stats": (
-                metadata.get("diff_stats") if isinstance(metadata.get("diff_stats"), dict) else {}
+                metadata.get("diff_stats")
+                if isinstance(metadata.get("diff_stats"), dict)
+                else {}
             ),
         }
     ]
@@ -544,7 +573,9 @@ async def _record_pr_telemetry(
     try:
         details = await _fetch_pr_details(client, token, owner, repo, pr_number)
         config = get_config()
-        configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
+        configurable = (
+            config.get("configurable", {}) if isinstance(config, dict) else {}
+        )
         thread_id = configurable.get("thread_id")
         github_login = configurable.get("github_login")
         user_email = configurable.get("user_email")
@@ -552,18 +583,25 @@ async def _record_pr_telemetry(
             from ..dashboard.user_mappings import login_for_email
 
             github_login = (
-                await login_for_email(user_email if isinstance(user_email, str) else None) or ""
+                await login_for_email(
+                    user_email if isinstance(user_email, str) else None
+                )
+                or ""
             )
         pr_url = details.get("html_url") or pr.get("html_url")
         merged = bool(details.get("merged"))
         is_draft = bool(details.get("draft", pr.get("draft")))
-        state = details.get("state") if isinstance(details.get("state"), str) else "open"
+        state = (
+            details.get("state") if isinstance(details.get("state"), str) else "open"
+        )
         additions_value = details.get("additions")
         additions = additions_value if isinstance(additions_value, int) else 0
         deletions_value = details.get("deletions")
         deletions = deletions_value if isinstance(deletions_value, int) else 0
         changed_files_value = details.get("changed_files")
-        changed_files = changed_files_value if isinstance(changed_files_value, int) else 0
+        changed_files = (
+            changed_files_value if isinstance(changed_files_value, int) else 0
+        )
         await record_agent_pr_usage(
             thread_id=thread_id if isinstance(thread_id, str) else None,
             github_login=github_login,
@@ -585,13 +623,17 @@ async def _record_pr_telemetry(
         if isinstance(thread_id, str) and thread_id:
             repo_private = None
             base_repo = details.get("base", {}).get("repo")
-            if isinstance(base_repo, dict) and isinstance(base_repo.get("private"), bool):
+            if isinstance(base_repo, dict) and isinstance(
+                base_repo.get("private"), bool
+            ):
                 repo_private = base_repo["private"]
             pr_state = derive_pr_state(state=state, merged=merged, draft=is_draft)
             pr_title = details.get("title") or pr.get("title")
             pr_user = details.get("user") or pr.get("user")
             author = pr_user.get("login") if isinstance(pr_user, dict) else None
-            author_avatar_url = pr_user.get("avatar_url") if isinstance(pr_user, dict) else None
+            author_avatar_url = (
+                pr_user.get("avatar_url") if isinstance(pr_user, dict) else None
+            )
             diff_stats = {
                 "files": changed_files,
                 "additions": additions,
@@ -612,13 +654,17 @@ async def _record_pr_telemetry(
                 "created_at": (
                     details.get("created_at")
                     if isinstance(details.get("created_at"), str)
-                    else pr.get("created_at")
-                    if isinstance(pr.get("created_at"), str)
-                    else ""
+                    else (
+                        pr.get("created_at")
+                        if isinstance(pr.get("created_at"), str)
+                        else ""
+                    )
                 ),
                 "diff_stats": diff_stats,
             }
-            pull_requests = _upsert_pull_request(await _thread_pull_requests(thread_id), record)
+            pull_requests = _upsert_pull_request(
+                await _thread_pull_requests(thread_id), record
+            )
             metadata: dict[str, Any] = {
                 "agent_kind": "agent",
                 "pr_url": pr_url if isinstance(pr_url, str) else "",
@@ -671,7 +717,10 @@ async def _record_pr_telemetry(
                     )
                 response = await client.get(
                     f"{GITHUB_API}/repos/{owner}/{repo}/pulls/{pr_number}",
-                    headers={**_auth_headers(token), "Accept": "application/vnd.github.v3.diff"},
+                    headers={
+                        **_auth_headers(token),
+                        "Accept": "application/vnd.github.v3.diff",
+                    },
                 )
                 if response.status_code == 200 and response.text.strip():
                     await set_view(
@@ -683,7 +732,11 @@ async def _record_pr_telemetry(
                     )
     except Exception:
         logger.debug(
-            "Failed to record PR usage for %s/%s#%s", owner, repo, pr_number, exc_info=True
+            "Failed to record PR usage for %s/%s#%s",
+            owner,
+            repo,
+            pr_number,
+            exc_info=True,
         )
 
 
@@ -748,9 +801,13 @@ async def _build_source_reference_lines(configurable: dict[str, Any]) -> list[st
     return lines
 
 
-async def _is_private_repo(client: httpx.AsyncClient, token: str, owner: str, repo: str) -> bool:
+async def _is_private_repo(
+    client: httpx.AsyncClient, token: str, owner: str, repo: str
+) -> bool:
     """Return True only when GitHub confirms the repo is private."""
-    resp = await client.get(f"{GITHUB_API}/repos/{owner}/{repo}", headers=_auth_headers(token))
+    resp = await client.get(
+        f"{GITHUB_API}/repos/{owner}/{repo}", headers=_auth_headers(token)
+    )
     if resp.status_code != 200:  # noqa: PLR2004
         return False
     data = resp.json()

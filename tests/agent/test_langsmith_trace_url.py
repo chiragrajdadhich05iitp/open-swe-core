@@ -22,7 +22,9 @@ def _set_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("LANGSMITH_TRACING_PROJECT_ID_PROD", raising=False)
 
 
-async def test_trace_url_resolves_project_id_by_name(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_trace_url_resolves_project_id_by_name(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _set_env(monkeypatch)
     monkeypatch.setattr(
         ls_utils,
@@ -31,13 +33,17 @@ async def test_trace_url_resolves_project_id_by_name(monkeypatch: pytest.MonkeyP
     )
 
     agent_url = await ls_utils.get_langsmith_trace_url("t1")
-    review_url = await ls_utils.get_langsmith_trace_url("t2", project_name=REVIEW_TRACING_PROJECT)
+    review_url = await ls_utils.get_langsmith_trace_url(
+        "t2", project_name=REVIEW_TRACING_PROJECT
+    )
 
     assert agent_url == "https://smith.example/o/tenant-1/projects/p/agent-pid/t/t1"
     assert review_url == "https://smith.example/o/tenant-1/projects/p/review-pid/t/t2"
 
 
-async def test_trace_url_falls_back_to_env_project_id(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_trace_url_falls_back_to_env_project_id(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _set_env(monkeypatch)
     monkeypatch.setenv("LANGSMITH_TRACING_PROJECT_ID_PROD", "env-pid")
     monkeypatch.setattr(ls_utils, "_resolve_project_id_by_name", _resolver({}))
@@ -47,14 +53,18 @@ async def test_trace_url_falls_back_to_env_project_id(monkeypatch: pytest.Monkey
     assert url == "https://smith.example/o/tenant-1/projects/p/env-pid/t/t3"
 
 
-async def test_trace_url_none_when_unresolvable(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_trace_url_none_when_unresolvable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _set_env(monkeypatch)
     monkeypatch.setattr(ls_utils, "_resolve_project_id_by_name", _resolver({}))
 
     assert await ls_utils.get_langsmith_trace_url("t4") is None
 
 
-async def test_resolve_project_id_caches_success(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_resolve_project_id_caches_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     calls: list[str] = []
 
     class _FakeProject:
@@ -104,7 +114,9 @@ async def test_resolve_project_id_retries_transient_failure(
     assert calls == [AGENT_TRACING_PROJECT, AGENT_TRACING_PROJECT]
 
 
-async def test_trace_url_none_when_tenant_unset(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_trace_url_none_when_tenant_unset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.delenv("LANGSMITH_TENANT_ID_PROD", raising=False)
 
     def _boom() -> None:

@@ -40,7 +40,9 @@ _SLACK_SYSTEM_MESSAGE_SUBTYPES = {
 }
 
 
-def participant_search_filters(login: str, email: str | None = None) -> list[dict[str, Any]]:
+def participant_search_filters(
+    login: str, email: str | None = None
+) -> list[dict[str, Any]]:
     """Metadata filters matching threads this person has participated in."""
     filters = [{PARTICIPANT_LOGINS_KEY: {login.strip().lower(): True}}]
     if isinstance(email, str) and email.strip():
@@ -63,10 +65,18 @@ def merge_participants(existing: Any, *values: Any) -> dict[str, bool]:
 
 def participant_logins(stored: Any) -> list[str]:
     if isinstance(stored, Mapping):
-        return sorted(key.strip().lower() for key in stored if isinstance(key, str) and key.strip())
+        return sorted(
+            key.strip().lower()
+            for key in stored
+            if isinstance(key, str) and key.strip()
+        )
     if isinstance(stored, list):
         return sorted(
-            {value.strip().lower() for value in stored if isinstance(value, str) and value.strip()}
+            {
+                value.strip().lower()
+                for value in stored
+                if isinstance(value, str) and value.strip()
+            }
         )
     return []
 
@@ -91,7 +101,9 @@ async def _mapped_slack_logins(messages: list[dict[str, Any]]) -> tuple[set[str]
         and isinstance(user_id := message.get("user"), str)
         and user_id
     }
-    resolved = await asyncio.gather(*(login_for_slack_id(user_id) for user_id in user_ids))
+    resolved = await asyncio.gather(
+        *(login_for_slack_id(user_id) for user_id in user_ids)
+    )
     mapped = await asyncio.gather(*(_active_mapping_login(login) for login in resolved))
     return {login for login in mapped if login}, sum(login is None for login in mapped)
 
@@ -116,7 +128,9 @@ def _context(configurable: dict[str, Any], metadata: dict[str, Any]) -> SourceCo
     return SourceContext.parse(merged)
 
 
-def _repo_config(configurable: dict[str, Any], metadata: dict[str, Any]) -> dict[str, str] | None:
+def _repo_config(
+    configurable: dict[str, Any], metadata: dict[str, Any]
+) -> dict[str, str] | None:
     repo = configurable.get("repo") or metadata.get("repo")
     if (
         isinstance(repo, dict)
@@ -178,7 +192,9 @@ async def resolve_thread_participant_logins(
         mapped, source_unresolved = await _mapped_email_logins(emails)
         logins.update(mapped)
         unresolved_count += source_unresolved
-    elif context.github_issue is not None or (source == "github" and context.pr_number is not None):
+    elif context.github_issue is not None or (
+        source == "github" and context.pr_number is not None
+    ):
         issue_number = (
             context.github_issue.number if context.github_issue else None
         ) or context.pr_number
@@ -186,7 +202,9 @@ async def resolve_thread_participant_logins(
         token = get_github_token(config)
         if not repo or not issue_number or not token:
             return None, 0, "GitHub thread context is incomplete"
-        participants = await fetch_github_thread_participants(repo, issue_number, token=token)
+        participants = await fetch_github_thread_participants(
+            repo, issue_number, token=token
+        )
         if participants is None:
             return None, 0, "Could not verify GitHub thread participants"
         mapped, source_unresolved = await _mapped_github_logins(participants)
@@ -202,14 +220,20 @@ async def resolve_thread_participant_logins(
         return None, 0, "Unsupported or missing thread source"
 
     if not logins:
-        return None, unresolved_count, "No mapped participants were found for the active thread"
+        return (
+            None,
+            unresolved_count,
+            "No mapped participants were found for the active thread",
+        )
     return logins, unresolved_count, None
 
 
 async def resolve_participant(on_behalf_of: str) -> str:
     login = on_behalf_of.strip()
     if not login:
-        raise ValueError("on_behalf_of is required: name the thread participant to act for.")
+        raise ValueError(
+            "on_behalf_of is required: name the thread participant to act for."
+        )
     config = get_config()
     caller = resolve_github_login(as_json_object(config))
     if not caller or login.lower() != caller.lower():

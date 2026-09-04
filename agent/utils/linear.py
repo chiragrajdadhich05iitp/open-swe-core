@@ -23,7 +23,9 @@ def _headers() -> dict[str, str]:
     }
 
 
-async def _graphql_request(query: str, variables: dict[str, Any] | None = None) -> dict[str, Any]:
+async def _graphql_request(
+    query: str, variables: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """Execute a GraphQL request against the Linear API."""
     if not LINEAR_API_KEY:
         return {"error": "LINEAR_API_KEY is not set"}
@@ -178,7 +180,9 @@ async def search_issues(
     issue_filter = dict(filters or {})
     if team_id:
         team_filter = {"team": {"id": {"eq": team_id}}}
-        issue_filter = {"and": [issue_filter, team_filter]} if issue_filter else team_filter
+        issue_filter = (
+            {"and": [issue_filter, team_filter]} if issue_filter else team_filter
+        )
     if not query and not issue_filter:
         return {"error": "Search query or filters must be provided"}
     if not 1 <= limit <= 50:

@@ -23,7 +23,9 @@ def _claim_thread_id(claim_key: str) -> str:
     return str(uuid.uuid5(uuid.NAMESPACE_URL, f"open-swe:slack-event:{claim_key}"))
 
 
-def slack_message_claim_key(event_id: str, channel_id: str = "", event_ts: str = "") -> str:
+def slack_message_claim_key(
+    event_id: str, channel_id: str = "", event_ts: str = ""
+) -> str:
     """Key a claim on the message itself, not the delivery."""
     if channel_id and event_ts:
         return f"{channel_id}:{event_ts}"
@@ -34,7 +36,9 @@ async def _claim_remotely(claim_key: str) -> bool | None:
     client = get_client(url=LANGGRAPH_URL)
     claim_thread_id = _claim_thread_id(claim_key)
     try:
-        await client.threads.create(thread_id=claim_thread_id, if_exists="raise", ttl=10)
+        await client.threads.create(
+            thread_id=claim_thread_id, if_exists="raise", ttl=10
+        )
     except Exception:  # noqa: BLE001
         try:
             await client.threads.get(claim_thread_id)
@@ -63,7 +67,9 @@ async def slack_event_already_seen(event_id: str) -> bool:
     return bool(event_id and event_id in _claimed_keys)
 
 
-async def claim_slack_event(event_id: str, channel_id: str = "", event_ts: str = "") -> bool:
+async def claim_slack_event(
+    event_id: str, channel_id: str = "", event_ts: str = ""
+) -> bool:
     """Atomically claim a Slack message; fail open when the platform is unavailable."""
     claim_key = slack_message_claim_key(event_id, channel_id, event_ts)
     if not claim_key:

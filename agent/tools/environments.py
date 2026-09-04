@@ -56,7 +56,10 @@ async def list_environments() -> dict[str, Any]:
     return {
         "ok": True,
         "environments": [
-            {**_summary(record), "is_default": record.slug == store.DEFAULT_ENVIRONMENT_SLUG}
+            {
+                **_summary(record),
+                "is_default": record.slug == store.DEFAULT_ENVIRONMENT_SLUG,
+            }
             for record in records
         ],
     }
@@ -114,9 +117,15 @@ async def save_environment(
         "fs_capacity_bytes": fs_capacity_bytes,
     }
     if clear_sizing and any(value is not None for value in sizing.values()):
-        return {"ok": False, "error": "clear_sizing cannot be combined with sizing values"}
+        return {
+            "ok": False,
+            "error": "clear_sizing cannot be combined with sizing values",
+        }
     if clear_create_params and create_params is not None:
-        return {"ok": False, "error": "clear_create_params cannot be combined with create_params"}
+        return {
+            "ok": False,
+            "error": "clear_create_params cannot be combined with create_params",
+        }
     try:
         slug = store.slugify(name)
     except ValueError as exc:
@@ -139,11 +148,17 @@ async def save_environment(
                 login if isinstance(login, str) else "open-swe",
             )
         else:
-            update_values: dict[str, Any] = {"name": name, "prompt": prompt, "repos": repos}
+            update_values: dict[str, Any] = {
+                "name": name,
+                "prompt": prompt,
+                "repos": repos,
+            }
             update_values.update(
                 dict.fromkeys(sizing)
                 if clear_sizing
-                else {field: value for field, value in sizing.items() if value is not None}
+                else {
+                    field: value for field, value in sizing.items() if value is not None
+                }
             )
             if create_params is not None:
                 update_values["create_params"] = create_params
@@ -185,7 +200,10 @@ async def capture_environment_snapshot(name: str) -> dict[str, Any]:
     except ValueError as exc:
         return {"ok": False, "error": str(exc)}
     if await store.ENVIRONMENTS.get(slug) is None:
-        return {"ok": False, "error": f"no environment named {name!r}; call save_environment first"}
+        return {
+            "ok": False,
+            "error": f"no environment named {name!r}; call save_environment first",
+        }
 
     thread_id = _configurable().get("thread_id")
     if not isinstance(thread_id, str) or not thread_id:

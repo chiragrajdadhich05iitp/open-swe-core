@@ -14,7 +14,8 @@ import logging
 from collections.abc import Mapping
 from typing import Any, TypedDict, cast
 
-from . import ttl_cache
+# Line 17 ko isse replace karo:
+from agent.utils import ttl_cache
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,9 @@ class ThreadSettings(TypedDict, total=False):
     repo_instructions: str | None
 
 
-def normalize_thread_settings(settings: Mapping[str, Any]) -> tuple[ThreadSettings, bool]:
+def normalize_thread_settings(
+    settings: Mapping[str, Any]
+) -> tuple[ThreadSettings, bool]:
     """Remove participant settings that are now resolved for each message."""
     value = dict(settings)
     removed = {
@@ -69,7 +72,9 @@ async def load_thread_settings(client: Any, thread_id: str) -> ThreadSettings:
         return {}
 
 
-async def store_thread_settings(client: Any, thread_id: str, settings: ThreadSettings) -> None:
+async def store_thread_settings(
+    client: Any, thread_id: str, settings: ThreadSettings
+) -> None:
     """Persist the thread's settings, replacing any previous snapshot."""
     try:
         await client.threads.update(

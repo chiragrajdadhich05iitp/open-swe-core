@@ -73,7 +73,10 @@ async def read_repo_file(path: str, ref: str | None = None) -> dict[str, Any]:
         return {"success": False, "error": f"GitHub request failed: {exc!s}"}
 
     if response.status_code == 404:
-        return {"success": False, "error": f"not found: {clean_path} @ {resolved_ref or 'default'}"}
+        return {
+            "success": False,
+            "error": f"not found: {clean_path} @ {resolved_ref or 'default'}",
+        }
     if response.status_code >= 400:
         return {"success": False, "error": f"GitHub returned {response.status_code}"}
 
@@ -88,14 +91,22 @@ async def read_repo_file(path: str, ref: str | None = None) -> dict[str, Any]:
             for item in payload
             if isinstance(item, dict)
         ]
-        return {"success": True, "path": clean_path, "ref": resolved_ref, "entries": entries}
+        return {
+            "success": True,
+            "path": clean_path,
+            "ref": resolved_ref,
+            "entries": entries,
+        }
 
     if not isinstance(payload, dict) or payload.get("type") != "file":
         return {"success": False, "error": f"unsupported content type for {clean_path}"}
 
     encoded = payload.get("content")
     if not isinstance(encoded, str):
-        return {"success": False, "error": "file content unavailable (too large for contents API)"}
+        return {
+            "success": False,
+            "error": "file content unavailable (too large for contents API)",
+        }
     raw = base64.b64decode(encoded)
     truncated = len(raw) > _MAX_FILE_BYTES
     text = raw[:_MAX_FILE_BYTES].decode("utf-8", errors="replace")

@@ -34,7 +34,9 @@ class _FakeStore:
     ) -> None:
         self.items = items or {}
 
-    async def get_item(self, namespace: tuple[str, ...], key: str) -> dict[str, Any] | None:
+    async def get_item(
+        self, namespace: tuple[str, ...], key: str
+    ) -> dict[str, Any] | None:
         return self.items.get((namespace, key))
 
 
@@ -122,7 +124,11 @@ async def test_dashboard_followup_sends_image_content_blocks(
     monkeypatch.setattr(
         thread_api,
         "create_image_block",
-        lambda *, base64, mime_type: {"type": "image", "data": base64, "mime_type": mime_type},
+        lambda *, base64, mime_type: {
+            "type": "image",
+            "data": base64,
+            "mime_type": mime_type,
+        },
     )
 
     with pytest.raises(HTTPException) as exc_info:
@@ -156,13 +162,17 @@ async def test_dashboard_followup_on_busy_thread_queues_dashboard_handoff(
     client = _FakeClient(metadata)
     queued_messages: list[object] = []
 
-    async def fake_queue_message_for_thread(thread_id: str, message_content: object) -> bool:
+    async def fake_queue_message_for_thread(
+        thread_id: str, message_content: object
+    ) -> bool:
         queued_messages.append(message_content)
         return True
 
     monkeypatch.setattr(thread_api, "langgraph_client", lambda: client)
     monkeypatch.setattr(thread_api, "get_thread_active_status", _active_thread)
-    monkeypatch.setattr(thread_api, "queue_message_for_thread", fake_queue_message_for_thread)
+    monkeypatch.setattr(
+        thread_api, "queue_message_for_thread", fake_queue_message_for_thread
+    )
 
     await thread_api.send_dashboard_message(
         "thread-1",
@@ -207,11 +217,15 @@ async def test_dashboard_followup_on_busy_slack_thread_updates_trace_reply(
     queued_messages: list[object] = []
     handoff_updates: list[dict[str, str]] = []
 
-    async def fake_queue_message_for_thread(thread_id: str, message_content: object) -> bool:
+    async def fake_queue_message_for_thread(
+        thread_id: str, message_content: object
+    ) -> bool:
         queued_messages.append(message_content)
         return True
 
-    async def fake_update_trace_reply(channel_id: str, message_ts: str, thread_id: str) -> bool:
+    async def fake_update_trace_reply(
+        channel_id: str, message_ts: str, thread_id: str
+    ) -> bool:
         handoff_updates.append(
             {"channel_id": channel_id, "message_ts": message_ts, "thread_id": thread_id}
         )
@@ -219,7 +233,9 @@ async def test_dashboard_followup_on_busy_slack_thread_updates_trace_reply(
 
     monkeypatch.setattr(thread_api, "langgraph_client", lambda: client)
     monkeypatch.setattr(thread_api, "get_thread_active_status", _active_thread)
-    monkeypatch.setattr(thread_api, "queue_message_for_thread", fake_queue_message_for_thread)
+    monkeypatch.setattr(
+        thread_api, "queue_message_for_thread", fake_queue_message_for_thread
+    )
     monkeypatch.setattr(
         thread_api, "update_slack_trace_reply_for_web_handoff", fake_update_trace_reply
     )
@@ -263,16 +279,24 @@ async def test_dashboard_followup_uses_stored_trace_reply_timestamp(
         metadata,
         {
             (("slack_run_map", "C1"), "thread:123.45"): {
-                "value": {"run_id": "run-1", "thread_ts": "123.45", "trace_message_ts": "123.46"}
+                "value": {
+                    "run_id": "run-1",
+                    "thread_ts": "123.45",
+                    "trace_message_ts": "123.46",
+                }
             }
         },
     )
     handoff_updates: list[dict[str, str]] = []
 
-    async def fake_queue_message_for_thread(thread_id: str, message_content: object) -> bool:
+    async def fake_queue_message_for_thread(
+        thread_id: str, message_content: object
+    ) -> bool:
         return True
 
-    async def fake_update_trace_reply(channel_id: str, message_ts: str, thread_id: str) -> bool:
+    async def fake_update_trace_reply(
+        channel_id: str, message_ts: str, thread_id: str
+    ) -> bool:
         handoff_updates.append(
             {"channel_id": channel_id, "message_ts": message_ts, "thread_id": thread_id}
         )
@@ -280,7 +304,9 @@ async def test_dashboard_followup_uses_stored_trace_reply_timestamp(
 
     monkeypatch.setattr(thread_api, "langgraph_client", lambda: client)
     monkeypatch.setattr(thread_api, "get_thread_active_status", _active_thread)
-    monkeypatch.setattr(thread_api, "queue_message_for_thread", fake_queue_message_for_thread)
+    monkeypatch.setattr(
+        thread_api, "queue_message_for_thread", fake_queue_message_for_thread
+    )
     monkeypatch.setattr(
         thread_api, "update_slack_trace_reply_for_web_handoff", fake_update_trace_reply
     )
@@ -309,17 +335,25 @@ async def test_dashboard_followup_on_busy_thread_queues_images(
     client = _FakeClient(metadata)
     queued_messages: list[object] = []
 
-    async def fake_queue_message_for_thread(thread_id: str, message_content: object) -> bool:
+    async def fake_queue_message_for_thread(
+        thread_id: str, message_content: object
+    ) -> bool:
         queued_messages.append(message_content)
         return True
 
     monkeypatch.setattr(thread_api, "langgraph_client", lambda: client)
     monkeypatch.setattr(thread_api, "get_thread_active_status", _active_thread)
-    monkeypatch.setattr(thread_api, "queue_message_for_thread", fake_queue_message_for_thread)
+    monkeypatch.setattr(
+        thread_api, "queue_message_for_thread", fake_queue_message_for_thread
+    )
     monkeypatch.setattr(
         thread_api,
         "create_image_block",
-        lambda *, base64, mime_type: {"type": "image", "data": base64, "mime_type": mime_type},
+        lambda *, base64, mime_type: {
+            "type": "image",
+            "data": base64,
+            "mime_type": mime_type,
+        },
     )
 
     await thread_api.send_dashboard_message(
@@ -327,7 +361,9 @@ async def test_dashboard_followup_on_busy_thread_queues_images(
         "octocat",
         thread_api.ThreadMessageBody(
             content="continue in web",
-            images=[thread_api.DashboardImageBody(base64="aW1hZ2U=", mimeType="image/png")],
+            images=[
+                thread_api.DashboardImageBody(base64="aW1hZ2U=", mimeType="image/png")
+            ],
         ),
     )
 
@@ -358,13 +394,17 @@ async def test_dashboard_followup_on_busy_text_only_thread_rejects_images(
     client = _FakeClient(metadata)
     queued_messages: list[object] = []
 
-    async def fake_queue_message_for_thread(thread_id: str, message_content: object) -> bool:
+    async def fake_queue_message_for_thread(
+        thread_id: str, message_content: object
+    ) -> bool:
         queued_messages.append(message_content)
         return True
 
     monkeypatch.setattr(thread_api, "langgraph_client", lambda: client)
     monkeypatch.setattr(thread_api, "get_thread_active_status", _active_thread)
-    monkeypatch.setattr(thread_api, "queue_message_for_thread", fake_queue_message_for_thread)
+    monkeypatch.setattr(
+        thread_api, "queue_message_for_thread", fake_queue_message_for_thread
+    )
 
     with pytest.raises(HTTPException) as exc_info:
         await thread_api.send_dashboard_message(
@@ -372,7 +412,11 @@ async def test_dashboard_followup_on_busy_text_only_thread_rejects_images(
             "octocat",
             thread_api.ThreadMessageBody(
                 content="continue in web",
-                images=[thread_api.DashboardImageBody(base64="aW1hZ2U=", mimeType="image/png")],
+                images=[
+                    thread_api.DashboardImageBody(
+                        base64="aW1hZ2U=", mimeType="image/png"
+                    )
+                ],
                 model_id="openai:gpt-5.6-sol",
                 effort="medium",
             ),
@@ -403,7 +447,11 @@ async def test_dashboard_followup_on_busy_unknown_model_rejects_images(
             "octocat",
             thread_api.ThreadMessageBody(
                 content="continue in web",
-                images=[thread_api.DashboardImageBody(base64="aW1hZ2U=", mimeType="image/png")],
+                images=[
+                    thread_api.DashboardImageBody(
+                        base64="aW1hZ2U=", mimeType="image/png"
+                    )
+                ],
             ),
         )
 

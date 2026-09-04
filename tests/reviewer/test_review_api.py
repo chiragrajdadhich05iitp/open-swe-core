@@ -19,9 +19,15 @@ from agent.thread_ids import reviewer_thread_id
 def test_classify_finding():
     assert classify_finding({"severity": "critical", "confidence": "high"}) == "bug"
     assert classify_finding({"severity": "high", "confidence": "high"}) == "bug"
-    assert classify_finding({"severity": "high", "confidence": "medium"}) == "investigate"
-    assert classify_finding({"severity": "medium", "confidence": "high"}) == "investigate"
-    assert classify_finding({"severity": "low", "confidence": "high"}) == "informational"
+    assert (
+        classify_finding({"severity": "high", "confidence": "medium"}) == "investigate"
+    )
+    assert (
+        classify_finding({"severity": "medium", "confidence": "high"}) == "investigate"
+    )
+    assert (
+        classify_finding({"severity": "low", "confidence": "high"}) == "informational"
+    )
 
 
 def test_finding_counts_only_open_in_groups():
@@ -61,7 +67,14 @@ def test_thread_review_summary():
             "head_sha": "abc",
             "watch": True,
             "latest_run_status": "success",
-            "findings": [{"id": "f_1", "severity": "high", "confidence": "high", "status": "open"}],
+            "findings": [
+                {
+                    "id": "f_1",
+                    "severity": "high",
+                    "confidence": "high",
+                    "status": "open",
+                }
+            ],
         },
     }
     summary = _thread_review_summary(thread)
@@ -79,7 +92,9 @@ def test_thread_review_summary_requires_pr_meta():
 
 def test_is_allowed_image_url_accepts_github_hosts():
     assert _is_allowed_image_url("https://github.com/user-attachments/assets/abc-123")
-    assert _is_allowed_image_url("https://private-user-images.githubusercontent.com/1/x.png?jwt=y")
+    assert _is_allowed_image_url(
+        "https://private-user-images.githubusercontent.com/1/x.png?jwt=y"
+    )
     assert _is_allowed_image_url("https://user-images.githubusercontent.com/1/x.png")
 
 
@@ -143,7 +158,9 @@ async def test_require_image_in_pr_rejects_unreferenced_url(monkeypatch):
     assert exc.value.status_code == 403
 
     # A URL actually embedded in the PR body is allowed.
-    await _require_image_in_pr("acme", "repo", 7, "https://x.githubusercontent.com/a.png", "tok")
+    await _require_image_in_pr(
+        "acme", "repo", 7, "https://x.githubusercontent.com/a.png", "tok"
+    )
 
 
 def test_review_api_uses_canonical_reviewer_thread_id():
@@ -165,7 +182,12 @@ def test_serialize_diff_groups_assigns_index_and_drops_invalid():
     groups, stale = _serialize_diff_groups(metadata, "abc")
     assert stale is False
     assert groups == [
-        {"index": 1, "title": "Feature", "summary": "Adds it", "files": ["a.py", "b.py"]},
+        {
+            "index": 1,
+            "title": "Feature",
+            "summary": "Adds it",
+            "files": ["a.py", "b.py"],
+        },
         {"index": 2, "title": "Tests", "summary": "Covers it", "files": ["t.py"]},
     ]
 
@@ -184,4 +206,7 @@ def test_serialize_diff_groups_marks_stale_on_head_mismatch():
 
 def test_serialize_diff_groups_handles_missing():
     assert _serialize_diff_groups({}, "abc") == ([], False)
-    assert _serialize_diff_groups({"diff_groups": {"groups": "nope"}}, "abc") == ([], False)
+    assert _serialize_diff_groups({"diff_groups": {"groups": "nope"}}, "abc") == (
+        [],
+        False,
+    )

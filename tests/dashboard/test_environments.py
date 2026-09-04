@@ -39,7 +39,9 @@ def _fake_client() -> tuple[MagicMock, dict[tuple[Any, ...], Any]]:
         offset: int = 0,
     ) -> dict[str, Any]:
         items = [
-            {"value": value} for (namespace, _key), value in store.items() if namespace == tuple(ns)
+            {"value": value}
+            for (namespace, _key), value in store.items()
+            if namespace == tuple(ns)
         ]
         return {"items": items[offset : offset + limit]}
 
@@ -74,7 +76,9 @@ def test_snapshot_name_prefix_is_configurable(monkeypatch: pytest.MonkeyPatch) -
     assert snapshot_name_for("default") == "acme-environment-default"
 
 
-def test_no_generated_snapshot_name_contains_a_colon(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_no_generated_snapshot_name_contains_a_colon(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """A colon anywhere in the name is rejected by the platform, so never emit one."""
     monkeypatch.setenv("ENVIRONMENT_SNAPSHOT_PREFIX", "acme:v2")
     for attempt in range(1, env_store.CAPTURE_NAME_ATTEMPTS + 1):
@@ -121,7 +125,9 @@ def test_create_params_accept_non_sensitive_runtime_and_proxy_settings() -> None
     create = EnvironmentCreate(name="env", create_params=params)
 
     assert create.create_params == params
-    assert Environment(slug="env", create_params=params).sandbox_create_params() == params
+    assert (
+        Environment(slug="env", create_params=params).sandbox_create_params() == params
+    )
 
 
 @pytest.mark.parametrize(
@@ -133,13 +139,23 @@ def test_create_params_accept_non_sensitive_runtime_and_proxy_settings() -> None
         {
             "proxy_config": {
                 "rules": [
-                    {"headers": [{"name": "Authorization", "type": "opaque", "value": "sensitive"}]}
+                    {
+                        "headers": [
+                            {
+                                "name": "Authorization",
+                                "type": "opaque",
+                                "value": "sensitive",
+                            }
+                        ]
+                    }
                 ]
             }
         },
         {
             "proxy_config": {
-                "rules": [{"headers": [{"name": "X-OpenAI-Api-Key", "value": "sensitive"}]}]
+                "rules": [
+                    {"headers": [{"name": "X-OpenAI-Api-Key", "value": "sensitive"}]}
+                ]
             }
         },
     ],
@@ -156,7 +172,9 @@ def test_create_params_reject_persisted_secrets(create_params: dict[str, Any]) -
         {"proxy_config": {"rules": {"name": "invalid"}}},
     ],
 )
-def test_create_params_validate_proxy_config_shape(create_params: dict[str, Any]) -> None:
+def test_create_params_validate_proxy_config_shape(
+    create_params: dict[str, Any]
+) -> None:
     with pytest.raises(ValueError, match="proxy_config"):
         EnvironmentCreate(name="env", create_params=create_params)
 
@@ -171,25 +189,35 @@ def test_create_params_enforce_serialized_size_limit() -> None:
 
 def test_snapshot_id_only_resolves_when_ready() -> None:
     assert (
-        Environment(slug="e", snapshot_status="capturing", snapshot_id="s-1").ready_snapshot_id
+        Environment(
+            slug="e", snapshot_status="capturing", snapshot_id="s-1"
+        ).ready_snapshot_id
         is None
     )
     assert (
-        Environment(slug="e", snapshot_status="ready", snapshot_id="s-1").ready_snapshot_id == "s-1"
+        Environment(
+            slug="e", snapshot_status="ready", snapshot_id="s-1"
+        ).ready_snapshot_id
+        == "s-1"
     )
     assert Environment(slug="e", snapshot_status="ready").ready_snapshot_id is None
 
 
 def test_environment_prompt_blank_is_none() -> None:
     assert Environment(slug="e", prompt="   ").instructions is None
-    assert Environment(slug="e", prompt=" build with make ").instructions == "build with make"
+    assert (
+        Environment(slug="e", prompt=" build with make ").instructions
+        == "build with make"
+    )
 
 
 # --- CRUD (patched store) ---
 
 
 @pytest.mark.asyncio
-async def test_only_the_environment_named_default_is_resolved(fake_store: FakeStore) -> None:
+async def test_only_the_environment_named_default_is_resolved(
+    fake_store: FakeStore,
+) -> None:
     await ENVIRONMENTS.create(EnvironmentCreate(name="Draft"), "ramon")
     assert await env_store.resolve_default_environment() is None
 
@@ -221,7 +249,9 @@ async def test_update_writes_only_provided_fields(fake_store: FakeStore) -> None
         ),
         "ramon",
     )
-    updated = await ENVIRONMENTS.apply_update("base", EnvironmentUpdate(prompt="replaced", vcpus=8))
+    updated = await ENVIRONMENTS.apply_update(
+        "base", EnvironmentUpdate(prompt="replaced", vcpus=8)
+    )
     assert updated.prompt == "replaced"
     assert updated.repos == ["o/r"]
     assert updated.mem_bytes == 8 * 1024**3
@@ -249,9 +279,7 @@ async def test_update_rejects_a_rename_across_slugs(fake_store: FakeStore) -> No
 @pytest.mark.asyncio
 async def test_delete_removes_record_and_snapshot(fake_store: FakeStore) -> None:
     delete_snapshot = AsyncMock()
-    with (
-        patch.object(env_store, "_delete_snapshot", delete_snapshot),
-    ):
+    with (patch.object(env_store, "_delete_snapshot", delete_snapshot),):
         await ENVIRONMENTS.create(EnvironmentCreate(name="default"), "ramon")
         await ENVIRONMENTS.mark_captured(
             "default",
@@ -266,7 +294,9 @@ async def test_delete_removes_record_and_snapshot(fake_store: FakeStore) -> None
 
 
 @pytest.mark.asyncio
-async def test_resolve_default_environment_swallows_store_failures(fake_store: FakeStore) -> None:
+async def test_resolve_default_environment_swallows_store_failures(
+    fake_store: FakeStore,
+) -> None:
     client = MagicMock()
     client.store.get_item = AsyncMock(side_effect=RuntimeError("store down"))
     with patch.object(agent_store, "store_client", return_value=client):
@@ -291,7 +321,9 @@ def _sandbox_client(capture: AsyncMock) -> MagicMock:
 
 
 @pytest.mark.asyncio
-async def test_capture_tags_latest_and_replaces_previous_snapshot(fake_store: FakeStore) -> None:
+async def test_capture_tags_latest_and_replaces_previous_snapshot(
+    fake_store: FakeStore,
+) -> None:
     capture = AsyncMock(return_value=_FakeSnapshot("snap-2"))
     delete_snapshot = AsyncMock()
     with (
@@ -328,7 +360,9 @@ _NameConflict.__name__ = "ResourceAlreadyExistsError"
 
 
 @pytest.mark.asyncio
-async def test_capture_walks_the_name_suffix_past_a_conflict(fake_store: FakeStore) -> None:
+async def test_capture_walks_the_name_suffix_past_a_conflict(
+    fake_store: FakeStore,
+) -> None:
     capture = AsyncMock(side_effect=[_NameConflict("taken"), _FakeSnapshot("snap-2")])
     with (
         patch.object(env_store, "_delete_snapshot", AsyncMock()),
@@ -384,7 +418,9 @@ async def test_failed_recapture_keeps_booting_from_the_previous_snapshot(
 
 
 @pytest.mark.asyncio
-async def test_first_capture_failure_marks_the_environment_failed(fake_store: FakeStore) -> None:
+async def test_first_capture_failure_marks_the_environment_failed(
+    fake_store: FakeStore,
+) -> None:
     capture = AsyncMock(side_effect=RuntimeError("capture exploded"))
     with (
         patch(
@@ -435,10 +471,13 @@ async def test_update_clearing_create_params_with_null_stays_readable(
     unresolvable, unupdatable, and invisible to listings.
     """
     await ENVIRONMENTS.create(
-        EnvironmentCreate(name="base", create_params={"_internal_runtime": "v2"}), "ramon"
+        EnvironmentCreate(name="base", create_params={"_internal_runtime": "v2"}),
+        "ramon",
     )
 
-    updated = await ENVIRONMENTS.apply_update("base", EnvironmentUpdate(create_params=None))
+    updated = await ENVIRONMENTS.apply_update(
+        "base", EnvironmentUpdate(create_params=None)
+    )
 
     assert updated.create_params == {}
     reread = await ENVIRONMENTS.get("base")
@@ -485,7 +524,9 @@ def test_assignment_is_validated() -> None:
         ("open env:Staging-Box now", "staging-box", "open now"),
     ],
 )
-def test_parse_environment_tag(text: str, expected_slug: str | None, expected_text: str) -> None:
+def test_parse_environment_tag(
+    text: str, expected_slug: str | None, expected_text: str
+) -> None:
     assert env_store.parse_environment_tag(text) == (expected_slug, expected_text)
 
 
@@ -509,7 +550,9 @@ async def test_resolve_environment_prefers_the_selection(fake_store: FakeStore) 
 
 
 @pytest.mark.asyncio
-async def test_environment_options_omit_admin_only_settings(fake_store: FakeStore) -> None:
+async def test_environment_options_omit_admin_only_settings(
+    fake_store: FakeStore,
+) -> None:
     await ENVIRONMENTS.create(
         EnvironmentCreate(
             name="default",

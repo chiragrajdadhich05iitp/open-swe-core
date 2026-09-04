@@ -11,7 +11,10 @@ async def _fake_trace_url(thread_id: str, **kwargs: object) -> str:
 
 
 def test_resolve_repo_config_parses_request_repo() -> None:
-    assert thread_api._resolve_repo_config("octo/repo") == {"owner": "octo", "name": "repo"}
+    assert thread_api._resolve_repo_config("octo/repo") == {
+        "owner": "octo",
+        "name": "repo",
+    }
 
 
 def test_resolve_repo_config_returns_empty_when_no_repo_given() -> None:
@@ -93,7 +96,9 @@ async def test_thread_summary_derives_issue_category_from_source_context() -> No
     assert summary["triggerKind"] == "user"
 
 
-async def test_thread_summary_includes_trace_url(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_thread_summary_includes_trace_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(
         thread_api,
         "get_langsmith_trace_url",
@@ -111,7 +116,9 @@ class _FakeThreadsClient:
     ) -> dict[str, Any]:
         return {"thread_id": thread_id, "metadata": metadata, "if_exists": if_exists}
 
-    async def update(self, *, thread_id: str, metadata: dict[str, Any]) -> dict[str, Any]:
+    async def update(
+        self, *, thread_id: str, metadata: dict[str, Any]
+    ) -> dict[str, Any]:
         return {"thread_id": thread_id, "metadata": metadata}
 
     async def get(self, thread_id: str) -> dict[str, Any]:
@@ -180,7 +187,9 @@ def test_create_thread_record_omits_repo_less_marker_when_repo_unset(
     )
 
     configurable = asyncio.run(
-        thread_api._build_dashboard_configurable("thread-id", "octo", {"source": "dashboard"})
+        thread_api._build_dashboard_configurable(
+            "thread-id", "octo", {"source": "dashboard"}
+        )
     )
     assert "repo_explicitly_none" not in configurable
     assert "repo" not in configurable

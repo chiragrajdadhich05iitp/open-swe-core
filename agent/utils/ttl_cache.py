@@ -49,7 +49,9 @@ async def cached(key: str, ttl_seconds: float, loader: Callable[[], Awaitable[T]
         except Exception:
             if has_stale:
                 logger.warning(
-                    "TTL cache loader failed for %s; serving stale value", key, exc_info=True
+                    "TTL cache loader failed for %s; serving stale value",
+                    key,
+                    exc_info=True,
                 )
                 return cast(T, stale)
             raise
@@ -64,7 +66,9 @@ async def _refresh_stale_entry(
         try:
             value = await loader()
         except Exception:
-            logger.warning("TTL cache background refresh failed for %s", key, exc_info=True)
+            logger.warning(
+                "TTL cache background refresh failed for %s", key, exc_info=True
+            )
             return
         _CACHE[key] = (value, _now() + ttl_seconds)
 

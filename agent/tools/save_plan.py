@@ -61,7 +61,9 @@ async def save_plan(
     except Exception:
         config = {}
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
-    thread_id = configurable.get("thread_id") if isinstance(configurable, dict) else None
+    thread_id = (
+        configurable.get("thread_id") if isinstance(configurable, dict) else None
+    )
     if not thread_id:
         return {"success": False, "error": "no thread_id in run config"}
 
@@ -71,7 +73,10 @@ async def save_plan(
             return {"success": False, "error": "plan file cannot be empty"}
         document = wrap_html_artifact(content, title=_title_from_path(path))
         await _save(
-            str(thread_id), document, path, plan_mode=_active_plan_mode(state, configurable)
+            str(thread_id),
+            document,
+            path,
+            plan_mode=_active_plan_mode(state, configurable),
         )
     except Exception as exc:  # noqa: BLE001
         logger.exception("save_plan failed for thread %s", thread_id)

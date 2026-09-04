@@ -22,10 +22,14 @@ class _Store:
     def __init__(self) -> None:
         self.items: dict[tuple[tuple[str, ...], str], dict[str, Any]] = {}
 
-    async def get_item(self, namespace: tuple[str, ...], key: str) -> dict[str, Any] | None:
+    async def get_item(
+        self, namespace: tuple[str, ...], key: str
+    ) -> dict[str, Any] | None:
         return self.items.get((tuple(namespace), key))
 
-    async def put_item(self, namespace: tuple[str, ...], key: str, value: dict[str, Any]) -> None:
+    async def put_item(
+        self, namespace: tuple[str, ...], key: str, value: dict[str, Any]
+    ) -> None:
         self.items[(tuple(namespace), key)] = {
             "namespace": list(namespace),
             "key": key,
@@ -47,7 +51,9 @@ class _Store:
             item
             for (item_namespace, _), item in self.items.items()
             if item_namespace == tuple(namespace)
-            and all(item["value"].get(key) == value for key, value in (filter or {}).items())
+            and all(
+                item["value"].get(key) == value for key, value in (filter or {}).items()
+            )
         ]
         return {"items": matches[offset : offset + limit]}
 
@@ -59,7 +65,9 @@ class _Threads:
 
     async def create(self, *, thread_id: str, **_kwargs: Any) -> None:
         if thread_id in self.lock_ids:
-            response = httpx.Response(409, request=httpx.Request("POST", "http://test/threads"))
+            response = httpx.Response(
+                409, request=httpx.Request("POST", "http://test/threads")
+            )
             raise ConflictError("already exists", response=response, body=None)
         self.lock_ids.add(thread_id)
 
@@ -70,7 +78,9 @@ class _Threads:
         return self.matches
 
     async def get(self, thread_id: str) -> dict[str, Any]:
-        return next(match for match in self.matches if match.get("thread_id") == thread_id)
+        return next(
+            match for match in self.matches if match.get("thread_id") == thread_id
+        )
 
 
 class _Client:
@@ -85,7 +95,9 @@ def _legacy_thread(
     return {
         "thread_id": thread_id,
         "metadata": {
-            "source_context": {"slack_thread": {"channel_id": channel_id, "thread_ts": thread_ts}}
+            "source_context": {
+                "slack_thread": {"channel_id": channel_id, "thread_ts": thread_ts}
+            }
         },
     }
 
@@ -94,7 +106,9 @@ def _legacy_thread(
 async def test_thread_mutation_lock_returns_active_thread() -> None:
     client: Any = _Client(matches=[_legacy_thread("agent-thread")])
 
-    async with slack_thread_mutation_lock(client, "C1", "1.0", thread_id="agent-thread") as active:
+    async with slack_thread_mutation_lock(
+        client, "C1", "1.0", thread_id="agent-thread"
+    ) as active:
         assert active == {"channel_id": "C1", "thread_ts": "1.0"}
 
 
@@ -168,7 +182,9 @@ async def test_binding_refuses_to_overwrite_another_thread() -> None:
 
 
 @pytest.mark.asyncio
-async def test_message_mapping_uses_executing_run_without_replacing_thread_mapping() -> None:
+async def test_message_mapping_uses_executing_run_without_replacing_thread_mapping() -> (
+    None
+):
     client: Any = _Client()
     await store_slack_run_mapping(
         client,
@@ -189,7 +205,9 @@ async def test_message_mapping_uses_executing_run_without_replacing_thread_mappi
     )
 
     namespace = ("slack_run_map", "C1")
-    assert client.store.items[(namespace, "thread:1.0")]["value"]["run_id"] == "queued-run"
+    assert (
+        client.store.items[(namespace, "thread:1.0")]["value"]["run_id"] == "queued-run"
+    )
     message = client.store.items[(namespace, "message:1.1")]["value"]
     assert message["run_id"] == "active-run"
     assert message["triggering_user_id"] == "active-user"
@@ -202,7 +220,9 @@ async def test_delete_does_not_remove_a_location_reassigned_to_another_thread() 
     await bind_slack_thread_id(client, "C1", "1.0", "new-thread")
     await store_slack_run_mapping(client, "C1", "1.0", "new-run", message_ts="1.1")
 
-    await delete_slack_thread_associations(client, "C1", "1.0", expected_thread_id="old-thread")
+    await delete_slack_thread_associations(
+        client, "C1", "1.0", expected_thread_id="old-thread"
+    )
 
     assert await lookup_slack_thread_id(client, "C1", "1.0") == "new-thread"
     remaining = [item["value"] for item in client.store.items.values()]

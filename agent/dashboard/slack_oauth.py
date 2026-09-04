@@ -65,7 +65,9 @@ def build_authorize_url(*, redirect_uri: str, state: str) -> str:
 def parse_slack_identity(data: dict[str, Any]) -> SlackIdentity:
     """Build a SlackIdentity from an openid.connect.userInfo response."""
     if not data.get("ok", True):
-        raise HTTPException(400, f"slack userinfo failed: {data.get('error', 'unknown')}")
+        raise HTTPException(
+            400, f"slack userinfo failed: {data.get('error', 'unknown')}"
+        )
     user_id = data.get(_USER_ID_CLAIM)
     if not isinstance(user_id, str) or not user_id:
         raise HTTPException(400, "slack userinfo missing user id")
@@ -102,7 +104,9 @@ async def exchange_slack_code(code: str, redirect_uri: str) -> str:
     resp.raise_for_status()
     data = resp.json()
     if not data.get("ok") or not data.get("access_token"):
-        raise HTTPException(400, f"slack oauth exchange failed: {data.get('error', 'unknown')}")
+        raise HTTPException(
+            400, f"slack oauth exchange failed: {data.get('error', 'unknown')}"
+        )
     return data["access_token"]
 
 

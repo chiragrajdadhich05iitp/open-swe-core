@@ -16,7 +16,9 @@ async def _resolve_sandbox_file(file_path: str) -> tuple[Any, str, str]:
 
     config = get_config()
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
-    thread_id = configurable.get("thread_id") if isinstance(configurable, dict) else None
+    thread_id = (
+        configurable.get("thread_id") if isinstance(configurable, dict) else None
+    )
     if not isinstance(thread_id, str) or not thread_id:
         raise ValueError("no thread_id in run config")
 
@@ -28,13 +30,17 @@ async def _resolve_sandbox_file(file_path: str) -> tuple[Any, str, str]:
         else posixpath.join(work_dir, file_path.strip())
     )
     if posixpath.commonpath((work_dir, path)) != work_dir:
-        raise ValueError(f"file_path must resolve within the sandbox work directory ({work_dir})")
+        raise ValueError(
+            f"file_path must resolve within the sandbox work directory ({work_dir})"
+        )
     resolved = await backend_proxy.aexecute(f"realpath -- {shlex.quote(path)}")
     if resolved.exit_code != 0:
         raise ValueError("file_path must identify an existing sandbox file")
     path = posixpath.normpath(resolved.output.strip())
     if posixpath.commonpath((work_dir, path)) != work_dir:
-        raise ValueError(f"file_path must resolve within the sandbox work directory ({work_dir})")
+        raise ValueError(
+            f"file_path must resolve within the sandbox work directory ({work_dir})"
+        )
     return backend_proxy, path, work_dir
 
 

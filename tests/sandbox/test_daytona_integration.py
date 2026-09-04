@@ -23,7 +23,9 @@ class _FakeDaytonaSandbox:
 
 def _load_daytona_module(monkeypatch):
     fake_daytona = types.ModuleType("daytona")
-    fake_daytona.__dict__["CreateSandboxFromSnapshotParams"] = _FakeCreateSandboxFromSnapshotParams
+    fake_daytona.__dict__["CreateSandboxFromSnapshotParams"] = (
+        _FakeCreateSandboxFromSnapshotParams
+    )
     fake_daytona.__dict__["DaytonaConfig"] = _FakeDaytonaConfig
     fake_daytona.__dict__["Daytona"] = object
 

@@ -48,7 +48,9 @@ class _FakeBackgroundTasks:
 
 
 class _FakeRequest:
-    def __init__(self, payload: dict[str, Any], headers: dict[str, str] | None = None) -> None:
+    def __init__(
+        self, payload: dict[str, Any], headers: dict[str, str] | None = None
+    ) -> None:
         self.headers: dict[str, str] = headers or {}
         self._body = json.dumps(payload).encode()
 
@@ -73,7 +75,11 @@ def _mention_payload(event_id: str = "Ev1") -> dict[str, Any]:
 
 def _channel_message_payload(event_id: str = "Ev2") -> dict[str, Any]:
     payload = _mention_payload(event_id)
-    payload["event"] = {**payload["event"], "type": "message", "channel_type": "channel"}
+    payload["event"] = {
+        **payload["event"],
+        "type": "message",
+        "channel_type": "channel",
+    }
     return payload
 
 
@@ -93,7 +99,9 @@ def _patch_slack_webhook(monkeypatch: pytest.MonkeyPatch) -> _FakeClient:
     slack_events.reset_slack_event_claims()
     client = _FakeClient()
 
-    async def channel_context(_channel_id: str, *, use_cache: bool = True) -> dict[str, Any]:
+    async def channel_context(
+        _channel_id: str, *, use_cache: bool = True
+    ) -> dict[str, Any]:
         return {"is_ext_shared": False, "is_pending_ext_shared": False}
 
     async def not_docs_plz(_channel_id: str, _context: dict[str, Any]) -> bool:
@@ -103,8 +111,12 @@ def _patch_slack_webhook(monkeypatch: pytest.MonkeyPatch) -> _FakeClient:
         return {"owner": "langchain-ai", "name": "open-swe"}
 
     monkeypatch.setattr(slack_events, "get_client", lambda url: client)
-    monkeypatch.setattr(webhook_common, "verify_slack_signature", lambda **_kwargs: True)
-    monkeypatch.setattr(webhook_common, "resolve_slack_thread_id", AsyncMock(return_value="t1"))
+    monkeypatch.setattr(
+        webhook_common, "verify_slack_signature", lambda **_kwargs: True
+    )
+    monkeypatch.setattr(
+        webhook_common, "resolve_slack_thread_id", AsyncMock(return_value="t1")
+    )
     monkeypatch.setattr(webhook_common, "_get_slack_channel_context", channel_context)
     monkeypatch.setattr(webhook_common, "_is_docs_plz_slack_channel", not_docs_plz)
 
@@ -116,11 +128,15 @@ async def test_redelivered_event_starts_only_one_run() -> None:
     background_tasks = _FakeBackgroundTasks()
 
     first = await _post(_mention_payload(), background_tasks)
-    second = await _post(_mention_payload(), background_tasks, {"X-Slack-Retry-Num": "1"})
+    second = await _post(
+        _mention_payload(), background_tasks, {"X-Slack-Retry-Num": "1"}
+    )
 
     assert first["status"] == "accepted"
     assert second["status"] == "ignored"
-    assert [task[0] for task in background_tasks.tasks] == [slack_service.process_slack_mention]
+    assert [task[0] for task in background_tasks.tasks] == [
+        slack_service.process_slack_mention
+    ]
 
 
 async def test_redelivered_event_without_retry_header_is_deduped() -> None:
@@ -170,7 +186,9 @@ async def test_distinct_messages_in_one_channel_both_run() -> None:
 async def test_retry_header_alone_does_not_drop_an_unseen_event() -> None:
     background_tasks = _FakeBackgroundTasks()
 
-    response = await _post(_mention_payload("EvNew"), background_tasks, {"X-Slack-Retry-Num": "2"})
+    response = await _post(
+        _mention_payload("EvNew"), background_tasks, {"X-Slack-Retry-Num": "2"}
+    )
 
     assert response["status"] == "accepted"
     assert len(background_tasks.tasks) == 1
@@ -236,7 +254,9 @@ async def test_unverified_channel_fails_closed_without_reply_or_run(
     resolve_thread.assert_not_awaited()
 
 
-async def test_preprocessing_failure_does_not_claim_event(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_preprocessing_failure_does_not_claim_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     background_tasks = _FakeBackgroundTasks()
 
     async def failed_repo_config(*_args: Any, **_kwargs: Any) -> dict[str, str]:

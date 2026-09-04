@@ -59,7 +59,9 @@ def _extract_tool_name(request: ToolCallRequest | None) -> str | None:
     return None
 
 
-def _to_error_payload(e: Exception, request: ToolCallRequest | None = None) -> dict[str, str]:
+def _to_error_payload(
+    e: Exception, request: ToolCallRequest | None = None
+) -> dict[str, str]:
     data: dict[str, str] = {
         "error": str(e),
         "error_type": e.__class__.__name__,
@@ -184,13 +186,17 @@ class ToolErrorMiddleware(AgentMiddleware):
             # abandoned one.
             if is_transient_sandbox_error(e):
                 logger.warning(
-                    "Transient sandbox error during tool call; request=%r", request, exc_info=True
+                    "Transient sandbox error during tool call; request=%r",
+                    request,
+                    exc_info=True,
                 )
                 return _transient_sandbox_tool_message(e, request)
             if not _is_sandbox_unreachable(e):
                 logger.exception("Error during tool call handling; request=%r", request)
                 return _generic_error_tool_message(e, request)
-            logger.exception("Sandbox error during tool call handling; request=%r", request)
+            logger.exception(
+                "Sandbox error during tool call handling; request=%r", request
+            )
             thread_id = _get_thread_id(request)
             config = _get_run_config(request)
             if config is not None:
@@ -199,7 +205,9 @@ class ToolErrorMiddleware(AgentMiddleware):
                         config, sandbox_id=extract_sandbox_id(str(e))
                     )
                 except Exception:
-                    logger.exception("Failed to notify user of dead sandbox for %s", thread_id)
+                    logger.exception(
+                        "Failed to notify user of dead sandbox for %s", thread_id
+                    )
             # Every later sandbox call would hit the same dead backend and notify
             # again, so end the run here now that the user has been told once.
             raise

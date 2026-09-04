@@ -165,7 +165,9 @@ def _parse_git_push(command: str) -> ParsedGitPush | None:
     return _parse_git_tokens(tokens, repo_dir=None)
 
 
-def _parse_git_tokens(tokens: list[str], *, repo_dir: str | None) -> ParsedGitPush | None:
+def _parse_git_tokens(
+    tokens: list[str], *, repo_dir: str | None
+) -> ParsedGitPush | None:
     if not tokens or tokens[0] != "git":
         return None
     i = 1
@@ -180,7 +182,9 @@ def _parse_git_tokens(tokens: list[str], *, repo_dir: str | None) -> ParsedGitPu
     return _parse_push_args(tokens[i + 1 :], repo_dir=repo_dir)
 
 
-def _parse_push_args(tokens: list[str], *, repo_dir: str | None) -> ParsedGitPush | None:
+def _parse_push_args(
+    tokens: list[str], *, repo_dir: str | None
+) -> ParsedGitPush | None:
     set_upstream = False
     while tokens and tokens[0] in {"-u", "--set-upstream"}:
         set_upstream = True
@@ -210,7 +214,9 @@ def _parse_refspec(refspec: str) -> tuple[str, str] | None:
         local_ref, remote_ref = parts
     else:
         local_ref = remote_ref = refspec
-    if not _safe_ref(local_ref, allow_head=True) or not _safe_ref(remote_ref, allow_head=False):
+    if not _safe_ref(local_ref, allow_head=True) or not _safe_ref(
+        remote_ref, allow_head=False
+    ):
         return None
     return local_ref, remote_ref
 
@@ -270,7 +276,10 @@ def _diff_preview(diff: str) -> tuple[str, bool]:
     truncated = False
     for line in diff.splitlines():
         next_count = char_count + len(line) + 1
-        if len(preview_lines) >= _DIFF_PREVIEW_MAX_LINES or next_count > _DIFF_PREVIEW_MAX_CHARS:
+        if (
+            len(preview_lines) >= _DIFF_PREVIEW_MAX_LINES
+            or next_count > _DIFF_PREVIEW_MAX_CHARS
+        ):
             truncated = True
             break
         preview_lines.append(line)
@@ -315,7 +324,9 @@ async def _workflow_change_for_push(
     if parsed.local_ref not in {"HEAD", branch_name}:
         return None
 
-    target_sha = await _run_git(backend, root, f"rev-parse {shlex.quote(parsed.local_ref)}")
+    target_sha = await _run_git(
+        backend, root, f"rev-parse {shlex.quote(parsed.local_ref)}"
+    )
     head = _first_line(target_sha.output) if target_sha.ok else ""
     if not head or not _GIT_OBJECT_ID.fullmatch(head):
         return None
@@ -327,10 +338,14 @@ async def _workflow_change_for_push(
     if remote_branch_exists.ok and _first_line(remote_branch_exists.output):
         base_ref = remote_branch
         range_expr = f"{shlex.quote(base_ref)}..{shlex.quote(head)}"
-        base_result = await _run_git(backend, root, f"rev-parse {shlex.quote(base_ref)}")
+        base_result = await _run_git(
+            backend, root, f"rev-parse {shlex.quote(base_ref)}"
+        )
         base_sha = _first_line(base_result.output)
     else:
-        origin_head = await _run_git(backend, root, "symbolic-ref --short refs/remotes/origin/HEAD")
+        origin_head = await _run_git(
+            backend, root, "symbolic-ref --short refs/remotes/origin/HEAD"
+        )
         base_ref = _first_line(origin_head.output) if origin_head.ok else "origin/main"
         range_expr = f"{shlex.quote(base_ref)}...{shlex.quote(head)}"
         merge_base = await _run_git(
@@ -358,7 +373,9 @@ async def _workflow_change_for_push(
     )
     if not diff.ok or not diff.output:
         return None
-    numstat = await _run_git(backend, root, f"diff --numstat {range_expr} -- .github/workflows")
+    numstat = await _run_git(
+        backend, root, f"diff --numstat {range_expr} -- .github/workflows"
+    )
     diff_preview, diff_preview_truncated = _diff_preview(diff.output)
     diff_stats = _diff_stats(files, numstat.output if numstat.ok else "")
 
@@ -428,11 +445,15 @@ def _blocked_message(
     return ToolMessage(content=json.dumps(content), tool_call_id="", status="error")
 
 
-def _tool_message_for_request(message: ToolMessage, request: ToolCallRequest) -> ToolMessage:
+def _tool_message_for_request(
+    message: ToolMessage, request: ToolCallRequest
+) -> ToolMessage:
     return message.model_copy(update={"tool_call_id": _tool_call_id(request)})
 
 
-def _override_execute_command(request: ToolCallRequest, command: str) -> ToolCallRequest:
+def _override_execute_command(
+    request: ToolCallRequest, command: str
+) -> ToolCallRequest:
     tool_call = getattr(request, "tool_call", None)
     if not isinstance(tool_call, Mapping):
         return request
@@ -441,14 +462,18 @@ def _override_execute_command(request: ToolCallRequest, command: str) -> ToolCal
     return request.override(tool_call=cast(ToolCall, {**dict(tool_call), "args": args}))
 
 
-def _approval_slack_message(change: WorkflowPushChange, approval_url: str | None = None) -> str:
+def _approval_slack_message(
+    change: WorkflowPushChange, approval_url: str | None = None
+) -> str:
     files = "\n".join(f"• `{path}`" for path in change.files[:10])
     if len(change.files) > 10:
         files += f"\n• …and {len(change.files) - 10} more"
     repo = change.repo or "the repository"
     branch = change.branch or "the current branch"
     stats = change.diff_stats
-    web_review = f"\n\n*Review diff:* <{approval_url}|Open in Web>" if approval_url else ""
+    web_review = (
+        f"\n\n*Review diff:* <{approval_url}|Open in Web>" if approval_url else ""
+    )
     return (
         "*Workflow file approval required*\n"
         f"Open SWE is trying to push changes to GitHub workflow files in `{repo}` on `{branch}`.\n\n"
@@ -529,7 +554,9 @@ class WorkflowPushGuardMiddleware(AgentMiddleware):
 
     state_schema = AgentState
 
-    async def _change_for_request(self, request: ToolCallRequest) -> WorkflowPushChange | None:
+    async def _change_for_request(
+        self, request: ToolCallRequest
+    ) -> WorkflowPushChange | None:
         if _tool_name(request) not in {"execute", "background_execute"}:
             return None
         command = _tool_args(request).get("command")

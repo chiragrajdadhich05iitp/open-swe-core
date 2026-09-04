@@ -29,7 +29,9 @@ _COMPACT_FIELDS = (
 
 
 def _compact(finding: dict[str, Any]) -> dict[str, Any]:
-    return {key: finding.get(key) for key in _COMPACT_FIELDS if finding.get(key) is not None}
+    return {
+        key: finding.get(key) for key in _COMPACT_FIELDS if finding.get(key) is not None
+    }
 
 
 async def list_review_findings(status_filter: str | None = None) -> dict[str, Any]:
@@ -46,13 +48,23 @@ async def list_review_findings(status_filter: str | None = None) -> dict[str, An
     Returns:
         ``{findings, count}``; ``{findings: [], count: 0, error}`` on failure.
     """
-    if status_filter is not None and status_filter not in {"open", "resolved", "dismissed"}:
-        return {"findings": [], "count": 0, "error": f"Invalid status_filter: {status_filter}"}
+    if status_filter is not None and status_filter not in {
+        "open",
+        "resolved",
+        "dismissed",
+    }:
+        return {
+            "findings": [],
+            "count": 0,
+            "error": f"Invalid status_filter: {status_filter}",
+        }
 
     config = get_config()
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
     reviewer_thread_id = (
-        configurable.get("reviewer_thread_id") if isinstance(configurable, dict) else None
+        configurable.get("reviewer_thread_id")
+        if isinstance(configurable, dict)
+        else None
     )
     if not isinstance(reviewer_thread_id, str) or not reviewer_thread_id:
         return {"findings": [], "count": 0, "error": "reviewer thread unavailable"}
@@ -60,7 +72,11 @@ async def list_review_findings(status_filter: str | None = None) -> dict[str, An
     try:
         findings = await list_findings_async(reviewer_thread_id)
     except Exception as exc:  # noqa: BLE001
-        return {"findings": [], "count": 0, "error": f"could not load findings: {exc!s}"}
+        return {
+            "findings": [],
+            "count": 0,
+            "error": f"could not load findings: {exc!s}",
+        }
 
     if status_filter is not None:
         findings = [f for f in findings if f.get("status") == status_filter]

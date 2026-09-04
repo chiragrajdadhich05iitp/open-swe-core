@@ -42,7 +42,9 @@ def test_detects_pr_creation_fallback_commands() -> None:
         "/usr/bin/curl -X POST https://api.github.com/repos/langchain-ai/open-swe/pulls -d '{}'"
     )
     assert is_pr_creation_fallback_command("bash -c 'gh pr create --draft'")
-    assert is_pr_creation_fallback_command("GH_TOKEN=dummy sh -c 'gh pr create --draft'")
+    assert is_pr_creation_fallback_command(
+        "GH_TOKEN=dummy sh -c 'gh pr create --draft'"
+    )
     assert is_pr_creation_fallback_command(
         "zsh -lc 'gh api repos/langchain-ai/open-swe/pulls -X POST -f title=x'"
     )
@@ -85,7 +87,8 @@ async def test_middleware_blocks_execute_pr_creation_fallbacks() -> None:
 
 async def test_middleware_blocks_background_pr_creation_fallback() -> None:
     result = await PullRequestCreationGuardMiddleware().awrap_tool_call(
-        cast(ToolCallRequest, _Request("gh pr create --draft", "background_execute")), _handler
+        cast(ToolCallRequest, _Request("gh pr create --draft", "background_execute")),
+        _handler,
     )
 
     assert isinstance(result, ToolMessage)
@@ -94,7 +97,8 @@ async def test_middleware_blocks_background_pr_creation_fallback() -> None:
 
 async def test_middleware_allows_safe_pr_view() -> None:
     result = await PullRequestCreationGuardMiddleware().awrap_tool_call(
-        cast(ToolCallRequest, _Request("GH_TOKEN=dummy gh pr view 1 --json url")), _handler
+        cast(ToolCallRequest, _Request("GH_TOKEN=dummy gh pr view 1 --json url")),
+        _handler,
     )
 
     assert isinstance(result, ToolMessage)

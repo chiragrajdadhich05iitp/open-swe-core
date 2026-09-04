@@ -15,16 +15,16 @@ async def _fetch_and_format(channel_id: str, message_ts: str) -> dict[str, Any]:
         return {"success": False, "messages": []}
 
     user_ids = [
-        user_id for msg in messages if isinstance(user_id := msg.get("user"), str) and user_id
+        user_id
+        for msg in messages
+        if isinstance(user_id := msg.get("user"), str) and user_id
     ]
     user_names = await get_slack_user_names(user_ids) if user_ids else {}
 
     truncated = len(messages) >= SLACK_THREAD_MAX_MESSAGES
     formatted = format_slack_messages_for_prompt(messages, user_names)
     if truncated:
-        formatted = (
-            f"[thread truncated — showing most recent {len(messages)} messages]\n{formatted}"
-        )
+        formatted = f"[thread truncated — showing most recent {len(messages)} messages]\n{formatted}"
     return {
         "success": True,
         "formatted": formatted,
@@ -33,7 +33,9 @@ async def _fetch_and_format(channel_id: str, message_ts: str) -> dict[str, Any]:
     }
 
 
-async def slack_read_thread_messages(channel_id: str, message_ts: str) -> dict[str, Any]:
+async def slack_read_thread_messages(
+    channel_id: str, message_ts: str
+) -> dict[str, Any]:
     """Read messages from a Slack thread.
 
     Use this tool to read messages from a Slack channel or thread.
@@ -45,7 +47,8 @@ async def slack_read_thread_messages(channel_id: str, message_ts: str) -> dict[s
     you can extract the channel_id (C0AME1J0) and convert the timestamp
     by inserting a dot 6 digits from the end (1776281321.762829).
 
-    Returns formatted thread messages with author names and forwarded-message context."""
+    Returns formatted thread messages with author names and forwarded-message context.
+    """
     if not channel_id or not channel_id.strip():
         return {"success": False, "error": "channel_id is required"}
     if not message_ts or not message_ts.strip():

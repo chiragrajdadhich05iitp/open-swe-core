@@ -58,9 +58,13 @@ async def test_write_sandbox_output_uses_current_thread_backend(monkeypatch) -> 
         lambda: {"configurable": {"thread_id": "thread-123"}},
     )
     monkeypatch.setattr(sandbox_output, "get_sandbox_backend", fake_get_backend)
-    monkeypatch.setattr(sandbox_output, "resolve_sandbox_work_dir", fake_resolve_work_dir)
+    monkeypatch.setattr(
+        sandbox_output, "resolve_sandbox_work_dir", fake_resolve_work_dir
+    )
 
-    path = await sandbox_output.write_sandbox_output("web-search", "full results", "txt")
+    path = await sandbox_output.write_sandbox_output(
+        "web-search", "full results", "txt"
+    )
 
     assert path.startswith("/workspace/web-search-")
     assert path.endswith(".txt")
@@ -94,7 +98,9 @@ async def test_web_search_saves_results_and_returns_only_path(monkeypatch) -> No
     assert raw_results not in str(result)
 
 
-async def test_web_search_returns_bounded_inline_results_without_sandbox(monkeypatch) -> None:
+async def test_web_search_returns_bounded_inline_results_without_sandbox(
+    monkeypatch,
+) -> None:
     raw_results = "search marker " + "x" * 200_000
     FakeExa.result = raw_results
     monkeypatch.setitem(sys.modules, "exa_py", types.SimpleNamespace(Exa=FakeExa))

@@ -36,7 +36,9 @@ class _FakeResponse:
 
 
 class _FakeClient:
-    def __init__(self, *, post: _FakeResponse, get: _FakeResponse | None = None) -> None:
+    def __init__(
+        self, *, post: _FakeResponse, get: _FakeResponse | None = None
+    ) -> None:
         self._post = post
         self._get = get
         self.post_calls: list[dict[str, Any]] = []
@@ -66,7 +68,9 @@ class _FakeClient:
 class _RoutingClient:
     """Fake httpx client that routes GETs by URL substring."""
 
-    def __init__(self, *, post: _FakeResponse, get_routes: dict[str, _FakeResponse]) -> None:
+    def __init__(
+        self, *, post: _FakeResponse, get_routes: dict[str, _FakeResponse]
+    ) -> None:
         self._post = post
         self._get_routes = get_routes
         self.post_calls: list[dict[str, Any]] = []
@@ -94,7 +98,9 @@ class _RoutingClient:
         return _FakeResponse(200, {"name": "ok"})
 
 
-def _install_client(monkeypatch: pytest.MonkeyPatch, client: _FakeClient | _RoutingClient) -> None:
+def _install_client(
+    monkeypatch: pytest.MonkeyPatch, client: _FakeClient | _RoutingClient
+) -> None:
     monkeypatch.setattr(opr.httpx, "AsyncClient", lambda **_kwargs: client)
 
 
@@ -135,7 +141,11 @@ def test_uses_user_token_for_slack_with_login(monkeypatch: pytest.MonkeyPatch) -
     client = _FakeClient(
         post=_FakeResponse(
             201,
-            {"html_url": "https://x/pull/1", "number": 1, "user": {"login": "johannes117"}},
+            {
+                "html_url": "https://x/pull/1",
+                "number": 1,
+                "user": {"login": "johannes117"},
+            },
         )
     )
     _install_client(monkeypatch, client)
@@ -157,13 +167,22 @@ def test_uses_user_token_for_slack_with_login(monkeypatch: pytest.MonkeyPatch) -
     }
 
 
-def test_profile_draft_preference_overrides_tool_argument(monkeypatch: pytest.MonkeyPatch) -> None:
-    _set_config(monkeypatch, {"source": "slack", "github_login": "johannes117", "draft_prs": False})
+def test_profile_draft_preference_overrides_tool_argument(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _set_config(
+        monkeypatch,
+        {"source": "slack", "github_login": "johannes117", "draft_prs": False},
+    )
     _stub_token(monkeypatch)
     client = _FakeClient(
         post=_FakeResponse(
             201,
-            {"html_url": "https://x/pull/1", "number": 1, "user": {"login": "johannes117"}},
+            {
+                "html_url": "https://x/pull/1",
+                "number": 1,
+                "user": {"login": "johannes117"},
+            },
         )
     )
     _install_client(monkeypatch, client)
@@ -193,7 +212,11 @@ def test_uses_user_token_for_linear_with_login(monkeypatch: pytest.MonkeyPatch) 
     client = _FakeClient(
         post=_FakeResponse(
             201,
-            {"html_url": "https://x/pull/1", "number": 1, "user": {"login": "johannes117"}},
+            {
+                "html_url": "https://x/pull/1",
+                "number": 1,
+                "user": {"login": "johannes117"},
+            },
         )
     )
     _install_client(monkeypatch, client)
@@ -225,7 +248,12 @@ def test_falls_back_to_bot_for_github_source(monkeypatch: pytest.MonkeyPatch) ->
 
     client = _FakeClient(
         post=_FakeResponse(
-            201, {"html_url": "https://x/pull/2", "number": 2, "user": {"login": "open-swe[bot]"}}
+            201,
+            {
+                "html_url": "https://x/pull/2",
+                "number": 2,
+                "user": {"login": "open-swe[bot]"},
+            },
         )
     )
     _install_client(monkeypatch, client)
@@ -236,7 +264,9 @@ def test_falls_back_to_bot_for_github_source(monkeypatch: pytest.MonkeyPatch) ->
     assert client.post_calls[0]["headers"]["Authorization"] == "Bearer bot-tok"
 
 
-def test_falls_back_to_bot_when_user_token_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_falls_back_to_bot_when_user_token_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _set_config(monkeypatch, {"source": "slack", "github_login": "johannes117"})
 
     from agent.dashboard import profiles
@@ -251,7 +281,9 @@ def test_falls_back_to_bot_when_user_token_missing(monkeypatch: pytest.MonkeyPat
 
     monkeypatch.setattr(opr, "get_github_app_installation_token", fake_bot)
 
-    client = _FakeClient(post=_FakeResponse(201, {"html_url": "u", "number": 3, "user": {}}))
+    client = _FakeClient(
+        post=_FakeResponse(201, {"html_url": "u", "number": 3, "user": {}})
+    )
     _install_client(monkeypatch, client)
 
     assert _open()["token_kind"] == "bot"
@@ -262,13 +294,22 @@ def test_returns_existing_pr_on_422(monkeypatch: pytest.MonkeyPatch) -> None:
 
     from agent.dashboard import profiles
 
-    monkeypatch.setattr(profiles, "get_valid_access_token", lambda *_a, **_k: _coro("user-tok"))
+    monkeypatch.setattr(
+        profiles, "get_valid_access_token", lambda *_a, **_k: _coro("user-tok")
+    )
     monkeypatch.setattr(opr, "get_github_app_installation_token", lambda: _coro("bot"))
 
     client = _FakeClient(
         post=_FakeResponse(422, text="A pull request already exists"),
         get=_FakeResponse(
-            200, [{"html_url": "https://x/pull/9", "number": 9, "user": {"login": "johannes117"}}]
+            200,
+            [
+                {
+                    "html_url": "https://x/pull/9",
+                    "number": 9,
+                    "user": {"login": "johannes117"},
+                }
+            ],
         ),
     )
     _install_client(monkeypatch, client)
@@ -290,10 +331,14 @@ def test_error_surfaced_on_failure(monkeypatch: pytest.MonkeyPatch) -> None:
 
     from agent.dashboard import profiles
 
-    monkeypatch.setattr(profiles, "get_valid_access_token", lambda *_a, **_k: _coro("user-tok"))
+    monkeypatch.setattr(
+        profiles, "get_valid_access_token", lambda *_a, **_k: _coro("user-tok")
+    )
     monkeypatch.setattr(opr, "get_github_app_installation_token", lambda: _coro("bot"))
 
-    client = _FakeClient(post=_FakeResponse(403, {"message": "Resource not accessible"}))
+    client = _FakeClient(
+        post=_FakeResponse(403, {"message": "Resource not accessible"})
+    )
     _install_client(monkeypatch, client)
 
     result = _open()
@@ -307,7 +352,10 @@ def test_error_surfaced_on_failure(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_404_create_returns_actionable_access_diagnostic(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    _set_config(monkeypatch, {"source": "slack", "github_login": "johannes117", "thread_id": "t1"})
+    _set_config(
+        monkeypatch,
+        {"source": "slack", "github_login": "johannes117", "thread_id": "t1"},
+    )
     _stub_token(monkeypatch)
     client = _FakeClient(post=_FakeResponse(404, {"message": "Not Found"}))
     _install_client(monkeypatch, client)
@@ -315,11 +363,14 @@ def test_404_create_returns_actionable_access_diagnostic(
     result = _open()
 
     assert result["success"] is False
-    assert "Branch pushed: langchain-ai/open-swe:open-swe/feature (yes)" in result["error"]
+    assert (
+        "Branch pushed: langchain-ai/open-swe:open-swe/feature (yes)" in result["error"]
+    )
     assert "PR created: no" in result["error"]
     assert "not installed on, granted access" in result["error"]
     assert (
-        "open_pull_request_failed code=github_app_access_missing_or_repo_not_found" in caplog.text
+        "open_pull_request_failed code=github_app_access_missing_or_repo_not_found"
+        in caplog.text
     )
 
 
@@ -331,7 +382,9 @@ def test_preflight_head_branch_404_reports_branch_not_pushed(
     client = _RoutingClient(
         post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}}),
         get_routes={
-            "/repos/langchain-ai/open-swe/branches/main": _FakeResponse(200, {"name": "main"}),
+            "/repos/langchain-ai/open-swe/branches/main": _FakeResponse(
+                200, {"name": "main"}
+            ),
             "/repos/langchain-ai/open-swe/branches/open-swe%2Ffeature": _FakeResponse(
                 404, {"message": "Branch not found"}
             ),
@@ -344,7 +397,9 @@ def test_preflight_head_branch_404_reports_branch_not_pushed(
 
     assert result["success"] is False
     assert "head branch `open-swe/feature`" in result["error"]
-    assert "Branch pushed: langchain-ai/open-swe:open-swe/feature (no)" in result["error"]
+    assert (
+        "Branch pushed: langchain-ai/open-swe:open-swe/feature (no)" in result["error"]
+    )
     assert client.post_calls == []
 
 
@@ -357,7 +412,9 @@ def test_preflight_base_branch_redirect_surfaces_raw_github_response(
         301,
         {"message": "Moved Permanently"},
         text='{"message":"Moved Permanently"}',
-        headers={"location": "https://api.github.com/repos/langchain-ai/open-swe/branches/main"},
+        headers={
+            "location": "https://api.github.com/repos/langchain-ai/open-swe/branches/main"
+        },
         request=_FakeRequest(
             "GET", "https://api.github.com/repos/langchain-ai/open-swe/branches/master"
         ),
@@ -377,9 +434,13 @@ def test_preflight_base_branch_redirect_surfaces_raw_github_response(
     error = result["error"]
     assert (
         "GitHub responded to GET "
-        "https://api.github.com/repos/langchain-ai/open-swe/branches/master with 301" in error
+        "https://api.github.com/repos/langchain-ai/open-swe/branches/master with 301"
+        in error
     )
-    assert "location: https://api.github.com/repos/langchain-ai/open-swe/branches/main" in error
+    assert (
+        "location: https://api.github.com/repos/langchain-ai/open-swe/branches/main"
+        in error
+    )
     assert 'response body: {"message":"Moved Permanently"}' in error
     assert client.post_calls == []
 
@@ -410,7 +471,9 @@ def _stub_plan(monkeypatch: pytest.MonkeyPatch, plan: dict[str, Any] | None) -> 
     monkeypatch.setattr(opr, "get_plan_content", lambda *_a, **_k: _coro(plan))
 
 
-def test_appends_slack_reference_for_private_repo(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_appends_slack_reference_for_private_repo(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _set_config(
         monkeypatch,
         {
@@ -425,7 +488,9 @@ def test_appends_slack_reference_for_private_repo(monkeypatch: pytest.MonkeyPatc
 
     client = _RoutingClient(
         post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}}),
-        get_routes={"/repos/langchain-ai/open-swe": _FakeResponse(200, {"private": True})},
+        get_routes={
+            "/repos/langchain-ai/open-swe": _FakeResponse(200, {"private": True})
+        },
     )
     _install_client(monkeypatch, client)
 
@@ -457,13 +522,18 @@ def test_uses_stored_slack_permalink_reference(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr(opr, "get_slack_permalink", fail_permalink)
     client = _RoutingClient(
         post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}}),
-        get_routes={"/repos/langchain-ai/open-swe": _FakeResponse(200, {"private": True})},
+        get_routes={
+            "/repos/langchain-ai/open-swe": _FakeResponse(200, {"private": True})
+        },
     )
     _install_client(monkeypatch, client)
 
     _open_with_body("body")
 
-    assert "- Slack thread: https://slack.example/stored" in client.post_calls[0]["json"]["body"]
+    assert (
+        "- Slack thread: https://slack.example/stored"
+        in client.post_calls[0]["json"]["body"]
+    )
 
 
 def test_appends_plan_reference_from_thread_id(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -478,7 +548,9 @@ def test_appends_plan_reference_from_thread_id(monkeypatch: pytest.MonkeyPatch) 
         },
     )
 
-    client = _FakeClient(post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}}))
+    client = _FakeClient(
+        post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}})
+    )
     _install_client(monkeypatch, client)
 
     _open_with_body("body")
@@ -489,13 +561,17 @@ def test_appends_plan_reference_from_thread_id(monkeypatch: pytest.MonkeyPatch) 
     assert client.post_calls
 
 
-def test_omits_plan_reference_when_no_plan_exists(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_omits_plan_reference_when_no_plan_exists(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("DASHBOARD_BASE_URL", "https://dashboard.example")
     _set_config(monkeypatch, {"source": "dashboard", "thread_id": "thread-1"})
     _stub_token(monkeypatch)
     _stub_plan(monkeypatch, None)
 
-    client = _FakeClient(post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}}))
+    client = _FakeClient(
+        post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}})
+    )
     _install_client(monkeypatch, client)
 
     _open_with_body("body")
@@ -504,13 +580,17 @@ def test_omits_plan_reference_when_no_plan_exists(monkeypatch: pytest.MonkeyPatc
     assert client.post_calls
 
 
-def test_omits_plan_reference_when_plan_html_empty(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_omits_plan_reference_when_plan_html_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("DASHBOARD_BASE_URL", "https://dashboard.example")
     _set_config(monkeypatch, {"source": "dashboard", "thread_id": "thread-1"})
     _stub_token(monkeypatch)
     _stub_plan(monkeypatch, {"html": "   \n  ", "status": "ready"})
 
-    client = _FakeClient(post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}}))
+    client = _FakeClient(
+        post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}})
+    )
     _install_client(monkeypatch, client)
 
     _open_with_body("body")
@@ -519,7 +599,9 @@ def test_omits_plan_reference_when_plan_html_empty(monkeypatch: pytest.MonkeyPat
     assert client.post_calls
 
 
-def test_omits_plan_reference_when_store_lookup_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_omits_plan_reference_when_store_lookup_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("DASHBOARD_BASE_URL", "https://dashboard.example")
     _set_config(monkeypatch, {"source": "dashboard", "thread_id": "thread-1"})
     _stub_token(monkeypatch)
@@ -529,7 +611,9 @@ def test_omits_plan_reference_when_store_lookup_fails(monkeypatch: pytest.Monkey
 
     monkeypatch.setattr(opr, "get_plan_content", fail_plan)
 
-    client = _FakeClient(post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}}))
+    client = _FakeClient(
+        post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}})
+    )
     _install_client(monkeypatch, client)
 
     _open_with_body("body")
@@ -563,7 +647,9 @@ def test_plan_reference_survives_source_reference_failure(
         raise RuntimeError("slack failed")
 
     monkeypatch.setattr(opr, "get_slack_permalink", fail_permalink)
-    client = _FakeClient(post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}}))
+    client = _FakeClient(
+        post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}})
+    )
     _install_client(monkeypatch, client)
 
     _open_with_body("body")
@@ -588,7 +674,9 @@ def test_omits_slack_reference_for_public_repo(monkeypatch: pytest.MonkeyPatch) 
 
     client = _RoutingClient(
         post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}}),
-        get_routes={"/repos/langchain-ai/open-swe": _FakeResponse(200, {"private": False})},
+        get_routes={
+            "/repos/langchain-ai/open-swe": _FakeResponse(200, {"private": False})
+        },
     )
     _install_client(monkeypatch, client)
 
@@ -623,7 +711,9 @@ def test_public_repo_appends_plan_but_not_slack_reference(
 
     client = _RoutingClient(
         post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}}),
-        get_routes={"/repos/langchain-ai/open-swe": _FakeResponse(200, {"private": False})},
+        get_routes={
+            "/repos/langchain-ai/open-swe": _FakeResponse(200, {"private": False})
+        },
     )
     _install_client(monkeypatch, client)
 
@@ -634,19 +724,26 @@ def test_public_repo_appends_plan_but_not_slack_reference(
     assert "Slack thread" not in sent_body
 
 
-def test_appends_linear_reference_for_private_repo(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_appends_linear_reference_for_private_repo(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _set_config(
         monkeypatch,
         {
             "source": "linear",
-            "linear_issue": {"url": "https://linear.app/x/AB-12", "identifier": "AB-12"},
+            "linear_issue": {
+                "url": "https://linear.app/x/AB-12",
+                "identifier": "AB-12",
+            },
         },
     )
     _stub_token(monkeypatch)
 
     client = _RoutingClient(
         post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}}),
-        get_routes={"/repos/langchain-ai/open-swe": _FakeResponse(200, {"private": True})},
+        get_routes={
+            "/repos/langchain-ai/open-swe": _FakeResponse(200, {"private": True})
+        },
     )
     _install_client(monkeypatch, client)
 
@@ -656,7 +753,9 @@ def test_appends_linear_reference_for_private_repo(monkeypatch: pytest.MonkeyPat
     assert "- Linear ticket: [AB-12](https://linear.app/x/AB-12)" in sent_body
 
 
-def test_appends_github_issue_reference_for_private_repo(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_appends_github_issue_reference_for_private_repo(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _set_config(
         monkeypatch,
         {
@@ -671,21 +770,28 @@ def test_appends_github_issue_reference_for_private_repo(monkeypatch: pytest.Mon
 
     client = _RoutingClient(
         post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}}),
-        get_routes={"/repos/langchain-ai/open-swe": _FakeResponse(200, {"private": True})},
+        get_routes={
+            "/repos/langchain-ai/open-swe": _FakeResponse(200, {"private": True})
+        },
     )
     _install_client(monkeypatch, client)
 
     _open_with_body("body")
 
     sent_body = client.post_calls[0]["json"]["body"]
-    assert "- GitHub issue: [#42](https://github.com/langchain-ai/open-swe/issues/42)" in sent_body
+    assert (
+        "- GitHub issue: [#42](https://github.com/langchain-ai/open-swe/issues/42)"
+        in sent_body
+    )
 
 
 def test_skips_append_when_no_source_context(monkeypatch: pytest.MonkeyPatch) -> None:
     _set_config(monkeypatch, {"source": "slack"})
     _stub_token(monkeypatch)
 
-    client = _FakeClient(post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}}))
+    client = _FakeClient(
+        post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}})
+    )
     _install_client(monkeypatch, client)
 
     _open_with_body("body")
@@ -694,7 +800,9 @@ def test_skips_append_when_no_source_context(monkeypatch: pytest.MonkeyPatch) ->
     assert client.post_calls
 
 
-def test_does_not_duplicate_existing_references(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_does_not_duplicate_existing_references(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _set_config(
         monkeypatch,
         {
@@ -704,7 +812,9 @@ def test_does_not_duplicate_existing_references(monkeypatch: pytest.MonkeyPatch)
     )
     _stub_token(monkeypatch)
 
-    client = _FakeClient(post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}}))
+    client = _FakeClient(
+        post=_FakeResponse(201, {"html_url": "u", "number": 1, "user": {}})
+    )
     _install_client(monkeypatch, client)
 
     _open_with_body("body\n\n## References\n- existing")

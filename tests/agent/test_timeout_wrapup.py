@@ -9,7 +9,9 @@ from agent.middleware.timeout_wrapup import TimeoutWrapupMiddleware
 
 
 @pytest.mark.asyncio
-async def test_timeout_wrapup_starts_clock_lazily(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_timeout_wrapup_starts_clock_lazily(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     times = [100.0, 105.0, 111.0]
 
     def monotonic() -> float:
@@ -56,7 +58,9 @@ async def test_timeout_wrapup_preserves_structured_system_content(
         model=cast(BaseChatModel, object()),
         messages=[],
         system_message=SystemMessage(
-            content=[{"type": "text", "text": "base", "cache_control": {"type": "ephemeral"}}]
+            content=[
+                {"type": "text", "text": "base", "cache_control": {"type": "ephemeral"}}
+            ]
         ),
     )
 
@@ -65,7 +69,11 @@ async def test_timeout_wrapup_preserves_structured_system_content(
     assert seen[0].system_message is not None
     content = seen[0].system_message.content
     assert isinstance(content, list)
-    assert content[0] == {"type": "text", "text": "base", "cache_control": {"type": "ephemeral"}}
+    assert content[0] == {
+        "type": "text",
+        "text": "base",
+        "cache_control": {"type": "ephemeral"},
+    }
     warning_block = content[1]
     assert isinstance(warning_block, dict)
     assert warning_block["type"] == "text"

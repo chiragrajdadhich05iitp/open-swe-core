@@ -95,7 +95,10 @@ async def update_finding(
     if title is not None:
         normalized_title = normalize_finding_title(title)
         if normalized_title == DEFAULT_FINDING_TITLE:
-            return {"success": False, "error": "title must be a non-empty generated headline"}
+            return {
+                "success": False,
+                "error": "title must be a non-empty generated headline",
+            }
         updates["title"] = normalized_title
     if description is not None:
         updates["description"] = description
@@ -139,7 +142,9 @@ async def update_finding(
 
     delegated_resolution = False
     repo_config = configurable.get("repo") if isinstance(configurable, dict) else None
-    pr_number = configurable.get("pr_number") if isinstance(configurable, dict) else None
+    pr_number = (
+        configurable.get("pr_number") if isinstance(configurable, dict) else None
+    )
     can_resolve_github_thread = (
         isinstance(repo_config, dict)
         and bool(repo_config.get("owner"))

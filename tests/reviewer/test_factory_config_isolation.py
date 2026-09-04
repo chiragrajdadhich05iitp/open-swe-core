@@ -127,4 +127,7 @@ async def test_factory_copies_config_dicts_but_preserves_runtime_objects(
     assert bound_config["callbacks"] is callbacks
     assert cast(list[object], bound_config["callbacks"])[0] is callback
     assert "recursion_limit" not in config
-    assert config.get("configurable") == {"thread_id": None, "custom_key": configurable_value}
+    assert config.get("configurable") == {
+        "thread_id": None,
+        "custom_key": configurable_value,
+    }

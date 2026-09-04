@@ -52,7 +52,11 @@ from fastapi.responses import (  # noqa: E402
 # Slack-user directory the fake ``users.info`` resolves: the default sender used
 # by the automated tests plus the named manual-test users.
 _SLACK_USERS: dict[str, dict[str, str]] = {
-    HUMAN_USER: {"name": "devuser", "real_name": "Dev User", "email": "dev@example.com"},
+    HUMAN_USER: {
+        "name": "devuser",
+        "real_name": "Dev User",
+        "email": "dev@example.com",
+    },
     **{
         u["slack_id"]: {"name": u["login"], "real_name": u["name"], "email": u["email"]}
         for u in TEST_USERS
@@ -117,7 +121,9 @@ async def control_state() -> JSONResponse:
 @app.get("/control/snapshots")
 async def control_snapshots() -> JSONResponse:
     """Snapshot captures/deletes the environment tools asked the platform for."""
-    return JSONResponse({"captured": fakes.SNAPSHOTS, "deleted": fakes.DELETED_SNAPSHOTS})
+    return JSONResponse(
+        {"captured": fakes.SNAPSHOTS, "deleted": fakes.DELETED_SNAPSHOTS}
+    )
 
 
 @app.get("/control/last-system-prompt")
@@ -165,15 +171,22 @@ async def control_queued(thread_id: str = "") -> JSONResponse:
     except Exception:  # noqa: BLE001
         value = None
     messages = value.get("messages") if isinstance(value, dict) else None
-    return JSONResponse({"queued_count": len(messages) if isinstance(messages, list) else 0})
+    return JSONResponse(
+        {"queued_count": len(messages) if isinstance(messages, list) else 0}
+    )
 
 
-async def _deliver_slack_event(payload: dict[str, Any], retry_num: str = "") -> httpx.Response:
+async def _deliver_slack_event(
+    payload: dict[str, Any], retry_num: str = ""
+) -> httpx.Response:
     """POST a signed Events-API delivery to the real /webhooks/slack route."""
     raw = json.dumps(payload).encode()
     req_ts = str(int(time.time()))
     base = f"v0:{req_ts}:{raw.decode()}".encode()
-    sig = "v0=" + hmac.new(SLACK_SIGNING_SECRET.encode(), base, hashlib.sha256).hexdigest()
+    sig = (
+        "v0="
+        + hmac.new(SLACK_SIGNING_SECRET.encode(), base, hashlib.sha256).hexdigest()
+    )
     headers = {
         "X-Slack-Signature": sig,
         "X-Slack-Request-Timestamp": req_ts,
@@ -184,7 +197,9 @@ async def _deliver_slack_event(payload: dict[str, Any], retry_num: str = "") -> 
         headers["X-Slack-Retry-Reason"] = "http_timeout"
 
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://harness") as client:
+    async with httpx.AsyncClient(
+        transport=transport, base_url="http://harness"
+    ) as client:
         return await client.post("/webhooks/slack", content=raw, headers=headers)
 
 
@@ -192,18 +207,27 @@ async def _deliver_slack_interaction(payload: dict[str, Any]) -> httpx.Response:
     raw = urlencode({"payload": json.dumps(payload)}).encode()
     req_ts = str(int(time.time()))
     base = f"v0:{req_ts}:{raw.decode()}".encode()
-    sig = "v0=" + hmac.new(SLACK_SIGNING_SECRET.encode(), base, hashlib.sha256).hexdigest()
+    sig = (
+        "v0="
+        + hmac.new(SLACK_SIGNING_SECRET.encode(), base, hashlib.sha256).hexdigest()
+    )
     headers = {
         "X-Slack-Signature": sig,
         "X-Slack-Request-Timestamp": req_ts,
         "Content-Type": "application/x-www-form-urlencoded",
     }
     transport = httpx.ASGITransport(app=app)
-    async with httpx.AsyncClient(transport=transport, base_url="http://harness") as client:
-        return await client.post("/webhooks/slack/interactivity", content=raw, headers=headers)
+    async with httpx.AsyncClient(
+        transport=transport, base_url="http://harness"
+    ) as client:
+        return await client.post(
+            "/webhooks/slack/interactivity", content=raw, headers=headers
+        )
 
 
-async def _slack_send_result(payload: dict[str, Any], resp: httpx.Response) -> JSONResponse:
+async def _slack_send_result(
+    payload: dict[str, Any], resp: httpx.Response
+) -> JSONResponse:
     event = payload["event"]
     channel = str(event["channel"])
     thread_ts = "0" if channel in fakes.CODE_CHANNELS else str(event["thread_ts"])
@@ -256,7 +280,9 @@ async def slack_send(request: Request) -> JSONResponse:
     # Sender defaults to the first test user (Alice) — the canonical owner the
     # automated tests log in as; the mock UI passes the chosen test user.
     user_id = str(form.get("user") or TEST_USERS[0]["slack_id"])
-    channel = str(form.get("channel") or ("D_DEMO" if channel_type == "im" else DEMO_CHANNEL))
+    channel = str(
+        form.get("channel") or ("D_DEMO" if channel_type == "im" else DEMO_CHANNEL)
+    )
 
     # ``thread_ts`` replies into an existing thread (a distinct message ts under
     # the same thread); omitting it opens a fresh thread, as the mock UI does.
@@ -268,7 +294,9 @@ async def slack_send(request: Request) -> JSONResponse:
         )
     else:
         thread_ts = fakes.new_thread_ts()
-        fakes.add_slack_message(channel, thread_ts, user=user_id, text=text, is_bot=False)
+        fakes.add_slack_message(
+            channel, thread_ts, user=user_id, text=text, is_bot=False
+        )
         event_ts = thread_ts
     CURRENT_THREAD["channel"] = channel
     CURRENT_THREAD["thread_ts"] = thread_ts
@@ -301,7 +329,12 @@ async def slack_action(request: Request) -> JSONResponse:
     thread_ts = str(body.get("thread_ts") or CURRENT_THREAD.get("thread_ts") or "")
     message_ts = str(body.get("message_ts") or "")
     user_id = str(body.get("user") or TEST_USERS[0]["slack_id"])
-    if not isinstance(action, dict) or not channel_id or not thread_ts or not message_ts:
+    if (
+        not isinstance(action, dict)
+        or not channel_id
+        or not thread_ts
+        or not message_ts
+    ):
         raise HTTPException(status_code=400, detail="Missing Slack action context")
     source_message = fakes.slack_message(channel_id, thread_ts, message_ts)
     if source_message is None:
@@ -336,12 +369,16 @@ async def control_login(request: Request) -> JSONResponse:
     email = str(form.get("email", "dev@example.com"))
     token = issue_session(login=login, email=email, avatar_url=None)
     resp = JSONResponse({"ok": True, "login": login, "email": email})
-    resp.set_cookie(COOKIE_NAME, token, httponly=True, samesite="lax", secure=False, path="/")
+    resp.set_cookie(
+        COOKIE_NAME, token, httponly=True, samesite="lax", secure=False, path="/"
+    )
     return resp
 
 
 @app.get("/control/login")
-async def control_login_get(login: str = "", email: str = "", next_url: str = "") -> Response:
+async def control_login_get(
+    login: str = "", email: str = "", next_url: str = ""
+) -> Response:
     """Browser login. With no ``login``, render a dropdown of the test users;
     with ``?login=<u>`` (email resolved from the registry, or pass ``&email=``),
     mint the session cookie and redirect into the dashboard. Use a separate
@@ -351,7 +388,9 @@ async def control_login_get(login: str = "", email: str = "", next_url: str = ""
     ui = os.environ.get("DASHBOARD_BASE_URL", "").rstrip("/")
     dest = next_url or (f"{ui}/agents" if ui else "/agents")
     if not login:
-        options = "".join(f'<option value="{u["login"]}">{u["name"]}</option>' for u in TEST_USERS)
+        options = "".join(
+            f'<option value="{u["login"]}">{u["name"]}</option>' for u in TEST_USERS
+        )
         return HTMLResponse(
             f"""<!doctype html><meta charset=utf-8><title>Mock login</title>
             <body style="font-family:system-ui;max-width:420px;margin:3rem auto;padding:0 1rem">
@@ -369,7 +408,9 @@ async def control_login_get(login: str = "", email: str = "", next_url: str = ""
         email = match["email"] if match else f"{login}@example.com"
     token = issue_session(login=login, email=email, avatar_url=None)
     resp = RedirectResponse(url=dest, status_code=303)
-    resp.set_cookie(COOKIE_NAME, token, httponly=True, samesite="lax", secure=False, path="/")
+    resp.set_cookie(
+        COOKIE_NAME, token, httponly=True, samesite="lax", secure=False, path="/"
+    )
     return resp
 
 
@@ -383,7 +424,9 @@ async def mock_github_login(redirect_to: str = "") -> Response:
     """
     ui = os.environ.get("DASHBOARD_BASE_URL", "").rstrip("/")
     dest = redirect_to or (f"{ui}/agents" if ui else "/agents")
-    return RedirectResponse(f"/fake-gh/login/oauth/authorize?redirect_to={quote(dest)}", 302)
+    return RedirectResponse(
+        f"/fake-gh/login/oauth/authorize?redirect_to={quote(dest)}", 302
+    )
 
 
 @app.get("/fake-gh/login/oauth/authorize")
@@ -417,7 +460,9 @@ async def fake_github_authorize(redirect_to: str = "", login: str = "") -> Respo
     email = match["email"] if match else f"{login}@example.com"
     token = issue_session(login=login, email=email, avatar_url=None)
     resp = RedirectResponse(url=dest, status_code=303)
-    resp.set_cookie(COOKIE_NAME, token, httponly=True, samesite="lax", secure=False, path="/")
+    resp.set_cookie(
+        COOKIE_NAME, token, httponly=True, samesite="lax", secure=False, path="/"
+    )
     return resp
 
 
@@ -470,13 +515,16 @@ async def _render_app_route(request: Request) -> Response:
             )
     except httpx.HTTPError as exc:
         raise HTTPException(
-            502, f"UI server unreachable at {UI_SERVER_URL} — is global-setup running it?"
+            502,
+            f"UI server unreachable at {UI_SERVER_URL} — is global-setup running it?",
         ) from exc
     return Response(
         content=upstream.content,
         status_code=upstream.status_code,
         headers={
-            k: v for k, v in upstream.headers.items() if k.lower() not in _DROPPED_RESPONSE_HEADERS
+            k: v
+            for k, v in upstream.headers.items()
+            if k.lower() not in _DROPPED_RESPONSE_HEADERS
         },
     )
 
@@ -484,7 +532,9 @@ async def _render_app_route(request: Request) -> Response:
 def _ui_file(name: str) -> FileResponse:
     path = UI_PUBLIC / name
     if not path.is_file():
-        raise HTTPException(404, f"{name} not built — run `pnpm run build` at the repo root")
+        raise HTTPException(
+            404, f"{name} not built — run `pnpm run build` at the repo root"
+        )
     return FileResponse(path)
 
 
@@ -537,7 +587,9 @@ async def ui_agents_home(request: Request) -> Response:
 
 
 @app.get("/agents/{thread_id}", response_class=HTMLResponse)
-async def ui_agents_thread(request: Request, thread_id: str) -> Response:  # noqa: ARG001
+async def ui_agents_thread(
+    request: Request, thread_id: str
+) -> Response:  # noqa: ARG001
     return await _render_app_route(request)
 
 
@@ -598,13 +650,16 @@ async def slack_state(channel: str = "") -> JSONResponse:
     channels.extend(
         {
             "id": message_channel,
-            "name": "direct-message"
-            if message_channel.startswith("D")
-            else message_channel.lower(),
+            "name": (
+                "direct-message"
+                if message_channel.startswith("D")
+                else message_channel.lower()
+            ),
             "code_channel": False,
         }
         for message_channel in fakes.slack_channels()
-        if message_channel != DEMO_CHANNEL and message_channel not in fakes.CODE_CHANNELS
+        if message_channel != DEMO_CHANNEL
+        and message_channel not in fakes.CODE_CHANNELS
     )
     channels.extend(
         {**value, "code_channel": True}
@@ -651,7 +706,9 @@ async def mock_github_data() -> JSONResponse:
 
 
 @app.get("/mock/github/{owner}/{repo}/pull/{number}", response_class=HTMLResponse)
-async def mock_github_pr(owner: str, repo: str, number: int) -> HTMLResponse:  # noqa: ARG001
+async def mock_github_pr(
+    owner: str, repo: str, number: int
+) -> HTMLResponse:  # noqa: ARG001
     pr = fakes.find_pull(number)
     if pr is None:
         return HTMLResponse(f"<h1>PR #{number} not found</h1>", status_code=404)
@@ -704,11 +761,15 @@ def _gh_pr_json(pr: dict[str, Any]) -> dict[str, Any]:
 
 @app.get("/fake-gh/repos/{owner}/{repo}")
 async def gh_get_repo(owner: str, repo: str) -> JSONResponse:
-    return JSONResponse({"full_name": f"{owner}/{repo}", "private": fakes.repo_private()})
+    return JSONResponse(
+        {"full_name": f"{owner}/{repo}", "private": fakes.repo_private()}
+    )
 
 
 @app.get("/fake-gh/repos/{owner}/{repo}/branches/{branch:path}")
-async def gh_get_branch(owner: str, repo: str, branch: str) -> JSONResponse:  # noqa: ARG001
+async def gh_get_branch(
+    owner: str, repo: str, branch: str
+) -> JSONResponse:  # noqa: ARG001
     if not fakes.branch_exists(owner, repo, branch):
         return JSONResponse({"message": "Branch not found"}, status_code=404)
     return JSONResponse({"name": branch, "commit": {"sha": "deadbeef"}})
@@ -747,7 +808,9 @@ async def gh_get_check_runs(owner: str, repo: str, sha: str) -> JSONResponse:
     pr = fakes.find_pull_by_sha(owner, repo, sha)
     if pr is None:
         return JSONResponse({"message": "Not Found"}, status_code=404)
-    return JSONResponse({"total_count": len(pr["check_runs"]), "check_runs": pr["check_runs"]})
+    return JSONResponse(
+        {"total_count": len(pr["check_runs"]), "check_runs": pr["check_runs"]}
+    )
 
 
 @app.get("/fake-gh/repos/{owner}/{repo}/commits/{sha}/status")
@@ -765,13 +828,21 @@ async def gh_graphql(request: Request) -> JSONResponse:
     owner = variables.get("owner")
     repo = variables.get("repo")
     number = variables.get("number")
-    if not isinstance(owner, str) or not isinstance(repo, str) or not isinstance(number, int):
-        return JSONResponse({"errors": [{"message": "Invalid variables"}]}, status_code=400)
+    if (
+        not isinstance(owner, str)
+        or not isinstance(repo, str)
+        or not isinstance(number, int)
+    ):
+        return JSONResponse(
+            {"errors": [{"message": "Invalid variables"}]}, status_code=400
+        )
     pr = fakes.find_pull(number, owner, repo)
     if pr is None:
         return JSONResponse({"errors": [{"message": "Pull request not found"}]})
     review_threads = {
-        "nodes": [fakes.review_thread_graphql(thread) for thread in pr["review_threads"]],
+        "nodes": [
+            fakes.review_thread_graphql(thread) for thread in pr["review_threads"]
+        ],
         "pageInfo": {"hasNextPage": False, "endCursor": None},
     }
     pull_request: dict[str, Any] = {"reviewThreads": review_threads}
@@ -804,13 +875,19 @@ async def gh_graphql(request: Request) -> JSONResponse:
                             "statusCheckRollup": {
                                 "contexts": {
                                     "nodes": [
-                                        *[fakes.check_graphql(check) for check in pr["check_runs"]],
+                                        *[
+                                            fakes.check_graphql(check)
+                                            for check in pr["check_runs"]
+                                        ],
                                         *[
                                             fakes.status_graphql(status)
                                             for status in pr["statuses"]
                                         ],
                                     ],
-                                    "pageInfo": {"hasNextPage": False, "endCursor": None},
+                                    "pageInfo": {
+                                        "hasNextPage": False,
+                                        "endCursor": None,
+                                    },
                                 }
                             },
                         }
@@ -952,21 +1029,29 @@ async def slack_set_code_channel_status(request: Request) -> JSONResponse:
     channel = fakes.update_code_channel(
         str(body.get("channel_id") or ""), status=body.get("status")
     )
-    return _ok() if channel else JSONResponse({"ok": False, "error": "channel_not_found"})
+    return (
+        _ok() if channel else JSONResponse({"ok": False, "error": "channel_not_found"})
+    )
 
 
 @app.post("/fake-slack/agents.sessions.rename")
 async def slack_rename_code_channel(request: Request) -> JSONResponse:
     body = await request.json()
-    channel = fakes.update_code_channel(str(body.get("channel_id") or ""), name=body.get("title"))
-    return _ok() if channel else JSONResponse({"ok": False, "error": "channel_not_found"})
+    channel = fakes.update_code_channel(
+        str(body.get("channel_id") or ""), name=body.get("title")
+    )
+    return (
+        _ok() if channel else JSONResponse({"ok": False, "error": "channel_not_found"})
+    )
 
 
 @app.post("/fake-slack/agents.conversations.setProperties")
 async def slack_set_code_channel_properties(request: Request) -> JSONResponse:
     body = await request.json()
     channel_id = str(body.get("channel_id") or "")
-    code_channel = body.get("code_channel") if isinstance(body.get("code_channel"), dict) else {}
+    code_channel = (
+        body.get("code_channel") if isinstance(body.get("code_channel"), dict) else {}
+    )
     values: dict[str, Any] = {}
     if "context_bar_items" in code_channel:
         values["context_bar_items"] = code_channel["context_bar_items"]
@@ -975,7 +1060,9 @@ async def slack_set_code_channel_properties(request: Request) -> JSONResponse:
     if "agent_resource" in body:
         values["agent_resource"] = body["agent_resource"]
     channel = fakes.update_code_channel(channel_id, **values)
-    return _ok() if channel else JSONResponse({"ok": False, "error": "channel_not_found"})
+    return (
+        _ok() if channel else JSONResponse({"ok": False, "error": "channel_not_found"})
+    )
 
 
 @app.post("/fake-slack/agents.conversations.setCommands")
@@ -984,7 +1071,9 @@ async def slack_set_code_channel_commands(request: Request) -> JSONResponse:
     channel = fakes.update_code_channel(
         str(body.get("channel_id") or ""), commands=body.get("commands", [])
     )
-    return _ok() if channel else JSONResponse({"ok": False, "error": "channel_not_found"})
+    return (
+        _ok() if channel else JSONResponse({"ok": False, "error": "channel_not_found"})
+    )
 
 
 @app.post("/fake-slack/agents.conversations.setView")
@@ -1001,12 +1090,18 @@ async def slack_set_code_channel_view(request: Request) -> JSONResponse:
 @app.post("/fake-slack/agents.conversations.archive")
 async def slack_archive_code_channel(request: Request) -> JSONResponse:
     body = await request.json()
-    channel = fakes.update_code_channel(str(body.get("channel_id") or ""), archived=True)
-    return _ok() if channel else JSONResponse({"ok": False, "error": "channel_not_found"})
+    channel = fakes.update_code_channel(
+        str(body.get("channel_id") or ""), archived=True
+    )
+    return (
+        _ok() if channel else JSONResponse({"ok": False, "error": "channel_not_found"})
+    )
 
 
 @app.get("/fake-slack/chat.getPermalink")
-async def slack_get_permalink(channel: str = "", message_ts: str = "") -> JSONResponse:  # noqa: ARG001
+async def slack_get_permalink(
+    channel: str = "", message_ts: str = ""
+) -> JSONResponse:  # noqa: ARG001
     return _ok({"permalink": f"{BASE_URL}/mock/slack"})
 
 

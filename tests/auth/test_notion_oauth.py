@@ -17,7 +17,9 @@ class _FakeStore:
         value = self.items.get((tuple(namespace), key))
         return {"value": value} if value is not None else None
 
-    async def put_item(self, namespace: list[str], key: str, value: dict[str, Any]) -> None:
+    async def put_item(
+        self, namespace: list[str], key: str, value: dict[str, Any]
+    ) -> None:
         self.items[(tuple(namespace), key)] = value
 
     async def delete_item(self, namespace: list[str], key: str) -> None:
@@ -39,7 +41,10 @@ def fake_store(monkeypatch: pytest.MonkeyPatch) -> _FakeStore:
 
 def test_code_challenge_matches_rfc7636_vector() -> None:
     verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
-    assert no.code_challenge_for_verifier(verifier) == "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
+    assert (
+        no.code_challenge_for_verifier(verifier)
+        == "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"
+    )
 
 
 def test_build_notion_authorize_url() -> None:

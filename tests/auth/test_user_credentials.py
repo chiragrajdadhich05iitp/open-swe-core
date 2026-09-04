@@ -20,7 +20,9 @@ class _FakeStore:
         value = self.items.get((tuple(namespace), key))
         return {"value": value} if value is not None else None
 
-    async def put_item(self, namespace: list[str], key: str, value: dict[str, Any]) -> None:
+    async def put_item(
+        self, namespace: list[str], key: str, value: dict[str, Any]
+    ) -> None:
         self.items[(tuple(namespace), key)] = value
 
     async def delete_item(self, namespace: list[str], key: str) -> None:
@@ -75,7 +77,9 @@ async def test_currents_roundtrip_and_redaction(fake_store: _FakeStore) -> None:
 
 @pytest.mark.asyncio
 async def test_currents_isolation_between_users(fake_store: _FakeStore) -> None:
-    await uc.connect_currents("alice", CurrentsCredentialsUpdate(api_key="alice-key-abcd"))
+    await uc.connect_currents(
+        "alice", CurrentsCredentialsUpdate(api_key="alice-key-abcd")
+    )
     await uc.connect_currents("bob", CurrentsCredentialsUpdate(api_key="bob-key-wxyz"))
 
     assert await uc.get_currents_api_key("alice") == "alice-key-abcd"
@@ -87,7 +91,9 @@ async def test_currents_isolation_between_users(fake_store: _FakeStore) -> None:
 
 
 @pytest.mark.asyncio
-async def test_langsmith_roundtrip_redaction_and_isolation(fake_store: _FakeStore) -> None:
+async def test_langsmith_roundtrip_redaction_and_isolation(
+    fake_store: _FakeStore,
+) -> None:
     with pytest.raises(ValidationError):
         uc.UserLangSmithCredentialsUpdate(api_key="key")
     with pytest.raises(ValidationError):
@@ -126,7 +132,9 @@ async def test_currents_status_when_not_connected(fake_store: _FakeStore) -> Non
 
 
 @pytest.mark.asyncio
-async def test_get_currents_api_key_none_when_not_connected(fake_store: _FakeStore) -> None:
+async def test_get_currents_api_key_none_when_not_connected(
+    fake_store: _FakeStore,
+) -> None:
     assert await uc.get_currents_api_key("nobody") is None
 
 

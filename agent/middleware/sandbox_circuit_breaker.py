@@ -12,7 +12,11 @@ from agent.auth.thread_token import get_github_token
 
 from ..utils.github_comments import post_github_comment
 from ..utils.linear import comment_on_linear_issue
-from ..utils.slack import LANGGRAPH_URL, get_active_slack_thread, post_slack_thread_reply
+from ..utils.slack import (
+    LANGGRAPH_URL,
+    get_active_slack_thread,
+    post_slack_thread_reply,
+)
 from ..utils.user_messages import warning
 
 logger = logging.getLogger(__name__)
@@ -99,7 +103,9 @@ def _coerce_issue_number(value: object) -> int | None:
     return None
 
 
-def _get_github_target(configurable: Mapping[str, Any]) -> tuple[dict[str, str], int] | None:
+def _get_github_target(
+    configurable: Mapping[str, Any]
+) -> tuple[dict[str, str], int] | None:
     repo_config = configurable.get("repo")
     if not isinstance(repo_config, Mapping):
         return None
@@ -142,7 +148,9 @@ async def post_sandbox_unreachable_notification(
 ) -> None:
     configurable = config.get("configurable", {})
     if not isinstance(configurable, Mapping):
-        logger.info("No runtime configurable found for sandbox unreachable notification")
+        logger.info(
+            "No runtime configurable found for sandbox unreachable notification"
+        )
         return
 
     message = sandbox_unreachable_message(
@@ -156,27 +164,37 @@ async def post_sandbox_unreachable_notification(
         channel_id, thread_ts = slack_target
         thread_id = configurable.get("thread_id")
         if isinstance(thread_id, str) and thread_id:
-            await post_slack_thread_reply(channel_id, thread_ts, message, agent_thread_id=thread_id)
+            await post_slack_thread_reply(
+                channel_id, thread_ts, message, agent_thread_id=thread_id
+            )
         else:
             await post_slack_thread_reply(channel_id, thread_ts, message)
-        logger.info("Sent sandbox unreachable notification to Slack thread %s", thread_ts)
+        logger.info(
+            "Sent sandbox unreachable notification to Slack thread %s", thread_ts
+        )
         return
 
     linear_issue_id = _get_linear_issue_id(configurable)
     if linear_issue_id is not None:
         await comment_on_linear_issue(linear_issue_id, message)
-        logger.info("Sent sandbox unreachable notification to Linear issue %s", linear_issue_id)
+        logger.info(
+            "Sent sandbox unreachable notification to Linear issue %s", linear_issue_id
+        )
         return
 
     github_target = _get_github_target(configurable)
     if github_target is not None:
         token = get_github_token(config) or await get_github_app_installation_token()
         if not token:
-            logger.info("No GitHub token available for sandbox unreachable notification")
+            logger.info(
+                "No GitHub token available for sandbox unreachable notification"
+            )
             return
         repo, issue_number = github_target
         await post_github_comment(repo, issue_number, message, token=token)
-        logger.info("Sent sandbox unreachable notification to GitHub item #%s", issue_number)
+        logger.info(
+            "Sent sandbox unreachable notification to GitHub item #%s", issue_number
+        )
         return
 
     logger.info("No user-facing target found for sandbox unreachable notification")

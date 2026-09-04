@@ -12,7 +12,11 @@ class RunUsageSummary:
 
 
 def _number(value: Any) -> int | None:
-    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
+    return (
+        value
+        if isinstance(value, int) and not isinstance(value, bool) and value >= 0
+        else None
+    )
 
 
 def _tokens(usage: Any) -> int | None:
@@ -27,7 +31,9 @@ def _tokens(usage: Any) -> int | None:
         total = input_tokens + output_tokens
     input_details = usage.get("input_token_details")
     cache_read = (
-        _number(input_details.get("cache_read")) if isinstance(input_details, dict) else None
+        _number(input_details.get("cache_read"))
+        if isinstance(input_details, dict)
+        else None
     )
     return max(total - (cache_read or 0), 0)
 
@@ -53,13 +59,17 @@ def summarize_run_usage(state: dict[str, Any] | None) -> RunUsageSummary | None:
         if isinstance(messages[index], HumanMessage):
             start = index + 1
             break
-    ai_messages = [message for message in messages[start:] if isinstance(message, AIMessage)]
+    ai_messages = [
+        message for message in messages[start:] if isinstance(message, AIMessage)
+    ]
     if not ai_messages:
         return None
 
     models = {model for message in ai_messages if (model := _message_model(message))}
     reported_tokens = [
-        tokens for message in ai_messages if (tokens := _tokens(message.usage_metadata)) is not None
+        tokens
+        for message in ai_messages
+        if (tokens := _tokens(message.usage_metadata)) is not None
     ]
     main_agent_tokens = sum(reported_tokens) if reported_tokens else None
     if not models and main_agent_tokens is None:

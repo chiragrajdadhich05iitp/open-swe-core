@@ -27,7 +27,9 @@ class ReadOnlyBackend(BackendProtocol):
     def read(self, file_path: str, offset: int = 0, limit: int = 2000) -> ReadResult:
         raise NotImplementedError(_SYNC_UNSUPPORTED)
 
-    async def aread(self, file_path: str, offset: int = 0, limit: int = 2000) -> ReadResult:
+    async def aread(
+        self, file_path: str, offset: int = 0, limit: int = 2000
+    ) -> ReadResult:
         return await self._backend.aread(file_path, offset, limit)
 
     def grep(

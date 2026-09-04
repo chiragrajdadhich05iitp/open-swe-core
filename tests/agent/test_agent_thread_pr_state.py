@@ -8,7 +8,9 @@ import pytest
 from agent.webhooks import common as webhook_common
 
 
-def _pr_payload(*, state: str, merged: bool = False, draft: bool = False) -> dict[str, Any]:
+def _pr_payload(
+    *, state: str, merged: bool = False, draft: bool = False
+) -> dict[str, Any]:
     return {
         "pull_request": {
             "html_url": "https://github.com/lc/repo/pull/7",
@@ -21,16 +23,22 @@ def _pr_payload(*, state: str, merged: bool = False, draft: bool = False) -> dic
 
 def test_pr_state_from_payload_merged() -> None:
     assert (
-        webhook_common._pr_state_from_payload(_pr_payload(state="closed", merged=True)) == "merged"
+        webhook_common._pr_state_from_payload(_pr_payload(state="closed", merged=True))
+        == "merged"
     )
 
 
 def test_pr_state_from_payload_closed() -> None:
-    assert webhook_common._pr_state_from_payload(_pr_payload(state="closed")) == "closed"
+    assert (
+        webhook_common._pr_state_from_payload(_pr_payload(state="closed")) == "closed"
+    )
 
 
 def test_pr_state_from_payload_draft() -> None:
-    assert webhook_common._pr_state_from_payload(_pr_payload(state="open", draft=True)) == "draft"
+    assert (
+        webhook_common._pr_state_from_payload(_pr_payload(state="open", draft=True))
+        == "draft"
+    )
 
 
 def test_pr_state_from_payload_open() -> None:
@@ -84,7 +92,9 @@ async def test_update_agent_thread_pr_state_skips_reviewer_threads() -> None:
 
 
 @pytest.mark.asyncio
-async def test_update_agent_thread_pr_state_updates_non_latest_collection_entry() -> None:
+async def test_update_agent_thread_pr_state_updates_non_latest_collection_entry() -> (
+    None
+):
     older_pr = {
         "repo_full_name": "lc/repo",
         "number": 7,
@@ -129,7 +139,8 @@ async def test_update_agent_thread_pr_state_updates_non_latest_collection_entry(
 @pytest.mark.asyncio
 async def test_update_agent_thread_pr_state_paginates_all_matching_threads() -> None:
     first_page = [
-        {"thread_id": f"reviewer-{index}", "metadata": {"kind": "reviewer"}} for index in range(50)
+        {"thread_id": f"reviewer-{index}", "metadata": {"kind": "reviewer"}}
+        for index in range(50)
     ]
     target = {
         "thread_id": "t51",
@@ -146,7 +157,9 @@ async def test_update_agent_thread_pr_state_paginates_all_matching_threads() -> 
     with patch("agent.webhooks.common.get_client", return_value=fake_client):
         await webhook_common.update_agent_thread_pr_state(_pr_payload(state="closed"))
 
-    assert [call.kwargs["offset"] for call in fake_client.threads.search.await_args_list] == [
+    assert [
+        call.kwargs["offset"] for call in fake_client.threads.search.await_args_list
+    ] == [
         0,
         50,
         0,
@@ -173,6 +186,8 @@ async def test_update_agent_thread_pr_state_noop_when_state_unchanged() -> None:
     fake_client.threads.update = AsyncMock()
 
     with patch("agent.webhooks.common.get_client", return_value=fake_client):
-        await webhook_common.update_agent_thread_pr_state(_pr_payload(state="closed", merged=True))
+        await webhook_common.update_agent_thread_pr_state(
+            _pr_payload(state="closed", merged=True)
+        )
 
     fake_client.threads.update.assert_not_called()

@@ -210,14 +210,20 @@ async def _resolve_session(
     async with _client(creds) as client:
         thread_id, evidence = await _resolve_thread(client, project, pr_context)
         if thread_id is None:
-            detail = f"No coding-agent thread matched (tried {_attempted_keys(pr_context)})."
+            detail = (
+                f"No coding-agent thread matched (tried {_attempted_keys(pr_context)})."
+            )
             return None, detail, project
 
-        runs = await _list_thread_runs(client, project, thread_id, limit=_MAX_SESSION_RUNS)
+        runs = await _list_thread_runs(
+            client, project, thread_id, limit=_MAX_SESSION_RUNS
+        )
         if not runs:
             return None, f"Matched thread {thread_id} but it returned no runs.", project
 
-    runs.sort(key=lambda r: _run_time(r, "start_time") or datetime.min.replace(tzinfo=UTC))
+    runs.sort(
+        key=lambda r: _run_time(r, "start_time") or datetime.min.replace(tzinfo=UTC)
+    )
     confidence = 0.9 if evidence.startswith("branch:") else 0.85
     session = _ResolvedSession(
         project=project,
@@ -281,7 +287,8 @@ def _build_pr_context(configurable: dict[str, Any]) -> _PRContext | None:
         repo=repo,
         pr_number=pr_number,
         pr_url=str(
-            configurable.get("pr_url") or f"https://github.com/{owner}/{repo}/pull/{pr_number}"
+            configurable.get("pr_url")
+            or f"https://github.com/{owner}/{repo}/pull/{pr_number}"
         ),
         branch_name=str(configurable.get("branch_name") or ""),
         head_sha=str(configurable.get("head_sha") or ""),
@@ -289,7 +296,9 @@ def _build_pr_context(configurable: dict[str, Any]) -> _PRContext | None:
     )
 
 
-async def _resolve_thread(client: Any, project: str, context: _PRContext) -> tuple[str | None, str]:
+async def _resolve_thread(
+    client: Any, project: str, context: _PRContext
+) -> tuple[str | None, str]:
     """Return the dominant thread for the strongest available key, or ``(None, "")``.
 
     The branch search is scoped to the repo: branch names like ``fix-tests`` are not
@@ -325,8 +334,12 @@ async def _dominant_thread(client: Any, project: str, terms: list[str]) -> str |
     return max(counts, key=lambda thread_id: counts[thread_id])
 
 
-async def _search_runs(client: Any, project: str, terms: list[str], *, limit: int) -> list[Any]:
-    clauses = [f'search("{_filter_string(t.strip())}")' for t in terms if len(t.strip()) >= 3]
+async def _search_runs(
+    client: Any, project: str, terms: list[str], *, limit: int
+) -> list[Any]:
+    clauses = [
+        f'search("{_filter_string(t.strip())}")' for t in terms if len(t.strip()) >= 3
+    ]
     if not clauses:
         return []
     since = datetime.now(UTC) - timedelta(days=_SEARCH_LOOKBACK_DAYS)
@@ -335,7 +348,9 @@ async def _search_runs(client: Any, project: str, terms: list[str], *, limit: in
     return await _list_runs(client, project, filter_expr, limit=limit)
 
 
-async def _list_thread_runs(client: Any, project: str, thread_id: str, *, limit: int) -> list[Any]:
+async def _list_thread_runs(
+    client: Any, project: str, thread_id: str, *, limit: int
+) -> list[Any]:
     return await _list_runs(
         client,
         project,
@@ -344,7 +359,9 @@ async def _list_thread_runs(client: Any, project: str, thread_id: str, *, limit:
     )
 
 
-async def _list_runs(client: Any, project: str, filter_expr: str, *, limit: int) -> list[Any]:
+async def _list_runs(
+    client: Any, project: str, filter_expr: str, *, limit: int
+) -> list[Any]:
     capped = max(1, min(limit, _MAX_SESSION_RUNS))
 
     kwargs: dict[str, Any] = {"filter": filter_expr, "limit": capped}
@@ -395,7 +412,11 @@ async def _write_json_to_sandbox(
     if isinstance(response, dict):
         error = response.get("error")
     else:
-        error = getattr(response, "error", None) if response is not None else "no upload response"
+        error = (
+            getattr(response, "error", None)
+            if response is not None
+            else "no upload response"
+        )
     if error:
         raise RuntimeError(f"failed to write author trace context file: {error}")
 

@@ -17,10 +17,14 @@ class _FakeStore:
     def __init__(self) -> None:
         self.items: dict[tuple[tuple[str, ...], str], dict[str, Any]] = {}
 
-    async def get_item(self, namespace: tuple[str, ...], key: str) -> dict[str, Any] | None:
+    async def get_item(
+        self, namespace: tuple[str, ...], key: str
+    ) -> dict[str, Any] | None:
         return self.items.get((namespace, key))
 
-    async def put_item(self, namespace: tuple[str, ...], key: str, value: dict[str, Any]) -> None:
+    async def put_item(
+        self, namespace: tuple[str, ...], key: str, value: dict[str, Any]
+    ) -> None:
         self.items[(namespace, key)] = {"value": value}
 
     async def delete_item(self, namespace: tuple[str, ...], key: str) -> None:
@@ -59,7 +63,10 @@ def _reaction_payload(content: str = "+1", action: str = "created") -> dict[str,
         "reaction": {"content": content},
         "repository": {"owner": {"login": "langchain-ai"}, "name": "open-swe"},
         "pull_request": {"number": 7},
-        "comment": {"id": 123, "pull_request_url": "https://api.github.com/repos/o/r/pulls/7"},
+        "comment": {
+            "id": 123,
+            "pull_request_url": "https://api.github.com/repos/o/r/pulls/7",
+        },
         "sender": {"login": "reviewer"},
     }
 
@@ -106,7 +113,9 @@ async def test_github_reaction_added_creates_langsmith_feedback(
         "list_findings",
         fake_list_findings,
     )
-    monkeypatch.setattr(github_feedback, "create_langsmith_feedback", fake_create_feedback)
+    monkeypatch.setattr(
+        github_feedback, "create_langsmith_feedback", fake_create_feedback
+    )
 
     await process_github_reaction_added(_reaction_payload(), delivery_id="delivery-1")
 
@@ -114,7 +123,10 @@ async def test_github_reaction_added_creates_langsmith_feedback(
     assert created["key"] == "github_reaction:langchain-ai/open-swe:reviewer:123"
     assert created["score"] == 1.0
     assert created["source_info"]["finding_id"] == "f1"
-    assert (("github_reaction_events", "langchain-ai/open-swe"), "delivery-1") in client.store.items
+    assert (
+        ("github_reaction_events", "langchain-ai/open-swe"),
+        "delivery-1",
+    ) in client.store.items
 
 
 @pytest.mark.asyncio
@@ -155,7 +167,9 @@ async def test_github_reaction_removed_deletes_langsmith_feedback(
         "list_findings",
         fake_list_findings,
     )
-    monkeypatch.setattr(github_feedback, "delete_langsmith_feedback", fake_delete_feedback)
+    monkeypatch.setattr(
+        github_feedback, "delete_langsmith_feedback", fake_delete_feedback
+    )
 
     await process_github_reaction_removed(
         _reaction_payload(action="deleted"), delivery_id="delivery-2"
@@ -172,15 +186,22 @@ async def test_github_reaction_removed_deletes_langsmith_feedback(
 
 
 @pytest.mark.asyncio
-async def test_github_webhook_ignores_reaction_event(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_github_webhook_ignores_reaction_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     payload = _reaction_payload()
     background_tasks = _FakeBackgroundTasks()
 
-    monkeypatch.setattr(webhook_common, "verify_github_signature", lambda *args, **kwargs: True)
+    monkeypatch.setattr(
+        webhook_common, "verify_github_signature", lambda *args, **kwargs: True
+    )
 
     response = await github_routes.github_webhook(
         cast(Request, _FakeRequest(payload)), cast(BackgroundTasks, background_tasks)
     )
 
-    assert response == {"status": "ignored", "reason": "Unsupported event type: reaction"}
+    assert response == {
+        "status": "ignored",
+        "reason": "Unsupported event type: reaction",
+    }
     assert background_tasks.tasks == []

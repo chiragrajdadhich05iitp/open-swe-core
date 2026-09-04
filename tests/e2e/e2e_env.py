@@ -78,7 +78,12 @@ _DEFAULTS = {
 # by email) is the same person when they sign in. The first (Alice) is the
 # default Slack sender, hence the default thread owner.
 TEST_USERS = [
-    {"name": "Alice", "slack_id": "U_ALICE", "login": "alice", "email": "alice@example.com"},
+    {
+        "name": "Alice",
+        "slack_id": "U_ALICE",
+        "login": "alice",
+        "email": "alice@example.com",
+    },
     {"name": "Bob", "slack_id": "U_BOB", "login": "bob", "email": "bob@example.com"},
 ]
 

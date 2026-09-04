@@ -21,7 +21,9 @@ async def _output_iframe(
     """Display a sandbox HTML file in an isolated iframe in the dashboard."""
     backend, source_path, work_dir = await _resolve_sandbox_file(path)
     quoted_source = shlex.quote(source_path)
-    stat = await backend.aexecute(f"test -f {quoted_source} && stat -c %s -- {quoted_source}")
+    stat = await backend.aexecute(
+        f"test -f {quoted_source} && stat -c %s -- {quoted_source}"
+    )
     if stat.exit_code != 0:
         raise ValueError("HTML path must identify a regular file")
     try:
@@ -74,7 +76,9 @@ async def _output_iframe(
         content_type="text/html; charset=utf-8",
         content_disposition="attachment",
     )
-    display_title = title.strip() if isinstance(title, str) and title.strip() else "HTML Output"
+    display_title = (
+        title.strip() if isinstance(title, str) and title.strip() else "HTML Output"
+    )
     return (
         "Displayed the HTML output in the dashboard.",
         {

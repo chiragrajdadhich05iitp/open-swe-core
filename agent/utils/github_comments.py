@@ -95,7 +95,9 @@ def verify_github_signature(body: bytes, signature: str, *, secret: str) -> bool
         True if signature is valid or no secret is configured.
     """
     if not secret:
-        logger.warning("GITHUB_WEBHOOK_SECRET is not configured — rejecting webhook request")
+        logger.warning(
+            "GITHUB_WEBHOOK_SECRET is not configured — rejecting webhook request"
+        )
         return False
 
     if not signature:
@@ -126,7 +128,9 @@ def sanitize_github_comment_body(body: str) -> str:
         _SANITIZED_UNTRUSTED_GITHUB_COMMENT_CLOSE_TAG,
     )
     if sanitized != body:
-        logger.warning("Sanitized reserved untrusted-comment tags from GitHub comment body")
+        logger.warning(
+            "Sanitized reserved untrusted-comment tags from GitHub comment body"
+        )
     return sanitized
 
 
@@ -160,7 +164,9 @@ async def react_to_github_comment(
     owner = repo_config.get("owner", "")
     repo = repo_config.get("name", "")
 
-    url_template = _REACTION_ENDPOINTS.get(event_type, _REACTION_ENDPOINTS["issue_comment"])
+    url_template = _REACTION_ENDPOINTS.get(
+        event_type, _REACTION_ENDPOINTS["issue_comment"]
+    )
     url = url_template.format(
         owner=owner, repo=repo, comment_id=comment_id, pull_number=pull_number
     )
@@ -177,7 +183,9 @@ async def react_to_github_comment(
                 json={"content": "eyes"},
             )
             if response.status_code == 401:
-                raise GitHubAuthError(f"GitHub returned 401 reacting to comment {comment_id}")
+                raise GitHubAuthError(
+                    f"GitHub returned 401 reacting to comment {comment_id}"
+                )
             # 200 = already reacted, 201 = just created
             return response.status_code in (200, 201)
         except GitHubAuthError:
@@ -247,7 +255,9 @@ async def post_github_comment(
             response.raise_for_status()
             return True
         except httpx.HTTPError:
-            logger.exception("Failed to post comment to GitHub issue/PR #%s", issue_number)
+            logger.exception(
+                "Failed to post comment to GitHub issue/PR #%s", issue_number
+            )
             return False
 
 
@@ -269,7 +279,9 @@ async def fetch_github_thread_participants(
                 headers=headers,
             )
             if issue_response.status_code == 401:
-                raise GitHubAuthError(f"GitHub returned 401 fetching issue {issue_number}")
+                raise GitHubAuthError(
+                    f"GitHub returned 401 fetching issue {issue_number}"
+                )
             if issue_response.status_code != 200:  # noqa: PLR2004
                 return None
             issue = issue_response.json()
@@ -294,7 +306,10 @@ async def fetch_github_thread_participants(
         return None
     except Exception:
         logger.exception(
-            "Failed to fetch GitHub participants for %s/%s#%s", owner, repo, issue_number
+            "Failed to fetch GitHub participants for %s/%s#%s",
+            owner,
+            repo,
+            issue_number,
         )
         return None
 
@@ -432,7 +447,9 @@ async def fetch_pr_comments_since_last_tag(
     all_comments.sort(key=lambda c: c.get("created_at", ""))
 
     tag_indices = [
-        i for i, comment in enumerate(all_comments) if mentions_open_swe(comment.get("body"))
+        i
+        for i, comment in enumerate(all_comments)
+        if mentions_open_swe(comment.get("body"))
     ]
 
     if not tag_indices:
@@ -492,7 +509,10 @@ async def extract_pr_context(
         (repo_config, pr_number, branch_name, github_login, pr_url, comment_id, node_id)
     """
     repo = payload.get("repository", {})
-    repo_config = {"owner": repo.get("owner", {}).get("login", ""), "name": repo.get("name", "")}
+    repo_config = {
+        "owner": repo.get("owner", {}).get("login", ""),
+        "name": repo.get("name", ""),
+    }
 
     pr_data = payload.get("pull_request") or payload.get("issue", {})
     pr_number = pr_data.get("number")
@@ -508,7 +528,15 @@ async def extract_pr_context(
     comment_id = comment.get("id")
     node_id = comment.get("node_id") if event_type == "pull_request_review" else None
 
-    return repo_config, pr_number, branch_name, github_login, pr_url, comment_id, node_id
+    return (
+        repo_config,
+        pr_number,
+        branch_name,
+        github_login,
+        pr_url,
+        comment_id,
+        node_id,
+    )
 
 
 def build_pr_prompt(
@@ -532,7 +560,9 @@ def build_pr_prompt(
     comments_text = "".join(lines)
     repo_line = ""
     if repo_config:
-        repo_line = f"## Repository: {repo_config.get('owner')}/{repo_config.get('name')}\n\n"
+        repo_line = (
+            f"## Repository: {repo_config.get('owner')}/{repo_config.get('name')}\n\n"
+        )
     return (
         "You've been tagged in GitHub PR comments. Please resolve them.\n\n"
         f"{repo_line}"
@@ -573,7 +603,9 @@ async def _fetch_paginated(
             if response.status_code == 401:
                 raise GitHubAuthError(f"GitHub returned 401 fetching {url}")
             if response.status_code != 200:  # noqa: PLR2004
-                logger.warning("GitHub API returned %s for %s", response.status_code, url)
+                logger.warning(
+                    "GitHub API returned %s for %s", response.status_code, url
+                )
                 break
             page_data = response.json()
             if not page_data:

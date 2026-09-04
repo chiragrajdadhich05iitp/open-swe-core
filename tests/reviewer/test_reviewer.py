@@ -87,7 +87,9 @@ async def test_reviewer_resolves_app_installation_token_at_run_start() -> None:
             return_value="/workspace",
         ),
         patch("agent.reviewer.make_model", return_value=MagicMock()),
-        patch("agent.reviewer.create_deep_agent", return_value=dummy_agent) as create_agent,
+        patch(
+            "agent.reviewer.create_deep_agent", return_value=dummy_agent
+        ) as create_agent,
     ):
         await reviewer.get_reviewer_agent(config)
         prepare = create_agent.call_args.kwargs["middleware"][0]
@@ -139,16 +141,30 @@ async def test_reviewer_reuses_app_token_for_sandbox_proxy() -> None:
             new_callable=AsyncMock,
             return_value="/workspace",
         ),
-        patch("agent.reviewer.fetch_pr_diff", new_callable=AsyncMock, return_value=None),
-        patch("agent.reviewer.fetch_pr_metadata", new_callable=AsyncMock, return_value=None),
-        patch("agent.reviewer.fetch_pr_review_threads", new_callable=AsyncMock, return_value=[]),
+        patch(
+            "agent.reviewer.fetch_pr_diff", new_callable=AsyncMock, return_value=None
+        ),
+        patch(
+            "agent.reviewer.fetch_pr_metadata",
+            new_callable=AsyncMock,
+            return_value=None,
+        ),
+        patch(
+            "agent.reviewer.fetch_pr_review_threads",
+            new_callable=AsyncMock,
+            return_value=[],
+        ),
         patch(
             "agent.reviewer.reconcile_findings_with_review_threads",
             new_callable=AsyncMock,
         ),
-        patch("agent.reviewer.fetch_agents_md", new_callable=AsyncMock, return_value=None),
+        patch(
+            "agent.reviewer.fetch_agents_md", new_callable=AsyncMock, return_value=None
+        ),
         patch("agent.reviewer.make_model", return_value=MagicMock()),
-        patch("agent.reviewer.create_deep_agent", return_value=_DummyAgent()) as create_agent,
+        patch(
+            "agent.reviewer.create_deep_agent", return_value=_DummyAgent()
+        ) as create_agent,
     ):
         await reviewer.get_reviewer_agent(config)
         prepare = create_agent.call_args.kwargs["middleware"][0]
@@ -186,7 +202,9 @@ async def test_reviewer_raises_when_app_installation_token_unavailable() -> None
             return_value=MagicMock(),
         ) as mock_sandbox,
         patch("agent.reviewer.make_model", return_value=MagicMock()),
-        patch("agent.reviewer.create_deep_agent", return_value=_DummyAgent()) as create_agent,
+        patch(
+            "agent.reviewer.create_deep_agent", return_value=_DummyAgent()
+        ) as create_agent,
     ):
         await reviewer.get_reviewer_agent(config)
         prepare = create_agent.call_args.kwargs["middleware"][0]
@@ -239,15 +257,23 @@ async def test_reviewer_applies_eval_model_and_effort_overrides() -> None:
 
     main_model_call = make_model.call_args_list[0]
     assert main_model_call.args == ("anthropic:claude-opus-5",)
-    assert main_model_call.kwargs["thinking"] == {"type": "adaptive", "display": "summarized"}
+    assert main_model_call.kwargs["thinking"] == {
+        "type": "adaptive",
+        "display": "summarized",
+    }
     assert main_model_call.kwargs["effort"] == "high"
     subagent_model_call = make_model.call_args_list[1]
     assert subagent_model_call.args == ("openai:gpt-5.6-sol",)
-    assert subagent_model_call.kwargs["reasoning"] == {"effort": "low", "summary": "auto"}
+    assert subagent_model_call.kwargs["reasoning"] == {
+        "effort": "low",
+        "summary": "auto",
+    }
 
 
 @pytest.mark.asyncio
-async def test_reviewer_subagent_inherits_eval_model_without_explicit_override() -> None:
+async def test_reviewer_subagent_inherits_eval_model_without_explicit_override() -> (
+    None
+):
     config: RunnableConfig = {
         "configurable": {
             "__is_for_execution__": True,
@@ -287,11 +313,17 @@ async def test_reviewer_subagent_inherits_eval_model_without_explicit_override()
 
     main_model_call = make_model.call_args_list[0]
     assert main_model_call.args == ("anthropic:claude-opus-5",)
-    assert main_model_call.kwargs["thinking"] == {"type": "adaptive", "display": "summarized"}
+    assert main_model_call.kwargs["thinking"] == {
+        "type": "adaptive",
+        "display": "summarized",
+    }
     assert main_model_call.kwargs["effort"] == "high"
     subagent_model_call = make_model.call_args_list[1]
     assert subagent_model_call.args == ("anthropic:claude-opus-5",)
-    assert subagent_model_call.kwargs["thinking"] == {"type": "adaptive", "display": "summarized"}
+    assert subagent_model_call.kwargs["thinking"] == {
+        "type": "adaptive",
+        "display": "summarized",
+    }
     assert subagent_model_call.kwargs["effort"] == "high"
 
 
@@ -344,8 +376,14 @@ async def test_reviewer_injects_repo_style_during_eval() -> None:
         patch("agent.reviewer.make_model", return_value=MagicMock()),
         patch("agent.reviewer.create_deep_agent", side_effect=fake_create_deep_agent),
         patch("agent.reviewer.fetch_pr_review_threads", fetch_threads),
-        patch("agent.reviewer.fetch_pr_diff", new_callable=AsyncMock, return_value=None),
-        patch("agent.reviewer.fetch_pr_metadata", new_callable=AsyncMock, return_value=None),
+        patch(
+            "agent.reviewer.fetch_pr_diff", new_callable=AsyncMock, return_value=None
+        ),
+        patch(
+            "agent.reviewer.fetch_pr_metadata",
+            new_callable=AsyncMock,
+            return_value=None,
+        ),
         patch(
             "agent.reviewer.fetch_agents_md",
             new_callable=AsyncMock,
@@ -485,7 +523,9 @@ async def test_reviewer_inlines_agents_md_into_system_prompt() -> None:
         updates = await _run_prepare(prepare)
         captured["system_prompt"] = cast(str, updates["rendered_system_prompt"])
 
-    mock_fetch_agents_md.assert_awaited_once_with("acme", "repo", "base-sha-xyz", token="gh-token")
+    mock_fetch_agents_md.assert_awaited_once_with(
+        "acme", "repo", "base-sha-xyz", token="gh-token"
+    )
     assert "Repository conventions (AGENTS.md / CLAUDE.md)" in captured["system_prompt"]
     assert "Always use the design system IconButton." in captured["system_prompt"]
 
@@ -543,7 +583,9 @@ async def test_reviewer_inlines_claude_md_when_agents_md_absent() -> None:
         updates = await _run_prepare(prepare)
         captured["system_prompt"] = cast(str, updates["rendered_system_prompt"])
 
-    mock_fetch_agents_md.assert_awaited_once_with("acme", "repo", "base-sha-xyz", token="gh-token")
+    mock_fetch_agents_md.assert_awaited_once_with(
+        "acme", "repo", "base-sha-xyz", token="gh-token"
+    )
     assert "Repository conventions (AGENTS.md / CLAUDE.md)" in captured["system_prompt"]
     assert "Use semantic tokens only." in captured["system_prompt"]
     assert "Repository conventions compliance" in captured["system_prompt"]
@@ -577,7 +619,9 @@ def test_format_pr_review_threads_renders_resolved_and_open_threads() -> None:
                 "original_line": None,
                 "is_resolved": False,
                 "is_outdated": False,
-                "comments": [{"author": "rev", "body": "this looks fishy", "created_at": ""}],
+                "comments": [
+                    {"author": "rev", "body": "this looks fishy", "created_at": ""}
+                ],
             },
         ]
     )
@@ -661,7 +705,9 @@ def test_format_pr_review_threads_neutralizes_closing_tags_in_body() -> None:
     assert "</body_>" in block
 
 
-def test_build_first_review_context_includes_existing_threads_block_when_present() -> None:
+def test_build_first_review_context_includes_existing_threads_block_when_present() -> (
+    None
+):
     ctx = reviewer._build_first_review_context(
         pr_url="https://example/pr",
         repo_owner="acme",
@@ -707,7 +753,9 @@ def test_build_re_review_context_includes_existing_threads_block() -> None:
 
 
 def test_format_pr_overview_renders_title_and_body() -> None:
-    block = reviewer._format_pr_overview("Add retry logic", "Fixes flaky uploads by retrying.")
+    block = reviewer._format_pr_overview(
+        "Add retry logic", "Fixes flaky uploads by retrying."
+    )
     assert "PR title and description" in block
     assert "<pr_overview>" in block
     assert "<title>Add retry logic</title>" in block
@@ -940,7 +988,9 @@ async def test_reviewer_injects_pr_review_threads_into_re_review_context() -> No
             "original_line": 5,
             "is_resolved": False,
             "is_outdated": False,
-            "comments": [{"author": "open-swe[bot]", "body": "same bug again", "created_at": ""}],
+            "comments": [
+                {"author": "open-swe[bot]", "body": "same bug again", "created_at": ""}
+            ],
         }
     ]
 
@@ -1325,7 +1375,10 @@ async def test_reviewer_injects_pr_title_and_body_into_context() -> None:
         patch(
             "agent.reviewer.fetch_pr_metadata",
             new_callable=AsyncMock,
-            return_value=("Add retry logic for uploads", "Retries flaky uploads up to 3 times."),
+            return_value=(
+                "Add retry logic for uploads",
+                "Retries flaky uploads up to 3 times.",
+            ),
         ) as mock_fetch_metadata,
         patch("agent.reviewer.make_model", return_value=MagicMock()),
         patch("agent.reviewer.create_deep_agent", side_effect=fake_create_deep_agent),

@@ -45,7 +45,9 @@ def _thread_id_from_filter(filter_expr: str) -> str | None:
 
 
 class _FakeLangSmithClient:
-    def __init__(self, search_results: dict[str, list[dict[str, Any]]] | None = None) -> None:
+    def __init__(
+        self, search_results: dict[str, list[dict[str, Any]]] | None = None
+    ) -> None:
         self.filters: list[str] = []
         self.closed = False
         self.search_results = (
@@ -107,14 +109,17 @@ def _config(**overrides: Any) -> dict[str, Any]:
 
 
 def _patches(client: _FakeLangSmithClient) -> Any:
-    creds = LangSmithCredentials(api_key="k", endpoint="https://api.smith.langchain.com")
+    creds = LangSmithCredentials(
+        api_key="k", endpoint="https://api.smith.langchain.com"
+    )
     return (
         patch(
             "agent.review.trace_context.get_team_review_tracing_project",
             AsyncMock(return_value="pajuha"),
         ),
         patch(
-            "agent.review.trace_context.get_langsmith_credentials", AsyncMock(return_value=creds)
+            "agent.review.trace_context.get_langsmith_credentials",
+            AsyncMock(return_value=creds),
         ),
         patch("agent.review.trace_context._client", return_value=client),
         patch(
@@ -147,11 +152,14 @@ async def test_prepare_pr_trace_context_resolves_on_branch_alone() -> None:
     assert result.evidence == ["branch:feature/trace-resolution"]
     assert sandbox.payload is not None
     assert sandbox.payload["resolution"]["thread_id"] == "thread-1"
-    assert sandbox.payload["runs"][0]["outputs"]["message"].startswith("Edited reviewer.py")
+    assert sandbox.payload["runs"][0]["outputs"]["message"].startswith(
+        "Edited reviewer.py"
+    )
     assert any('search("feature/trace-resolution")' in f for f in fake_client.filters)
     # Branch search is scoped to the repo so a same-named branch elsewhere can't match.
     assert any(
-        'search("feature/trace-resolution")' in f and 'search("langchain-ai/open-swe")' in f
+        'search("feature/trace-resolution")' in f
+        and 'search("langchain-ai/open-swe")' in f
         for f in fake_client.filters
     )
     # Thread runs use documented metadata key/value filter syntax, not has(metadata, ...).
@@ -243,7 +251,9 @@ async def test_resolve_pr_trace_reports_reason_when_unresolved() -> None:
     fake_client = _FakeLangSmithClient()
     p1, p2, p3, p4 = _patches(fake_client)
     with p1, p2, p3, p4:
-        result = await resolve_pr_trace(configurable=_config(branch_name="main", head_sha=""))
+        result = await resolve_pr_trace(
+            configurable=_config(branch_name="main", head_sha="")
+        )
 
     assert result.resolved is False
     assert result.thread_id is None

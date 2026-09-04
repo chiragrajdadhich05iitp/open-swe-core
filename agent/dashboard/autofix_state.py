@@ -28,14 +28,18 @@ async def is_pr_autofix_disabled(owner: str, repo: str, pr_number: int) -> bool:
     break the handler.
     """
     try:
-        record = await get_value(AUTOFIX_PR_STATE_NAMESPACE, _key(owner, repo, pr_number))
+        record = await get_value(
+            AUTOFIX_PR_STATE_NAMESPACE, _key(owner, repo, pr_number)
+        )
     except Exception:
         logger.warning("autofix PR state lookup failed", exc_info=True)
         return False
     return bool(record.get("disabled")) if record else False
 
 
-async def set_pr_autofix_disabled(owner: str, repo: str, pr_number: int, disabled: bool) -> None:
+async def set_pr_autofix_disabled(
+    owner: str, repo: str, pr_number: int, disabled: bool
+) -> None:
     """Persist the per-PR auto-fix opt-out flag."""
     await put_value(
         AUTOFIX_PR_STATE_NAMESPACE,

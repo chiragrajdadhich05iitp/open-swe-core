@@ -57,7 +57,9 @@ async def resolve_finding_thread(
     config = get_config()
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
     repo_config = configurable.get("repo") if isinstance(configurable, dict) else None
-    pr_number = configurable.get("pr_number") if isinstance(configurable, dict) else None
+    pr_number = (
+        configurable.get("pr_number") if isinstance(configurable, dict) else None
+    )
     if (
         not isinstance(repo_config, dict)
         or not repo_config.get("owner")
@@ -83,7 +85,9 @@ async def resolve_finding_thread(
     except ReviewerThreadMissingError as exc:
         return thread_missing_tool_result(exc)
     if result.get("success") and isinstance(result.get("finding"), dict):
-        thread_id = configurable.get("thread_id") if isinstance(configurable, dict) else None
+        thread_id = (
+            configurable.get("thread_id") if isinstance(configurable, dict) else None
+        )
         await emit_finding_status_outcome(
             result["finding"],
             status,
@@ -141,7 +145,10 @@ async def _resolve_finding_thread_async(
         if github_thread_id in resolved_thread_ids:
             continue
         primary_comment_id = comment_ids[idx] if idx < len(comment_ids) else None
-        if primary_comment_id and primary_comment_id not in posted_resolution_comment_ids:
+        if (
+            primary_comment_id
+            and primary_comment_id not in posted_resolution_comment_ids
+        ):
             reply = await reply_to_review_comment(
                 owner=owner,
                 repo=repo,
@@ -157,12 +164,14 @@ async def _resolve_finding_thread_async(
             resolved_thread_ids.append(github_thread_id)
             resolved_count += 1
     if resolved_count == 0 and not all(
-        github_thread_id in resolved_thread_ids for github_thread_id in github_thread_ids
+        github_thread_id in resolved_thread_ids
+        for github_thread_id in github_thread_ids
     ):
         return {"success": False, "error": "GitHub did not resolve the review thread"}
 
     fully_resolved = all(
-        github_thread_id in resolved_thread_ids for github_thread_id in github_thread_ids
+        github_thread_id in resolved_thread_ids
+        for github_thread_id in github_thread_ids
     )
     updates: dict[str, Any] = {
         "status": status,
@@ -175,7 +184,11 @@ async def _resolve_finding_thread_async(
     if posted_resolution_comment_ids:
         updates["github_posted_resolution_comment_ids"] = posted_resolution_comment_ids
     updated = await update_finding_fields(thread_id, finding_id, updates)
-    return {"success": True, "finding": updated, "resolved_thread_count": resolved_count}
+    return {
+        "success": True,
+        "finding": updated,
+        "resolved_thread_count": resolved_count,
+    }
 
 
 async def _get_finding_with_pr_backfill(

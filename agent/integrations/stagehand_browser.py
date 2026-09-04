@@ -31,7 +31,11 @@ def _model_api_key() -> str | None:
 
 
 def _headless() -> bool:
-    return os.getenv("STAGEHAND_HEADLESS", "true").strip().lower() not in ("0", "false", "no")
+    return os.getenv("STAGEHAND_HEADLESS", "true").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
 
 
 def browser_tools_enabled() -> bool:
@@ -45,7 +49,9 @@ def browser_tools_enabled() -> bool:
 def _thread_id() -> str:
     config = get_config()
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
-    thread_id = configurable.get("thread_id") if isinstance(configurable, dict) else None
+    thread_id = (
+        configurable.get("thread_id") if isinstance(configurable, dict) else None
+    )
     if not isinstance(thread_id, str) or not thread_id:
         raise RuntimeError("no thread_id in run config")
     return thread_id
@@ -83,9 +89,14 @@ async def _request(operation: str, **payload: Any) -> dict[str, Any]:
     try:
         response = json.loads(result.output)
     except json.JSONDecodeError:
-        return {"success": False, "error": f"browser_{operation} returned an invalid response"}
+        return {
+            "success": False,
+            "error": f"browser_{operation} returned an invalid response",
+        }
     return (
-        response if isinstance(response, dict) else {"success": False, "error": "invalid response"}
+        response
+        if isinstance(response, dict)
+        else {"success": False, "error": "invalid response"}
     )
 
 
@@ -104,7 +115,9 @@ async def browser_observe(instruction: str) -> dict[str, Any]:
     return await _request("observe", instruction=instruction)
 
 
-async def browser_extract(instruction: str, schema: dict[str, Any] | None = None) -> dict[str, Any]:
+async def browser_extract(
+    instruction: str, schema: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """Extract structured data from the current page."""
     return await _request("extract", instruction=instruction, schema=schema)
 
@@ -119,4 +132,10 @@ def load_browser_tools() -> list[Any]:
     if not browser_tools_enabled():
         return []
     logger.info("Sandbox-local Stagehand tools enabled (model=%s)", _model_name())
-    return [browser_navigate, browser_act, browser_observe, browser_extract, browser_close]
+    return [
+        browser_navigate,
+        browser_act,
+        browser_observe,
+        browser_extract,
+        browser_close,
+    ]

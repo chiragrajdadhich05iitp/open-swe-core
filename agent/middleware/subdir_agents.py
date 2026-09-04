@@ -106,11 +106,15 @@ def _extract_text(result: Any) -> str | None:
     encoded = content.encode("utf-8")
     if len(encoded) <= _MAX_AGENTS_BYTES:
         return content
-    return encoded[:_MAX_AGENTS_BYTES].decode("utf-8", errors="ignore") + "\n\n[truncated]"
+    return (
+        encoded[:_MAX_AGENTS_BYTES].decode("utf-8", errors="ignore") + "\n\n[truncated]"
+    )
 
 
 def _system_reminder(file_path: str, loaded: Iterable[tuple[str, str]]) -> str:
-    sections = [f"Instructions from: {path}\n{content.rstrip()}" for path, content in loaded]
+    sections = [
+        f"Instructions from: {path}\n{content.rstrip()}" for path, content in loaded
+    ]
     body = "\n\n".join(sections)
     return (
         "<system-reminder>\n"
@@ -130,8 +134,14 @@ def _can_append_reminder(result: ToolMessage | Command) -> bool:
     )
 
 
-def _append_reminder(result: ToolMessage | Command, reminder: str | None) -> ToolMessage | Command:
-    if reminder is not None and isinstance(result, ToolMessage) and _can_append_reminder(result):
+def _append_reminder(
+    result: ToolMessage | Command, reminder: str | None
+) -> ToolMessage | Command:
+    if (
+        reminder is not None
+        and isinstance(result, ToolMessage)
+        and _can_append_reminder(result)
+    ):
         return result.model_copy(update={"content": f"{result.content}\n\n{reminder}"})
     return result
 
@@ -153,7 +163,9 @@ class SubdirAgentsReadMiddleware(AgentMiddleware):
             return None
         return SANDBOX_BACKENDS.get(thread_id)
 
-    def _mark_direct_agents_read(self, request: ToolCallRequest, file_path: str) -> bool:
+    def _mark_direct_agents_read(
+        self, request: ToolCallRequest, file_path: str
+    ) -> bool:
         if posixpath.basename(file_path) != _AGENTS_MD:
             return False
         self._loaded[self._thread_key(request)].add(file_path)
@@ -172,7 +184,9 @@ class SubdirAgentsReadMiddleware(AgentMiddleware):
                 continue
             loaded_paths.add(path)
             try:
-                text = _extract_text(await backend.aread(path, offset=0, limit=_MAX_AGENTS_LINES))
+                text = _extract_text(
+                    await backend.aread(path, offset=0, limit=_MAX_AGENTS_LINES)
+                )
             except Exception:
                 logger.debug("subdir_agents: aread failed for %s", path, exc_info=True)
                 continue

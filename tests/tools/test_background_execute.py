@@ -132,7 +132,8 @@ async def test_background_execute_reports_monitor_scheduling_failure() -> None:
 
     with (
         patch(
-            "agent.tools.background_execute._current_backend", return_value=("thread-1", backend)
+            "agent.tools.background_execute._current_backend",
+            return_value=("thread-1", backend),
         ),
         patch(
             "agent.tools.background_execute._execute",

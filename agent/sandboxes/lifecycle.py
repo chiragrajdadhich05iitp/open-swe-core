@@ -64,12 +64,15 @@ class SandboxCreateConfig:
     create_params: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    async def resolve(cls, environment_slug: str | None = None) -> "SandboxCreateConfig":
+    async def resolve(
+        cls, environment_slug: str | None = None
+    ) -> "SandboxCreateConfig":
         environment = await resolve_environment(environment_slug)
         if environment is None:
             return cls(snapshot_id=await get_admin_base_snapshot_id())
         return cls(
-            snapshot_id=environment.ready_snapshot_id or await get_admin_base_snapshot_id(),
+            snapshot_id=environment.ready_snapshot_id
+            or await get_admin_base_snapshot_id(),
             resources=environment.sandbox_resources(),
             create_params=environment.sandbox_create_params(),
         )
@@ -104,7 +107,9 @@ async def _create_sandbox_with_proxy(
     async with git_identity(thread_id, sandbox_backend):
         if os.getenv("SANDBOX_TYPE", "langsmith") == "langsmith":
             async with aphase(thread_id, "sandbox.proxy_token"):
-                token, expires_at, permissions = await _resolve_proxy_token(github_proxy_token)
+                token, expires_at, permissions = await _resolve_proxy_token(
+                    github_proxy_token
+                )
             if not token:
                 msg = "Cannot configure proxy: GitHub App installation token is unavailable"
                 logger.error(msg)
@@ -127,7 +132,9 @@ async def _configure_proxy(
     sandbox_id: str, token: str, base_proxy_config: dict[str, Any] | None
 ) -> None:
     if base_proxy_config is not None:
-        await _configure_github_proxy(sandbox_id, token, base_proxy_config=base_proxy_config)
+        await _configure_github_proxy(
+            sandbox_id, token, base_proxy_config=base_proxy_config
+        )
     else:
         await _configure_github_proxy(sandbox_id, token)
 
@@ -310,7 +317,9 @@ async def ensure_sandbox_for_thread(
     )
     async with aphase(thread_id, "sandbox.thread_metadata"):
         sandbox_id = await get_sandbox_id_from_metadata(thread_id)
-        sandbox_metadata = await get_sandbox_metadata(thread_id) if sandbox_id is not None else {}
+        sandbox_metadata = (
+            await get_sandbox_metadata(thread_id) if sandbox_id is not None else {}
+        )
     metadata_proxy_config = sandbox_metadata.get(_SANDBOX_PROXY_CONFIG_METADATA_KEY)
     base_proxy_config = (
         metadata_proxy_config
@@ -394,11 +403,15 @@ async def reset_sandbox_for_thread(
 ) -> tuple[str, str]:
     """Bind a thread to a fresh sandbox created from raw provider options."""
     if os.getenv("SANDBOX_TYPE", "langsmith") != "langsmith":
-        raise ValueError("sandbox_reset is only supported by the LangSmith sandbox provider")
+        raise ValueError(
+            "sandbox_reset is only supported by the LangSmith sandbox provider"
+        )
 
     cached = SANDBOX_BACKENDS.get(thread_id)
     metadata_sandbox_id = await get_sandbox_id_from_metadata(thread_id)
-    old_sandbox_id = cached.id if cached is not None and cached.has_backend else metadata_sandbox_id
+    old_sandbox_id = (
+        cached.id if cached is not None and cached.has_backend else metadata_sandbox_id
+    )
     if not old_sandbox_id:
         raise ValueError(f"Thread {thread_id} has no sandbox to reset")
 
@@ -409,7 +422,9 @@ async def reset_sandbox_for_thread(
     proxy_config = _get_sandbox_proxy_config(create_params)
     token, expires_at, permissions = await _resolve_proxy_token(None)
     if not token:
-        raise ValueError("Cannot configure proxy: GitHub App installation token is unavailable")
+        raise ValueError(
+            "Cannot configure proxy: GitHub App installation token is unavailable"
+        )
     await _configure_proxy(new_sandbox.id, token, proxy_config)
     await configure_git_identity(new_sandbox)
     sandbox_metadata: dict[str, Any] = {
@@ -441,7 +456,9 @@ async def recreate_sandbox_for_thread(
     """Bind a thread to a fresh sandbox while preserving its previous sandbox."""
     cached = SANDBOX_BACKENDS.get(thread_id)
     metadata_sandbox_id = await get_sandbox_id_from_metadata(thread_id)
-    old_sandbox_id = cached.id if cached is not None and cached.has_backend else metadata_sandbox_id
+    old_sandbox_id = (
+        cached.id if cached is not None and cached.has_backend else metadata_sandbox_id
+    )
     if not old_sandbox_id:
         raise ValueError(f"Thread {thread_id} has no sandbox to recreate")
 

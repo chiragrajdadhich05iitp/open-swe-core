@@ -58,7 +58,9 @@ async def test_unreachable_sandbox_notifies_then_ends_the_run() -> None:
     set_sandbox_backend("thread-1", FakeSandboxBackend("sb-old"))
 
     async def handler(_request: ToolCallRequest) -> ToolMessage:
-        raise SandboxConnectionError("WebSocket upgrade to sb-dead failed (no valid HTTP response)")
+        raise SandboxConnectionError(
+            "WebSocket upgrade to sb-dead failed (no valid HTTP response)"
+        )
 
     try:
         with (
@@ -67,7 +69,8 @@ async def test_unreachable_sandbox_notifies_then_ends_the_run() -> None:
                 new_callable=AsyncMock,
             ) as mock_notify,
             patch(
-                "agent.sandboxes.lifecycle._create_sandbox_with_proxy", new_callable=AsyncMock
+                "agent.sandboxes.lifecycle._create_sandbox_with_proxy",
+                new_callable=AsyncMock,
             ) as mock_create,
             pytest.raises(SandboxConnectionError),
         ):

@@ -47,7 +47,11 @@ async def ensure_continual_cron(full_name: str) -> str | None:
         logger.exception("Failed to create continual cron for %s", full_name)
         return None
 
-    cron_id = cron.get("cron_id") if isinstance(cron, dict) else getattr(cron, "cron_id", None)
+    cron_id = (
+        cron.get("cron_id")
+        if isinstance(cron, dict)
+        else getattr(cron, "cron_id", None)
+    )
     if isinstance(cron_id, str) and cron_id:
         await REVIEW_STYLES.set_continual_cron(full_name, cron_id)
         return cron_id
@@ -63,5 +67,10 @@ async def remove_continual_cron(full_name: str) -> None:
     try:
         await _client().crons.delete(cron_id)
     except Exception:
-        logger.debug("Could not delete continual cron %s for %s", cron_id, full_name, exc_info=True)
+        logger.debug(
+            "Could not delete continual cron %s for %s",
+            cron_id,
+            full_name,
+            exc_info=True,
+        )
     await REVIEW_STYLES.set_continual_cron(full_name, None)

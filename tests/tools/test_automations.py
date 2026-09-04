@@ -15,7 +15,9 @@ def admin(monkeypatch) -> None:  # noqa: ANN001
     )
 
 
-async def test_create_automation_uses_trusted_admin_identity(monkeypatch) -> None:  # noqa: ANN001
+async def test_create_automation_uses_trusted_admin_identity(
+    monkeypatch,
+) -> None:  # noqa: ANN001
     called: dict[str, Any] = {}
 
     async def create(login: str, body: Any, **kwargs: Any) -> dict[str, Any]:
@@ -39,7 +41,9 @@ async def test_create_automation_uses_trusted_admin_identity(monkeypatch) -> Non
 
 async def test_automation_tools_recheck_admin(monkeypatch) -> None:  # noqa: ANN001
     monkeypatch.setattr(
-        automations, "require_admin", lambda action: "Only workspace admins can manage automations."
+        automations,
+        "require_admin",
+        lambda action: "Only workspace admins can manage automations.",
     )
 
     result = await automations.delete_automation("schedule-1")

@@ -87,7 +87,9 @@ def _failure_text(status: str, dashboard_url: str | None = None) -> str:
     return text
 
 
-async def _settle_failed_reviewer_check(thread_id: str, metadata: dict[str, Any]) -> None:
+async def _settle_failed_reviewer_check(
+    thread_id: str, metadata: dict[str, Any]
+) -> None:
     """Best-effort cleanup for reviewer checks left open by graph failures."""
     if metadata.get("kind") != REVIEWER_THREAD_KIND:
         return
@@ -103,7 +105,9 @@ async def _settle_failed_reviewer_check(thread_id: str, metadata: dict[str, Any]
     try:
         token = await get_github_app_installation_token()
         if not token:
-            logger.warning("run-complete: no GitHub token to settle review check for %s", thread_id)
+            logger.warning(
+                "run-complete: no GitHub token to settle review check for %s", thread_id
+            )
             return
         pending = metadata.get("review_check_pending_result")
         if isinstance(pending, dict) and pending.get("conclusion") in {
@@ -132,11 +136,15 @@ async def _settle_failed_reviewer_check(thread_id: str, metadata: dict[str, Any]
         )
     except Exception:  # noqa: BLE001
         logger.warning(
-            "run-complete: could not settle review check for %s", thread_id, exc_info=True
+            "run-complete: could not settle review check for %s",
+            thread_id,
+            exc_info=True,
         )
 
 
-async def _post_failure_reply(thread_id: str, metadata: dict[str, Any], status: str) -> bool:
+async def _post_failure_reply(
+    thread_id: str, metadata: dict[str, Any], status: str
+) -> bool:
     """Post a failure reply to the run's originating channel. Best-effort."""
     source = metadata.get("source")
     ctx = SourceContext.from_metadata(metadata)
@@ -173,14 +181,20 @@ async def _post_failure_reply(thread_id: str, metadata: dict[str, Any], status: 
 
 def _posted_failure_run_ids(metadata: dict[str, Any]) -> list[str]:
     raw = metadata.get(_FAILURE_REPLY_RUN_IDS)
-    ids = [item for item in raw if isinstance(item, str) and item] if isinstance(raw, list) else []
+    ids = (
+        [item for item in raw if isinstance(item, str) and item]
+        if isinstance(raw, list)
+        else []
+    )
     latest = metadata.get(_FAILURE_REPLY_RUN_ID)
     if isinstance(latest, str) and latest and latest not in ids:
         ids.append(latest)
     return ids
 
 
-def _failure_reply_metadata(metadata: dict[str, Any], run_id: str | None) -> dict[str, Any]:
+def _failure_reply_metadata(
+    metadata: dict[str, Any], run_id: str | None
+) -> dict[str, Any]:
     if run_id is None:
         return {_FAILURE_REPLY_FLAG: True}
     ids = [item for item in _posted_failure_run_ids(metadata) if item != run_id]
@@ -193,7 +207,11 @@ def _failure_reply_metadata(metadata: dict[str, Any], run_id: str | None) -> dic
 
 def _scheduled_cost_run_ids(metadata: dict[str, Any]) -> list[str]:
     raw = metadata.get(_SESSION_COST_REFRESH_RUN_IDS)
-    ids = [item for item in raw if isinstance(item, str) and item] if isinstance(raw, list) else []
+    ids = (
+        [item for item in raw if isinstance(item, str) and item]
+        if isinstance(raw, list)
+        else []
+    )
     latest = metadata.get(_SESSION_COST_REFRESH_RUN_ID)
     if isinstance(latest, str) and latest and latest not in ids:
         ids.append(latest)
@@ -231,7 +249,9 @@ async def _settle_code_channel_session(
             if await client.runs.list(thread_id, status=status, limit=1):
                 return
     except Exception:  # noqa: BLE001
-        logger.debug("run-complete: could not list runs for %s", thread_id, exc_info=True)
+        logger.debug(
+            "run-complete: could not list runs for %s", thread_id, exc_info=True
+        )
     await set_session_status(slack_thread.channel_id, "active")
 
 
@@ -245,7 +265,9 @@ async def _schedule_success_cost_refresh(
     try:
         thread = await client.threads.get(thread_id)
     except Exception:  # noqa: BLE001
-        logger.warning("run-complete: could not load thread %s", thread_id, exc_info=True)
+        logger.warning(
+            "run-complete: could not load thread %s", thread_id, exc_info=True
+        )
         return {"status": "error", "reason": "thread fetch failed"}
     metadata = thread.get("metadata") if isinstance(thread, dict) else None
     metadata = metadata if isinstance(metadata, dict) else {}
@@ -284,7 +306,9 @@ async def _schedule_success_cost_refresh(
             metadata=_cost_refresh_metadata(metadata, run_id),
         )
     except Exception:  # noqa: BLE001
-        logger.warning("run-complete: could not flag thread %s", thread_id, exc_info=True)
+        logger.warning(
+            "run-complete: could not flag thread %s", thread_id, exc_info=True
+        )
     return {"status": "ok", "reason": "cost refresh scheduled"}
 
 
@@ -315,7 +339,9 @@ async def handle_run_completion(payload: dict[str, Any]) -> dict[str, str]:
     try:
         thread = await client.threads.get(thread_id)
     except Exception:  # noqa: BLE001
-        logger.warning("run-complete: could not load thread %s", thread_id, exc_info=True)
+        logger.warning(
+            "run-complete: could not load thread %s", thread_id, exc_info=True
+        )
         return {"status": "error", "reason": "thread fetch failed"}
 
     metadata = thread.get("metadata") if isinstance(thread, dict) else None
@@ -340,6 +366,8 @@ async def handle_run_completion(payload: dict[str, Any]) -> dict[str, str]:
             metadata=_failure_reply_metadata(metadata, run_id),
         )
     except Exception:  # noqa: BLE001
-        logger.warning("run-complete: could not flag thread %s", thread_id, exc_info=True)
+        logger.warning(
+            "run-complete: could not flag thread %s", thread_id, exc_info=True
+        )
     logger.info("Posted failure reply for thread %s (status=%s)", thread_id, status)
     return {"status": "ok", "reason": "failure reply posted"}

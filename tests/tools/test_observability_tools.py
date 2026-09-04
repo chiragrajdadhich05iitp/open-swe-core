@@ -14,15 +14,21 @@ from agent.integrations import datadog_mcp, langsmith_tools, notion_mcp
 def _resolve_participant():
     """Tools resolve the acting participant at call time; tests act as "alice"."""
     with (
-        patch.object(notion_mcp, "resolve_participant", AsyncMock(return_value="alice")),
-        patch.object(langsmith_tools, "resolve_participant", AsyncMock(return_value="alice")),
+        patch.object(
+            notion_mcp, "resolve_participant", AsyncMock(return_value="alice")
+        ),
+        patch.object(
+            langsmith_tools, "resolve_participant", AsyncMock(return_value="alice")
+        ),
     ):
         yield
 
 
 @pytest.mark.asyncio
 async def test_load_datadog_tools_empty_when_not_connected() -> None:
-    with patch.object(datadog_mcp, "get_datadog_credentials", AsyncMock(return_value=None)):
+    with patch.object(
+        datadog_mcp, "get_datadog_credentials", AsyncMock(return_value=None)
+    ):
         assert await datadog_mcp.load_datadog_tools() == []
 
 
@@ -30,8 +36,12 @@ async def test_load_datadog_tools_empty_when_not_connected() -> None:
 async def test_load_datadog_tools_degrades_on_error() -> None:
     creds = DatadogCredentials(site="datadoghq.com", api_key="a", app_key="b")
     with (
-        patch.object(datadog_mcp, "get_datadog_credentials", AsyncMock(return_value=creds)),
-        patch.object(datadog_mcp, "_build_mcp_tools", AsyncMock(side_effect=RuntimeError("boom"))),
+        patch.object(
+            datadog_mcp, "get_datadog_credentials", AsyncMock(return_value=creds)
+        ),
+        patch.object(
+            datadog_mcp, "_build_mcp_tools", AsyncMock(side_effect=RuntimeError("boom"))
+        ),
     ):
         assert await datadog_mcp.load_datadog_tools() == []
 
@@ -41,7 +51,9 @@ async def test_load_datadog_tools_returns_tools() -> None:
     creds = DatadogCredentials(site="datadoghq.com", api_key="a", app_key="b")
     sentinel = ["tool-a", "tool-b"]
     with (
-        patch.object(datadog_mcp, "get_datadog_credentials", AsyncMock(return_value=creds)),
+        patch.object(
+            datadog_mcp, "get_datadog_credentials", AsyncMock(return_value=creds)
+        ),
         patch.object(datadog_mcp, "_build_mcp_tools", AsyncMock(return_value=sentinel)),
     ):
         assert await datadog_mcp.load_datadog_tools() == sentinel
@@ -49,15 +61,21 @@ async def test_load_datadog_tools_returns_tools() -> None:
 
 @pytest.mark.asyncio
 async def test_load_notion_tools_empty_when_not_connected() -> None:
-    with patch.object(notion_mcp, "get_notion_access_token", AsyncMock(return_value=None)):
+    with patch.object(
+        notion_mcp, "get_notion_access_token", AsyncMock(return_value=None)
+    ):
         assert await notion_mcp.load_notion_tools("alice") == []
 
 
 @pytest.mark.asyncio
 async def test_load_notion_tools_degrades_on_error() -> None:
     with (
-        patch.object(notion_mcp, "get_notion_access_token", AsyncMock(return_value="tok")),
-        patch.object(notion_mcp, "_build_mcp_tools", AsyncMock(side_effect=RuntimeError("boom"))),
+        patch.object(
+            notion_mcp, "get_notion_access_token", AsyncMock(return_value="tok")
+        ),
+        patch.object(
+            notion_mcp, "_build_mcp_tools", AsyncMock(side_effect=RuntimeError("boom"))
+        ),
     ):
         assert await notion_mcp.load_notion_tools("alice") == []
 
@@ -85,8 +103,12 @@ def _notion_tool_for_token(
 async def test_load_notion_tools_returns_wrappers() -> None:
     discovered = _notion_tool_for_token("initial-token")
     with (
-        patch.object(notion_mcp, "get_notion_access_token", AsyncMock(return_value="tok")),
-        patch.object(notion_mcp, "_build_mcp_tools", AsyncMock(return_value=[discovered])),
+        patch.object(
+            notion_mcp, "get_notion_access_token", AsyncMock(return_value="tok")
+        ),
+        patch.object(
+            notion_mcp, "_build_mcp_tools", AsyncMock(return_value=[discovered])
+        ),
     ):
         tools = await notion_mcp.load_notion_tools("alice")
     assert len(tools) == 1
@@ -103,7 +125,9 @@ async def test_load_notion_tools_returns_wrappers() -> None:
 async def test_notion_wrapper_normalizes_content_and_artifact_tools() -> None:
     get_token = AsyncMock(side_effect=["initial-token", "fresh-token"])
     build_tools = AsyncMock(
-        side_effect=lambda token: [_notion_tool_for_token(token, "content_and_artifact")]
+        side_effect=lambda token: [
+            _notion_tool_for_token(token, "content_and_artifact")
+        ]
     )
     with (
         patch.object(notion_mcp, "get_notion_access_token", get_token),
@@ -151,10 +175,14 @@ async def test_notion_wrapper_fails_when_token_missing_at_call_time() -> None:
 async def test_load_langsmith_tools_empty_when_not_connected() -> None:
     with (
         patch.object(
-            langsmith_tools, "get_user_langsmith_credentials", AsyncMock(return_value=None)
+            langsmith_tools,
+            "get_user_langsmith_credentials",
+            AsyncMock(return_value=None),
         ),
         patch.object(
-            langsmith_tools, "get_team_langsmith_credentials", AsyncMock(return_value=None)
+            langsmith_tools,
+            "get_team_langsmith_credentials",
+            AsyncMock(return_value=None),
         ),
     ):
         assert await langsmith_tools.load_langsmith_tools("alice") == []
@@ -162,13 +190,19 @@ async def test_load_langsmith_tools_empty_when_not_connected() -> None:
 
 @pytest.mark.asyncio
 async def test_load_langsmith_tools_names() -> None:
-    creds = LangSmithCredentials(api_key="k", endpoint="https://api.smith.langchain.com")
+    creds = LangSmithCredentials(
+        api_key="k", endpoint="https://api.smith.langchain.com"
+    )
     team_credentials = AsyncMock()
     with (
         patch.object(
-            langsmith_tools, "get_user_langsmith_credentials", AsyncMock(return_value=creds)
+            langsmith_tools,
+            "get_user_langsmith_credentials",
+            AsyncMock(return_value=creds),
         ),
-        patch.object(langsmith_tools, "get_team_langsmith_credentials", team_credentials),
+        patch.object(
+            langsmith_tools, "get_team_langsmith_credentials", team_credentials
+        ),
     ):
         tools = await langsmith_tools.load_langsmith_tools("alice")
     assert {t.name for t in tools} == {"langsmith_get_trace", "langsmith_list_runs"}
@@ -177,7 +211,9 @@ async def test_load_langsmith_tools_names() -> None:
 
 @pytest.mark.asyncio
 async def test_langsmith_get_trace_serializes() -> None:
-    creds = LangSmithCredentials(api_key="k", endpoint="https://api.smith.langchain.com")
+    creds = LangSmithCredentials(
+        api_key="k", endpoint="https://api.smith.langchain.com"
+    )
 
     class _Run:
         id = "run-1"
@@ -216,7 +252,9 @@ async def test_langsmith_get_trace_serializes() -> None:
 
 @pytest.mark.asyncio
 async def test_langsmith_list_runs_caps_limit() -> None:
-    creds = LangSmithCredentials(api_key="k", endpoint="https://api.smith.langchain.com")
+    creds = LangSmithCredentials(
+        api_key="k", endpoint="https://api.smith.langchain.com"
+    )
     captured: dict[str, object] = {}
 
     class _FakeClient:
@@ -251,7 +289,10 @@ async def test_load_observability_tools_skipped_when_unauthorized() -> None:
         patch.object(server, "load_datadog_tools", AsyncMock(return_value=["dd"])),
         patch.object(server, "load_langsmith_tools", AsyncMock(return_value=["ls"])),
     ):
-        assert await server._load_observability_tools(authorized=False, profile_login=None) == []
+        assert (
+            await server._load_observability_tools(authorized=False, profile_login=None)
+            == []
+        )
 
 
 @pytest.mark.asyncio
@@ -260,32 +301,44 @@ async def test_load_observability_tools_loaded_when_authorized() -> None:
         patch.object(server, "load_datadog_tools", AsyncMock(return_value=["dd"])),
         patch.object(server, "load_langsmith_tools", AsyncMock(return_value=["ls"])),
     ):
-        assert await server._load_observability_tools(authorized=True, profile_login="alice") == [
+        assert await server._load_observability_tools(
+            authorized=True, profile_login="alice"
+        ) == [
             "dd",
             "ls",
         ]
 
 
 @pytest.mark.asyncio
-async def test_observability_authorized_gates_on_admin(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_observability_authorized_gates_on_admin(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("CONFIGURED_ADMINS", "admin@example.com")
     monkeypatch.delenv("OBSERVABILITY_AUTHORIZED_EMAILS", raising=False)
     monkeypatch.setattr(server, "email_for_login", AsyncMock(return_value=None))
 
-    admin_config = cast(RunnableConfig, {"configurable": {"user_email": "admin@example.com"}})
-    other_config = cast(RunnableConfig, {"configurable": {"user_email": "attacker@example.com"}})
+    admin_config = cast(
+        RunnableConfig, {"configurable": {"user_email": "admin@example.com"}}
+    )
+    other_config = cast(
+        RunnableConfig, {"configurable": {"user_email": "attacker@example.com"}}
+    )
 
     assert await server._observability_authorized(admin_config, None) is True
     assert await server._observability_authorized(other_config, None) is False
 
 
 @pytest.mark.asyncio
-async def test_observability_authorized_allowlist(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_observability_authorized_allowlist(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("CONFIGURED_ADMINS", "")
     monkeypatch.setenv("OBSERVABILITY_AUTHORIZED_EMAILS", "trusted@example.com")
     monkeypatch.setattr(server, "email_for_login", AsyncMock(return_value=None))
 
-    config = cast(RunnableConfig, {"configurable": {"user_email": "trusted@example.com"}})
+    config = cast(
+        RunnableConfig, {"configurable": {"user_email": "trusted@example.com"}}
+    )
     assert await server._observability_authorized(config, None) is True
 
 
@@ -297,7 +350,10 @@ async def test_allowed_org_member(monkeypatch: pytest.MonkeyPatch) -> None:
 
     config = cast(RunnableConfig, {"configurable": {"github_login": "dev"}})
     assert await server._allowed_org_member(config, "dev") is True
-    assert membership.await_args_list == [call("dev", "primary"), call("dev", "secondary")]
+    assert membership.await_args_list == [
+        call("dev", "primary"),
+        call("dev", "secondary"),
+    ]
 
 
 @pytest.mark.asyncio
@@ -366,16 +422,22 @@ async def test_observability_authorization_is_rechecked_per_run(
     monkeypatch.delenv("OBSERVABILITY_AUTHORIZED_EMAILS", raising=False)
     monkeypatch.setenv("ALLOWED_GITHUB_ORGS", "primary")
     monkeypatch.setattr(server, "email_for_login", AsyncMock(return_value=None))
-    monkeypatch.setattr(server, "is_user_active_org_member", AsyncMock(return_value=False))
+    monkeypatch.setattr(
+        server, "is_user_active_org_member", AsyncMock(return_value=False)
+    )
     monkeypatch.setattr(server, "load_datadog_tools", AsyncMock(return_value=["dd"]))
     monkeypatch.setattr(
         server,
         "load_langsmith_tools",
-        AsyncMock(side_effect=lambda _login, allow_team=True: ["team"] if allow_team else []),
+        AsyncMock(
+            side_effect=lambda _login, allow_team=True: ["team"] if allow_team else []
+        ),
     )
 
     admin = cast(RunnableConfig, {"configurable": {"user_email": "admin@example.com"}})
-    attacker = cast(RunnableConfig, {"configurable": {"user_email": "attacker@example.com"}})
+    attacker = cast(
+        RunnableConfig, {"configurable": {"user_email": "attacker@example.com"}}
+    )
 
     assert await server._observability_tools_for(admin, "alice") == ["dd", "team"]
     assert await server._observability_tools_for(attacker, "alice") == []

@@ -42,8 +42,12 @@ async def test_get_valid_access_token_refreshes_when_near_expiry() -> None:
             new_callable=AsyncMock,
             return_value=record,
         ),
-        patch("agent.dashboard.profiles._decrypt_access_token", return_value="old-access"),
-        patch("agent.dashboard.profiles._decrypt_refresh_token", return_value="ghr_test"),
+        patch(
+            "agent.dashboard.profiles._decrypt_access_token", return_value="old-access"
+        ),
+        patch(
+            "agent.dashboard.profiles._decrypt_refresh_token", return_value="ghr_test"
+        ),
         patch(
             "agent.dashboard.profiles.refresh_user_access_token",
             new_callable=AsyncMock,
@@ -71,7 +75,9 @@ def test_is_unrecoverable_refresh_error() -> None:
     assert is_unrecoverable_refresh_error(
         GithubOAuthError(400, "x", error_code="unauthorized_client")
     )
-    assert not is_unrecoverable_refresh_error(GithubOAuthError(400, "x", error_code="slow_down"))
+    assert not is_unrecoverable_refresh_error(
+        GithubOAuthError(400, "x", error_code="slow_down")
+    )
     assert not is_unrecoverable_refresh_error(GithubOAuthError(400, "x"))
     assert not is_unrecoverable_refresh_error(RuntimeError("boom"))
 
@@ -91,13 +97,20 @@ async def test_get_valid_access_token_drops_record_on_dead_refresh_token() -> No
             new_callable=AsyncMock,
             return_value=record,
         ),
-        patch("agent.dashboard.profiles._decrypt_access_token", return_value="stale-access"),
-        patch("agent.dashboard.profiles._decrypt_refresh_token", return_value="ghr_dead"),
+        patch(
+            "agent.dashboard.profiles._decrypt_access_token",
+            return_value="stale-access",
+        ),
+        patch(
+            "agent.dashboard.profiles._decrypt_refresh_token", return_value="ghr_dead"
+        ),
         patch(
             "agent.dashboard.profiles.refresh_user_access_token",
             new_callable=AsyncMock,
             side_effect=GithubOAuthError(
-                400, "github oauth error: bad refresh token", error_code="bad_refresh_token"
+                400,
+                "github oauth error: bad refresh token",
+                error_code="bad_refresh_token",
             ),
         ),
         patch(
@@ -111,7 +124,9 @@ async def test_get_valid_access_token_drops_record_on_dead_refresh_token() -> No
 
 
 @pytest.mark.asyncio
-async def test_get_valid_access_token_keeps_fresh_reauth_on_dead_refresh_token() -> None:
+async def test_get_valid_access_token_keeps_fresh_reauth_on_dead_refresh_token() -> (
+    None
+):
     soon = (datetime.now(UTC) + timedelta(minutes=1)).isoformat()
     stale = {
         "email": "u@example.com",
@@ -135,12 +150,16 @@ async def test_get_valid_access_token_keeps_fresh_reauth_on_dead_refresh_token()
             "agent.dashboard.profiles._decrypt_access_token",
             side_effect=lambda r: "fresh-access" if r is reauthed else "stale-access",
         ),
-        patch("agent.dashboard.profiles._decrypt_refresh_token", return_value="ghr_dead"),
+        patch(
+            "agent.dashboard.profiles._decrypt_refresh_token", return_value="ghr_dead"
+        ),
         patch(
             "agent.dashboard.profiles.refresh_user_access_token",
             new_callable=AsyncMock,
             side_effect=GithubOAuthError(
-                400, "github oauth error: bad refresh token", error_code="bad_refresh_token"
+                400,
+                "github oauth error: bad refresh token",
+                error_code="bad_refresh_token",
             ),
         ),
         patch(
@@ -154,7 +173,9 @@ async def test_get_valid_access_token_keeps_fresh_reauth_on_dead_refresh_token()
 
 
 @pytest.mark.asyncio
-async def test_get_valid_access_token_keeps_record_on_transient_refresh_failure() -> None:
+async def test_get_valid_access_token_keeps_record_on_transient_refresh_failure() -> (
+    None
+):
     soon = (datetime.now(UTC) + timedelta(minutes=1)).isoformat()
     record = {
         "email": "u@example.com",
@@ -168,7 +189,10 @@ async def test_get_valid_access_token_keeps_record_on_transient_refresh_failure(
             new_callable=AsyncMock,
             return_value=record,
         ),
-        patch("agent.dashboard.profiles._decrypt_access_token", return_value="still-usable"),
+        patch(
+            "agent.dashboard.profiles._decrypt_access_token",
+            return_value="still-usable",
+        ),
         patch("agent.dashboard.profiles._decrypt_refresh_token", return_value="ghr_ok"),
         patch(
             "agent.dashboard.profiles.refresh_user_access_token",
@@ -199,7 +223,9 @@ async def test_get_valid_access_token_returns_stored_when_not_expiring() -> None
             new_callable=AsyncMock,
             return_value=record,
         ),
-        patch("agent.dashboard.profiles._decrypt_access_token", return_value="still-good"),
+        patch(
+            "agent.dashboard.profiles._decrypt_access_token", return_value="still-good"
+        ),
         patch(
             "agent.dashboard.profiles.refresh_user_access_token",
             new_callable=AsyncMock,

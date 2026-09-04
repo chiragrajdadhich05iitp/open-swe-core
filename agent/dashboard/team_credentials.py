@@ -51,7 +51,13 @@ class DatadogCredentialsUpdate(BaseModel):
             return DEFAULT_DD_SITE
         if not isinstance(v, str):
             raise ValueError("site must be a string")
-        site = v.strip().lower().removeprefix("https://").removeprefix("http://").strip("/")
+        site = (
+            v.strip()
+            .lower()
+            .removeprefix("https://")
+            .removeprefix("http://")
+            .strip("/")
+        )
         site = site.removeprefix("app.")
         if not site:
             return DEFAULT_DD_SITE
@@ -151,22 +157,26 @@ async def get_team_credentials_status() -> dict[str, Any]:
     datadog = await _get_provider(DATADOG_KEY)
     langsmith = await _get_provider(LANGSMITH_KEY)
     return {
-        "datadog": {
-            "connected": True,
-            "site": datadog.get("site", DEFAULT_DD_SITE),
-            "api_key_last4": datadog.get("api_key_last4", ""),
-            "updated_at": datadog.get("updated_at"),
-        }
-        if datadog
-        else {"connected": False},
-        "langsmith": {
-            "connected": True,
-            "endpoint": langsmith.get("endpoint", DEFAULT_LANGSMITH_ENDPOINT),
-            "api_key_last4": langsmith.get("api_key_last4", ""),
-            "updated_at": langsmith.get("updated_at"),
-        }
-        if langsmith
-        else {"connected": False},
+        "datadog": (
+            {
+                "connected": True,
+                "site": datadog.get("site", DEFAULT_DD_SITE),
+                "api_key_last4": datadog.get("api_key_last4", ""),
+                "updated_at": datadog.get("updated_at"),
+            }
+            if datadog
+            else {"connected": False}
+        ),
+        "langsmith": (
+            {
+                "connected": True,
+                "endpoint": langsmith.get("endpoint", DEFAULT_LANGSMITH_ENDPOINT),
+                "api_key_last4": langsmith.get("api_key_last4", ""),
+                "updated_at": langsmith.get("updated_at"),
+            }
+            if langsmith
+            else {"connected": False}
+        ),
     }
 
 

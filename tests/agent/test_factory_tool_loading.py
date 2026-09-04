@@ -69,10 +69,15 @@ async def test_tool_loaders_run_concurrently() -> None:
         patch(
             "agent.server.get_team_default_model_pair",
             new_callable=AsyncMock,
-            return_value=(("openai:gpt-5.6-sol", "medium"), ("openai:gpt-5.6-sol", "low")),
+            return_value=(
+                ("openai:gpt-5.6-sol", "medium"),
+                ("openai:gpt-5.6-sol", "low"),
+            ),
         ),
         patch("agent.server.load_profile", new_callable=AsyncMock, return_value=None),
-        patch("agent.server.load_thread_settings", new_callable=AsyncMock, return_value={}),
+        patch(
+            "agent.server.load_thread_settings", new_callable=AsyncMock, return_value={}
+        ),
         patch("agent.server.fallback_model_id_for", return_value=None),
         patch("agent.server.make_model", side_effect=[MagicMock(), MagicMock()]),
         patch("agent.server.construct_system_prompt", return_value="prompt"),

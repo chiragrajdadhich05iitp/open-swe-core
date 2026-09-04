@@ -43,17 +43,25 @@ async def approve_plan(
     except Exception:
         config = {}
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
-    thread_id = configurable.get("thread_id") if isinstance(configurable, dict) else None
+    thread_id = (
+        configurable.get("thread_id") if isinstance(configurable, dict) else None
+    )
     if not thread_id:
         return {"success": False, "error": "no thread_id in run config"}
 
     try:
         metadata = await _thread_metadata(str(thread_id))
         if not _active_plan_mode(state, configurable, metadata):
-            return {"success": False, "error": "plan mode is not active for this thread"}
+            return {
+                "success": False,
+                "error": "plan mode is not active for this thread",
+            }
         content = await get_plan_content(str(thread_id), raise_on_error=True) or {}
         if content.get("status") == PLAN_STATUS_SHARED:
-            return {"success": False, "error": "shared content is not an implementation plan"}
+            return {
+                "success": False,
+                "error": "shared content is not an implementation plan",
+            }
         plan = str(content.get("html") or content.get("markdown") or "").strip()
         comments = await list_plan_comments(str(thread_id), raise_on_error=True)
         feedback = format_plan_comments(comments)
@@ -83,7 +91,9 @@ async def approve_plan(
 async def _thread_metadata(thread_id: str) -> dict[str, Any]:
     thread = await get_client().threads.get(thread_id)
     metadata = (
-        thread.get("metadata") if isinstance(thread, dict) else getattr(thread, "metadata", None)
+        thread.get("metadata")
+        if isinstance(thread, dict)
+        else getattr(thread, "metadata", None)
     )
     return metadata if isinstance(metadata, dict) else {}
 
@@ -110,7 +120,9 @@ def _current_approver(configurable: Any) -> dict[str, str]:
         or ""
     )
     name = str(
-        slack_thread.get("triggering_user_name") or configurable.get("github_login") or actor_id
+        slack_thread.get("triggering_user_name")
+        or configurable.get("github_login")
+        or actor_id
     )
     return make_plan_approver(actor_id=actor_id, name=name, source=source)
 

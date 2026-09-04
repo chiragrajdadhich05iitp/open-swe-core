@@ -37,24 +37,36 @@ def _request(
 
 def test_bearer_token_parsing() -> None:
     assert (
-        github_token_auth.bearer_github_token(_request(authorization="Bearer gh-tok")) == "gh-tok"
+        github_token_auth.bearer_github_token(_request(authorization="Bearer gh-tok"))
+        == "gh-tok"
     )
     assert (
-        github_token_auth.bearer_github_token(_request(authorization="bearer gh-tok")) == "gh-tok"
+        github_token_auth.bearer_github_token(_request(authorization="bearer gh-tok"))
+        == "gh-tok"
     )
-    assert github_token_auth.bearer_github_token(_request(authorization="Basic gh-tok")) is None
-    assert github_token_auth.bearer_github_token(_request(authorization="Bearer  ")) is None
+    assert (
+        github_token_auth.bearer_github_token(_request(authorization="Basic gh-tok"))
+        is None
+    )
+    assert (
+        github_token_auth.bearer_github_token(_request(authorization="Bearer  "))
+        is None
+    )
     assert github_token_auth.bearer_github_token(_request()) is None
 
 
-def _github_transport(user: dict[str, Any], emails: Any = None, *, emails_status: int = 200):
+def _github_transport(
+    user: dict[str, Any], emails: Any = None, *, emails_status: int = 200
+):
     """Serve /user and /user/emails without touching the network."""
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path == "/user":
             return httpx.Response(200, json=user)
         if request.url.path == "/user/emails":
-            return httpx.Response(emails_status, json=emails if emails is not None else [])
+            return httpx.Response(
+                emails_status, json=emails if emails is not None else []
+            )
         raise AssertionError(f"unexpected request to {request.url}")
 
     return httpx.MockTransport(handler)
@@ -65,12 +77,16 @@ _REAL_ASYNC_CLIENT = httpx.AsyncClient
 
 def _patched_client(transport: httpx.MockTransport):
     def factory(**kwargs: Any) -> httpx.AsyncClient:
-        return _REAL_ASYNC_CLIENT(transport=transport, base_url="https://api.github.com")
+        return _REAL_ASYNC_CLIENT(
+            transport=transport, base_url="https://api.github.com"
+        )
 
     return patch.object(github_token_auth.httpx, "AsyncClient", factory)
 
 
-async def test_identity_falls_back_to_primary_email(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_identity_falls_back_to_primary_email(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """A private-email admin allowlisted by email must still authenticate."""
     monkeypatch.setenv("CONFIGURED_ADMINS", "octo@example.com")
     transport = _github_transport(
@@ -84,16 +100,22 @@ async def test_identity_falls_back_to_primary_email(monkeypatch: pytest.MonkeyPa
     assert session["email"] == "octo@example.com"
 
 
-async def test_identity_skips_email_lookup_when_public(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_identity_skips_email_lookup_when_public(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("CONFIGURED_ADMINS", "octo@example.com")
-    transport = _github_transport({"login": "octo", "email": "octo@example.com"}, emails_status=403)
+    transport = _github_transport(
+        {"login": "octo", "email": "octo@example.com"}, emails_status=403
+    )
     with _patched_client(transport):
         session = await github_token_auth.admin_session_for_github_token("gh-tok")
 
     assert session["email"] == "octo@example.com"
 
 
-async def test_identity_tolerates_email_scope_denied(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_identity_tolerates_email_scope_denied(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """No email permission is fine — login matching still authenticates."""
     monkeypatch.setenv("CONFIGURED_ADMINS", "octo")
     transport = _github_transport({"login": "octo", "email": None}, emails_status=403)
@@ -104,7 +126,9 @@ async def test_identity_tolerates_email_scope_denied(monkeypatch: pytest.MonkeyP
     assert session["email"] is None
 
 
-async def test_admin_token_accepted_for_configured_admin(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_admin_token_accepted_for_configured_admin(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("CONFIGURED_ADMINS", "octo")
     with patch.object(
         github_token_auth,
@@ -118,7 +142,9 @@ async def test_admin_token_accepted_for_configured_admin(monkeypatch: pytest.Mon
     assert session["auth"] == "github_token"
 
 
-async def test_admin_token_rejected_for_non_admin(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_admin_token_rejected_for_non_admin(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("CONFIGURED_ADMINS", "octo")
     with (
         patch.object(
@@ -144,7 +170,9 @@ async def test_admin_dep_prefers_bearer_over_missing_cookie(
         new_callable=AsyncMock,
         return_value=("octo", "octo@example.com"),
     ):
-        session = await routes._admin_session_or_ci_token(_request(authorization="Bearer gh-tok"))
+        session = await routes._admin_session_or_ci_token(
+            _request(authorization="Bearer gh-tok")
+        )
 
     assert session["sub"] == "octo"
 
@@ -159,9 +187,13 @@ async def test_admin_dep_routes_oidc_tokens_to_oidc_verifier() -> None:
             new_callable=AsyncMock,
             return_value={"sub": "actions:acme/images", "auth": "actions_oidc"},
         ) as verify_oidc,
-        patch.object(github_token_auth, "_github_identity", new_callable=AsyncMock) as user_lookup,
+        patch.object(
+            github_token_auth, "_github_identity", new_callable=AsyncMock
+        ) as user_lookup,
     ):
-        session = await routes._admin_session_or_ci_token(_request(authorization="Bearer oidc-jwt"))
+        session = await routes._admin_session_or_ci_token(
+            _request(authorization="Bearer oidc-jwt")
+        )
 
     assert session["auth"] == "actions_oidc"
     verify_oidc.assert_awaited_once_with("oidc-jwt")
@@ -181,7 +213,9 @@ def test_bearer_mutation_skips_csrf(monkeypatch: pytest.MonkeyPatch) -> None:
     oauth.require_same_origin_for_mutations(_request(authorization="Bearer gh-tok"))
 
 
-def test_bearer_with_session_cookie_still_enforces_csrf(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_bearer_with_session_cookie_still_enforces_csrf(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("DASHBOARD_BASE_URL", "https://dashboard.example")
 
     with pytest.raises(HTTPException) as exc:

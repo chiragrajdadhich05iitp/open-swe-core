@@ -259,7 +259,9 @@ async def upsert_mapping(
     record: dict[str, Any] = {
         "github_login": login,
         "work_email": email,
-        "slack_user_id": _norm_slack_id(slack_user_id) or existing.get("slack_user_id") or None,
+        "slack_user_id": _norm_slack_id(slack_user_id)
+        or existing.get("slack_user_id")
+        or None,
         "source": source,
         "status": status,
         "created_at": existing.get("created_at") or now_iso(),

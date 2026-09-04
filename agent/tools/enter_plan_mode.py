@@ -44,11 +44,15 @@ async def enter_plan_mode(
         try:
             await set_plan_status(thread_id, PLAN_STATUS_PLANNING, plan_mode=True)
         except Exception:
-            logger.warning("Failed to persist plan-mode entry for %s", thread_id, exc_info=True)
+            logger.warning(
+                "Failed to persist plan-mode entry for %s", thread_id, exc_info=True
+            )
     return Command(
         update={
             "plan_mode": True,
-            "messages": [ToolMessage(content=_ENTERED_MESSAGE, tool_call_id=tool_call_id)],
+            "messages": [
+                ToolMessage(content=_ENTERED_MESSAGE, tool_call_id=tool_call_id)
+            ],
         }
     )
 
@@ -59,5 +63,7 @@ def _thread_id_from_config() -> str | None:
     except Exception:
         return None
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
-    thread_id = configurable.get("thread_id") if isinstance(configurable, dict) else None
+    thread_id = (
+        configurable.get("thread_id") if isinstance(configurable, dict) else None
+    )
     return str(thread_id) if thread_id else None

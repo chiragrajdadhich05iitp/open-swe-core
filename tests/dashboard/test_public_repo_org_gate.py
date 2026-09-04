@@ -21,7 +21,9 @@ def _sign_body(body: bytes, secret: str = _TEST_WEBHOOK_SECRET) -> str:
     return f"sha256={sig}"
 
 
-def _post_github_webhook(client: TestClient, event_type: str, payload: dict[str, Any]) -> Response:
+def _post_github_webhook(
+    client: TestClient, event_type: str, payload: dict[str, Any]
+) -> Response:
     body = json.dumps(payload, separators=(",", ":")).encode()
     return cast(
         Response,
@@ -45,7 +47,9 @@ def _install_membership_stub(monkeypatch, members: set[str]) -> dict[str, list[s
         seen["calls"].append(username)
         return username in members
 
-    monkeypatch.setattr(webhook_common, "is_user_active_org_member", fake_is_user_active_org_member)
+    monkeypatch.setattr(
+        webhook_common, "is_user_active_org_member", fake_is_user_active_org_member
+    )
     return seen
 
 
@@ -232,7 +236,9 @@ def test_gate_blocks_non_member_on_public_issue(monkeypatch) -> None:
     async def fake_process_github_issue(*_args, **_kwargs) -> None:
         raise AssertionError("should not be called")
 
-    monkeypatch.setattr(github_webhooks, "process_github_issue", fake_process_github_issue)
+    monkeypatch.setattr(
+        github_webhooks, "process_github_issue", fake_process_github_issue
+    )
 
     client = TestClient(app)
     response = _post_github_webhook(
@@ -339,7 +345,9 @@ def test_gate_allows_internal_bot_sender(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_is_user_active_org_member_returns_false_when_no_token(monkeypatch) -> None:
+async def test_is_user_active_org_member_returns_false_when_no_token(
+    monkeypatch,
+) -> None:
     from agent.utils import github_org_membership
 
     async def fake_installation(_org: str) -> int:
@@ -349,11 +357,18 @@ async def test_is_user_active_org_member_returns_false_when_no_token(monkeypatch
         return None
 
     monkeypatch.setattr(
-        github_org_membership, "get_github_app_installation_id_for_org", fake_installation
+        github_org_membership,
+        "get_github_app_installation_id_for_org",
+        fake_installation,
     )
-    monkeypatch.setattr(github_org_membership, "get_github_app_installation_token", fake_token)
+    monkeypatch.setattr(
+        github_org_membership, "get_github_app_installation_token", fake_token
+    )
 
-    assert await github_org_membership.is_user_active_org_member("alice", "langchain-ai") is False
+    assert (
+        await github_org_membership.is_user_active_org_member("alice", "langchain-ai")
+        is False
+    )
 
 
 class _FakeAsyncClient:
@@ -392,9 +407,13 @@ def _patch_membership_http(monkeypatch, response: _FakeResponse) -> dict[str, An
         return "x"
 
     monkeypatch.setattr(
-        github_org_membership, "get_github_app_installation_id_for_org", fake_installation
+        github_org_membership,
+        "get_github_app_installation_id_for_org",
+        fake_installation,
     )
-    monkeypatch.setattr(github_org_membership, "get_github_app_installation_token", fake_token)
+    monkeypatch.setattr(
+        github_org_membership, "get_github_app_installation_token", fake_token
+    )
 
     def factory(*_args, **_kwargs) -> _FakeAsyncClient:
         return _FakeAsyncClient(response)
@@ -409,7 +428,10 @@ async def test_is_user_active_org_member_handles_404(monkeypatch) -> None:
 
     _patch_membership_http(monkeypatch, _FakeResponse(404))
 
-    assert await github_org_membership.is_user_active_org_member("alice", "langchain-ai") is False
+    assert (
+        await github_org_membership.is_user_active_org_member("alice", "langchain-ai")
+        is False
+    )
 
 
 @pytest.mark.asyncio
@@ -418,7 +440,10 @@ async def test_is_user_active_org_member_active(monkeypatch) -> None:
 
     seen = _patch_membership_http(monkeypatch, _FakeResponse(200, {"state": "active"}))
 
-    assert await github_org_membership.is_user_active_org_member("alice", "langchain-ai") is True
+    assert (
+        await github_org_membership.is_user_active_org_member("alice", "langchain-ai")
+        is True
+    )
     assert seen == {"installation_id": 1, "permissions": {"members": "read"}}
 
 
@@ -428,4 +453,7 @@ async def test_is_user_active_org_member_pending_returns_false(monkeypatch) -> N
 
     _patch_membership_http(monkeypatch, _FakeResponse(200, {"state": "pending"}))
 
-    assert await github_org_membership.is_user_active_org_member("alice", "langchain-ai") is False
+    assert (
+        await github_org_membership.is_user_active_org_member("alice", "langchain-ai")
+        is False
+    )

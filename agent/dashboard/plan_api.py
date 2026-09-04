@@ -85,13 +85,17 @@ async def _thread_metadata(thread_id: str) -> dict[str, Any]:
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(404, "thread not found") from exc
     metadata = (
-        thread.get("metadata") if isinstance(thread, dict) else getattr(thread, "metadata", None)
+        thread.get("metadata")
+        if isinstance(thread, dict)
+        else getattr(thread, "metadata", None)
     )
     return metadata if isinstance(metadata, dict) else {}
 
 
 @plan_router.get("/{thread_id}")
-async def get_plan(thread_id: str, session: dict[str, Any] = _SESSION_DEP) -> dict[str, Any]:
+async def get_plan(
+    thread_id: str, session: dict[str, Any] = _SESSION_DEP
+) -> dict[str, Any]:
     metadata = await _thread_metadata(thread_id)
     if not _thread_is_readable(metadata):
         raise HTTPException(404, "thread not found")
@@ -134,7 +138,9 @@ async def update_plan(
         raise HTTPException(404, "thread not found")
     content = await get_plan_content(thread_id) or {}
     _reject_shared_content(content)
-    legacy_markdown = isinstance(content.get("markdown"), str) and not content.get("html")
+    legacy_markdown = isinstance(content.get("markdown"), str) and not content.get(
+        "html"
+    )
     field = "markdown" if legacy_markdown else "html"
     value = getattr(body, field)
     value = value.strip() if isinstance(value, str) else ""
@@ -145,7 +151,9 @@ async def update_plan(
         raise HTTPException(409, f"cannot edit a {status} plan")
     plan_file_path = content.get("plan_file_path")
     plan_file_path = (
-        plan_file_path if isinstance(plan_file_path, str) else plan_file_path_for_thread(thread_id)
+        plan_file_path
+        if isinstance(plan_file_path, str)
+        else plan_file_path_for_thread(thread_id)
     )
     if legacy_markdown:
         await save_plan_content(
@@ -218,7 +226,9 @@ async def remove_plan_comment(
 
 
 @plan_router.post("/{thread_id}/approve")
-async def approve_plan(thread_id: str, session: dict[str, Any] = _SESSION_DEP) -> dict[str, Any]:
+async def approve_plan(
+    thread_id: str, session: dict[str, Any] = _SESSION_DEP
+) -> dict[str, Any]:
     metadata = await _thread_metadata(thread_id)
     if not _thread_is_readable(metadata):
         raise HTTPException(404, "thread not found")
@@ -233,7 +243,9 @@ async def approve_plan(thread_id: str, session: dict[str, Any] = _SESSION_DEP) -
     )
 
 
-async def approve_plan_for_thread(thread_id: str, *, approver: dict[str, str]) -> dict[str, Any]:
+async def approve_plan_for_thread(
+    thread_id: str, *, approver: dict[str, str]
+) -> dict[str, Any]:
     approver = make_plan_approver(
         actor_id=str(approver.get("id") or ""),
         name=str(approver.get("name") or ""),
@@ -250,7 +262,9 @@ async def approve_plan_for_thread(thread_id: str, *, approver: dict[str, str]) -
             or content.get("status") != PLAN_STATUS_READY
         ):
             return {
-                "status": str(content.get("status") or metadata.get("plan_status") or "planning"),
+                "status": str(
+                    content.get("status") or metadata.get("plan_status") or "planning"
+                ),
                 "already_approved": True,
             }
         plan_html = str(content.get("html", "")).strip()
@@ -276,7 +290,9 @@ async def approve_plan_for_thread(thread_id: str, *, approver: dict[str, str]) -
                 f"adjustment while preserving its goals and reviewer edits:\n\n{plan_markdown}"
             )
         else:
-            text = "The plan has been approved. Implement it now as described in the plan."
+            text = (
+                "The plan has been approved. Implement it now as described in the plan."
+            )
         if feedback:
             text += "\n\nAlso take this reviewer feedback into account:\n\n" + feedback
         try:
@@ -315,7 +331,9 @@ async def reject_plan(
         await set_plan_status(thread_id, PLAN_STATUS_REVISING, plan_mode=True)
     if rejection is not None and not rejection.dispatch:
         return {"status": PLAN_STATUS_REVISING}
-    feedback = format_plan_comments(await list_plan_comments(thread_id, raise_on_error=True))
+    feedback = format_plan_comments(
+        await list_plan_comments(thread_id, raise_on_error=True)
+    )
     text = (
         "The plan needs changes before implementation. Address this reviewer feedback in the "
         "existing self-contained HTML file under /workspace/plans/, then publish an updated "
@@ -376,7 +394,9 @@ async def _maybe_post_plan_approved_to_slack(
         logger.warning("Could not post plan approval Slack reply", exc_info=True)
         return
     if not ok:
-        logger.warning("Could not post plan approval Slack reply to %s/%s", channel_id, thread_ts)
+        logger.warning(
+            "Could not post plan approval Slack reply to %s/%s", channel_id, thread_ts
+        )
 
 
 async def _dispatch_followup(

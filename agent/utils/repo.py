@@ -6,7 +6,9 @@ import re
 _DEFAULT_REPO_OWNER = os.environ.get("DEFAULT_REPO_OWNER", "langchain-ai")
 
 
-def extract_repo_from_text(text: str, default_owner: str | None = None) -> dict[str, str] | None:
+def extract_repo_from_text(
+    text: str, default_owner: str | None = None
+) -> dict[str, str] | None:
     """Extract owner/name repo config from text containing repo: syntax or GitHub URLs.
 
     Checks for explicit ``repo:owner/name`` or ``repo owner/name`` first, then

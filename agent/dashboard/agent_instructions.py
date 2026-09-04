@@ -66,7 +66,9 @@ class AgentInstructionsStore(TypedStore[AgentInstructions]):
             return existing
         return await self.put(full_name, AgentInstructions.seed(full_name, created_by))
 
-    async def set_instructions(self, full_name: str, instructions: str) -> AgentInstructions:
+    async def set_instructions(
+        self, full_name: str, instructions: str
+    ) -> AgentInstructions:
         record = await self.get(full_name) or AgentInstructions.seed(full_name, "")
         record.instructions = instructions
         record.updated_at = now_iso()

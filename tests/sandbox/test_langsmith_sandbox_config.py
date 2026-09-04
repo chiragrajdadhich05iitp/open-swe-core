@@ -28,8 +28,12 @@ from agent.sandboxes.providers import SandboxGoneError
 
 
 def test_sandbox_api_endpoint_appends_v2_sandboxes() -> None:
-    with patch.dict("os.environ", {"LANGSMITH_ENDPOINT": "https://eu.smith.langchain.com"}):
-        assert _get_sandbox_api_endpoint() == "https://eu.smith.langchain.com/v2/sandboxes"
+    with patch.dict(
+        "os.environ", {"LANGSMITH_ENDPOINT": "https://eu.smith.langchain.com"}
+    ):
+        assert (
+            _get_sandbox_api_endpoint() == "https://eu.smith.langchain.com/v2/sandboxes"
+        )
 
 
 def test_sandbox_api_endpoint_no_double_suffix() -> None:
@@ -37,7 +41,9 @@ def test_sandbox_api_endpoint_no_double_suffix() -> None:
         "os.environ",
         {"SANDBOX_LANGSMITH_ENDPOINT": "https://x.smith.langchain.com/v2/sandboxes"},
     ):
-        assert _get_sandbox_api_endpoint() == "https://x.smith.langchain.com/v2/sandboxes"
+        assert (
+            _get_sandbox_api_endpoint() == "https://x.smith.langchain.com/v2/sandboxes"
+        )
 
 
 def test_nothing_deletes_sandboxes() -> None:
@@ -224,7 +230,9 @@ class _FakeSandboxClient:
 
 
 @pytest.mark.asyncio
-async def test_create_sandbox_with_retry_retries_transient_errors(monkeypatch) -> None:  # noqa: ANN001
+async def test_create_sandbox_with_retry_retries_transient_errors(
+    monkeypatch,
+) -> None:  # noqa: ANN001
     client = _FakeSandboxClient(failures=2)
     monkeypatch.setattr("agent.integrations.langsmith.asyncio.sleep", AsyncMock())
 
@@ -317,7 +325,9 @@ def test_environment_create_params_override_deployment_defaults() -> None:
 
 
 def test_extra_fields_rejects_invalid_json() -> None:
-    with patch.dict("os.environ", {"SANDBOX_CREATE_EXTRA_JSON": "{not json"}, clear=True):
+    with patch.dict(
+        "os.environ", {"SANDBOX_CREATE_EXTRA_JSON": "{not json"}, clear=True
+    ):
         with pytest.raises(ValueError, match="valid JSON"):
             _get_sandbox_create_extra_fields()
 
@@ -344,10 +354,14 @@ async def test_install_create_extra_fields_merges_only_boxes_post() -> None:
             self._http = _FakeHttp()
 
     client = _FakeClient()
-    _install_create_extra_fields(cast(AsyncSandboxClient, client), {"_internal_runtime": "v2"})
+    _install_create_extra_fields(
+        cast(AsyncSandboxClient, client), {"_internal_runtime": "v2"}
+    )
 
     await client._http.post("https://api/v2/sandboxes/boxes", json={"snapshot_id": "s"})
-    await client._http.post("https://api/v2/sandboxes/boxes/abc/start", json={"foo": "bar"})
+    await client._http.post(
+        "https://api/v2/sandboxes/boxes/abc/start", json={"foo": "bar"}
+    )
 
     assert calls[0][1] == {"snapshot_id": "s", "_internal_runtime": "v2"}
     assert calls[1][1] == {"foo": "bar"}
@@ -380,7 +394,9 @@ class _MissingSandboxClient:
 
 @pytest.mark.asyncio
 async def test_reuse_reports_a_deleted_sandbox_as_gone() -> None:
-    client = _MissingSandboxClient(ResourceNotFoundError("Sandbox 'openswe-abc' not found"))
+    client = _MissingSandboxClient(
+        ResourceNotFoundError("Sandbox 'openswe-abc' not found")
+    )
     with pytest.raises(SandboxGoneError):
         await _reuse_existing_sandbox(cast(AsyncSandboxClient, client), "openswe-abc")
 

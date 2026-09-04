@@ -77,7 +77,9 @@ def test_desktop_login_uses_the_requested_backend_callback(monkeypatch) -> None:
         )
 
     query = parse_qs(urlparse(response.headers["location"]).query)
-    assert query["redirect_uri"] == ["https://backend.example/dashboard/api/auth/callback"]
+    assert query["redirect_uri"] == [
+        "https://backend.example/dashboard/api/auth/callback"
+    ]
 
 
 def test_auth_callback_preserves_relative_plan_redirect(monkeypatch) -> None:
@@ -86,14 +88,20 @@ def test_auth_callback_preserves_relative_plan_redirect(monkeypatch) -> None:
     monkeypatch.setenv("DASHBOARD_JWT_SECRET", "test-secret")
     monkeypatch.setenv("GITHUB_APP_CLIENT_ID", "client-id")
 
-    token_data = {"access_token": "gho_test", "refresh_token": "ghr_test", "expires_in": 3600}
+    token_data = {
+        "access_token": "gho_test",
+        "refresh_token": "ghr_test",
+        "expires_in": 3600,
+    }
     persisted: dict[str, Any] = {}
 
     async def fake_exchange_code(code: str) -> dict[str, Any]:
         assert code == "oauth-code"
         return token_data
 
-    async def fake_fetch_github_user(access_token: str) -> tuple[dict[str, Any], str | None]:
+    async def fake_fetch_github_user(
+        access_token: str,
+    ) -> tuple[dict[str, Any], str | None]:
         assert access_token == "gho_test"
         return {
             "login": "alice",
@@ -123,7 +131,9 @@ def test_auth_callback_preserves_relative_plan_redirect(monkeypatch) -> None:
 
     with TestClient(app) as client:
         login_response = client.get(
-            "/dashboard/api/auth/login", params={"redirect_to": target}, follow_redirects=False
+            "/dashboard/api/auth/login",
+            params={"redirect_to": target},
+            follow_redirects=False,
         )
         assert login_response.status_code == 302
         state = parse_qs(urlparse(login_response.headers["location"]).query)["state"][0]
@@ -138,7 +148,11 @@ def test_auth_callback_preserves_relative_plan_redirect(monkeypatch) -> None:
         assert callback_response.headers["location"] == f"http://testserver{target}"
         assert client.cookies.get(COOKIE_NAME)
 
-    assert persisted == {"login": "alice", "email": "alice@example.com", "data": token_data}
+    assert persisted == {
+        "login": "alice",
+        "email": "alice@example.com",
+        "data": token_data,
+    }
 
 
 def test_auth_callback_cross_origin_redirect(monkeypatch) -> None:
@@ -149,14 +163,23 @@ def test_auth_callback_cross_origin_redirect(monkeypatch) -> None:
     monkeypatch.setenv("DASHBOARD_JWT_SECRET", "test-secret")
     monkeypatch.setenv("GITHUB_APP_CLIENT_ID", "client-id")
 
-    token_data = {"access_token": "gho_test", "refresh_token": "ghr_test", "expires_in": 3600}
+    token_data = {
+        "access_token": "gho_test",
+        "refresh_token": "ghr_test",
+        "expires_in": 3600,
+    }
     persisted: dict[str, Any] = {}
 
     async def fake_exchange_code(code: str) -> dict[str, Any]:
         return token_data
 
-    async def fake_fetch_github_user(access_token: str) -> tuple[dict[str, Any], str | None]:
-        return {"login": "alice", "avatar_url": "https://avatars.example/alice.png"}, None
+    async def fake_fetch_github_user(
+        access_token: str,
+    ) -> tuple[dict[str, Any], str | None]:
+        return {
+            "login": "alice",
+            "avatar_url": "https://avatars.example/alice.png",
+        }, None
 
     async def fake_enforce_org_login_gate(login: str) -> None:
         pass
@@ -181,7 +204,9 @@ def test_auth_callback_cross_origin_redirect(monkeypatch) -> None:
 
     with TestClient(app, base_url="http://localhost:2024") as client:
         login_response = client.get(
-            "/dashboard/api/auth/login", params={"redirect_to": target}, follow_redirects=False
+            "/dashboard/api/auth/login",
+            params={"redirect_to": target},
+            follow_redirects=False,
         )
         assert login_response.status_code == 302
         state = parse_qs(urlparse(login_response.headers["location"]).query)["state"][0]
@@ -194,7 +219,9 @@ def test_auth_callback_cross_origin_redirect(monkeypatch) -> None:
 
         assert callback_response.status_code == 302
         assert callback_response.headers["location"] == f"http://localhost:3000{target}"
-        assert not callback_response.headers["location"].startswith("http://localhost:2024")
+        assert not callback_response.headers["location"].startswith(
+            "http://localhost:2024"
+        )
 
 
 def _desktop_login_env(monkeypatch) -> None:
@@ -206,7 +233,9 @@ def _desktop_login_env(monkeypatch) -> None:
     async def fake_exchange_code(code: str) -> dict[str, Any]:
         return {"access_token": "gho_test"}
 
-    async def fake_fetch_github_user(access_token: str) -> tuple[dict[str, Any], str | None]:
+    async def fake_fetch_github_user(
+        access_token: str,
+    ) -> tuple[dict[str, Any], str | None]:
         return {"login": "alice", "avatar_url": None}, "alice@example.com"
 
     async def fake_enforce_org_login_gate(login: str) -> None:
@@ -231,7 +260,9 @@ def test_desktop_login_hands_the_session_back_over_loopback(monkeypatch) -> None
     _desktop_login_env(monkeypatch)
     verifier = "desktop-verifier"
     challenge = (
-        base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).decode().rstrip("=")
+        base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
+        .decode()
+        .rstrip("=")
     )
 
     app = FastAPI()
@@ -311,7 +342,9 @@ def test_desktop_handoff_code_carries_no_session(monkeypatch) -> None:
     _desktop_login_env(monkeypatch)
     verifier = "desktop-verifier"
     challenge = (
-        base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).decode().rstrip("=")
+        base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
+        .decode()
+        .rstrip("=")
     )
 
     app = FastAPI()
@@ -334,7 +367,8 @@ def test_desktop_handoff_code_carries_no_session(monkeypatch) -> None:
     payload = jwt.decode(handoff, "test-secret", algorithms=["HS256"])
     assert "session" not in payload
     assert not any(
-        isinstance(v, str) and v.count(".") == 2 and len(v) > 60 for v in payload.values()
+        isinstance(v, str) and v.count(".") == 2 and len(v) > 60
+        for v in payload.values()
     ), f"handoff payload looks like it embeds a token: {payload}"
     assert payload["sub"] == "alice"
 
@@ -358,7 +392,9 @@ def test_desktop_login_callback_follows_the_configured_api_origin(monkeypatch) -
         )
 
     query = parse_qs(urlparse(response.headers["location"]).query)
-    assert query["redirect_uri"] == ["https://dashboard.example/dashboard/api/auth/callback"]
+    assert query["redirect_uri"] == [
+        "https://dashboard.example/dashboard/api/auth/callback"
+    ]
 
 
 def test_web_auth_callback_rejects_missing_state_cookie(monkeypatch) -> None:

@@ -6,6 +6,7 @@ builds the curated tool list plus optional integrations, and wires the
 middleware stack. All per-thread state lives in the sandbox + thread metadata;
 the agent itself is stateless.
 """
+
 # ruff: noqa: E402
 
 import hashlib
@@ -126,7 +127,11 @@ from .middleware import (
 )
 from .middleware.prepare_run import PrepareRunState
 from .middleware.sandbox_circuit_breaker import post_sandbox_unreachable_notification
-from .prompt import construct_sender_context, construct_system_prompt, render_open_swe_shared_base
+from .prompt import (
+    construct_sender_context,
+    construct_system_prompt,
+    render_open_swe_shared_base,
+)
 from .runtime.constants import (
     DEFAULT_LLM_MAX_TOKENS,
     DEFAULT_RECURSION_LIMIT,
@@ -197,7 +202,11 @@ from .utils.authorship import (
     resolve_participant_identities,
     resolve_triggering_user_identity,
 )
-from .utils.dashboard_links import dashboard_base_url, dashboard_plan_url, dashboard_thread_url
+from .utils.dashboard_links import (
+    dashboard_base_url,
+    dashboard_plan_url,
+    dashboard_thread_url,
+)
 from .utils.deferred_model import make_deferred_error_model
 from .utils.gateway import gateway_env_default
 from .utils.github_org_membership import is_user_active_org_member
@@ -257,7 +266,9 @@ def _tool_loader_timeout_seconds() -> float:
     try:
         timeout = float(raw_timeout)
     except ValueError:
-        logger.warning("Invalid TOOL_LOADER_TIMEOUT_SECONDS=%r; using default", raw_timeout)
+        logger.warning(
+            "Invalid TOOL_LOADER_TIMEOUT_SECONDS=%r; using default", raw_timeout
+        )
         return DEFAULT_TOOL_LOADER_TIMEOUT_SECONDS
     if timeout <= 0:
         logger.warning("TOOL_LOADER_TIMEOUT_SECONDS must be positive; using default")
@@ -265,7 +276,9 @@ def _tool_loader_timeout_seconds() -> float:
     return timeout
 
 
-async def _resolve_prompt_default_repo(configurable: dict[str, Any]) -> dict[str, str] | None:
+async def _resolve_prompt_default_repo(
+    configurable: dict[str, Any]
+) -> dict[str, str] | None:
     repo_config = configurable.get("repo")
     if isinstance(repo_config, dict):
         owner = repo_config.get("owner")
@@ -287,12 +300,18 @@ async def _resolve_repo_custom_instructions(
     default_repo: dict[str, str] | None,
 ) -> str | None:
     """Load per-repo custom agent instructions for the resolved default repo."""
-    if not default_repo or not default_repo.get("owner") or not default_repo.get("name"):
+    if (
+        not default_repo
+        or not default_repo.get("owner")
+        or not default_repo.get("name")
+    ):
         return None
     try:
         from .dashboard.agent_instructions import get_repo_agent_instructions
 
-        return await get_repo_agent_instructions(default_repo["owner"], default_repo["name"])
+        return await get_repo_agent_instructions(
+            default_repo["owner"], default_repo["name"]
+        )
     except Exception:
         logger.debug("Failed to load repo custom agent instructions", exc_info=True)
         return None
@@ -305,7 +324,9 @@ async def _thread_participant_identities(thread_id: str) -> list[CollaboratorIde
         logins = participant_logins(thread_metadata(thread).get(PARTICIPANT_LOGINS_KEY))
         return await resolve_participant_identities(logins)
     except Exception:
-        logger.debug("Failed to resolve participant identities for %s", thread_id, exc_info=True)
+        logger.debug(
+            "Failed to resolve participant identities for %s", thread_id, exc_info=True
+        )
         return []
 
 
@@ -404,7 +425,9 @@ def _general_purpose_subagent(
         # Deep Agents' default GP prompt covers only task mechanics; the shared
         # base carries the Open SWE identity and conventions (gh proxy usage,
         # tool-call cadence) that delegated work also needs.
-        "system_prompt": render_open_swe_shared_base(sandbox_file_downloads=sandbox_file_downloads)
+        "system_prompt": render_open_swe_shared_base(
+            sandbox_file_downloads=sandbox_file_downloads
+        )
         + "\n\n"
         + GENERAL_PURPOSE_SUBAGENT["system_prompt"],
         "model": model,
@@ -463,7 +486,9 @@ def _browser_subagent(model: BaseChatModel, tools: list[Any]) -> SubAgent:
     }
 
 
-async def _observability_authorized(config: RunnableConfig, profile_login: str | None) -> bool:
+async def _observability_authorized(
+    config: RunnableConfig, profile_login: str | None
+) -> bool:
     """Whether the triggering user may use the team observability tools.
 
     Gates on admin / explicitly-authorized emails so prompt-injected runs from
@@ -472,12 +497,17 @@ async def _observability_authorized(config: RunnableConfig, profile_login: str |
     configurable = (config or {}).get("configurable") or {}
     slack_thread = configurable.get("slack_thread") or {}
     config_login = configurable.get("github_login")
-    candidate_login = profile_login or (config_login if isinstance(config_login, str) else None)
+    candidate_login = profile_login or (
+        config_login if isinstance(config_login, str) else None
+    )
     candidate_emails = [
         configurable.get("user_email"),
         slack_thread.get("triggering_user_email"),
     ]
-    if any(is_observability_authorized(email, login=candidate_login) for email in candidate_emails):
+    if any(
+        is_observability_authorized(email, login=candidate_login)
+        for email in candidate_emails
+    ):
         return True
     return is_observability_authorized(
         await email_for_login(candidate_login), login=candidate_login
@@ -537,7 +567,9 @@ async def _admin_thread(config: RunnableConfig, profile_login: str | None) -> bo
     )
 
 
-async def _cached_allowed_org_member(config: RunnableConfig, profile_login: str | None) -> bool:
+async def _cached_allowed_org_member(
+    config: RunnableConfig, profile_login: str | None
+) -> bool:
     login = _org_member_login(config, profile_login)
     if not login:
         return False
@@ -554,7 +586,9 @@ def _org_member_login(config: RunnableConfig, profile_login: str | None) -> str 
     return profile_login or (config_login if isinstance(config_login, str) else None)
 
 
-async def _allowed_org_member(config: RunnableConfig, profile_login: str | None) -> bool:
+async def _allowed_org_member(
+    config: RunnableConfig, profile_login: str | None
+) -> bool:
     login = _org_member_login(config, profile_login)
     if not login:
         return False
@@ -574,7 +608,9 @@ async def _cached_tool_loader(key: str, ttl_seconds: float, loader: Any) -> list
         return await asyncio.wait_for(loader(), timeout=_tool_loader_timeout_seconds())
 
     try:
-        return await ttl_cache.cached_stale_while_revalidate(key, ttl_seconds, load_with_timeout)
+        return await ttl_cache.cached_stale_while_revalidate(
+            key, ttl_seconds, load_with_timeout
+        )
     except TimeoutError:
         logger.warning("Timed out loading cached tools for %s", key, exc_info=True)
         return []
@@ -583,7 +619,9 @@ async def _cached_tool_loader(key: str, ttl_seconds: float, loader: Any) -> list
         return []
 
 
-async def _cached_langsmith_tools(profile_login: str | None, *, allow_team: bool) -> list[Any]:
+async def _cached_langsmith_tools(
+    profile_login: str | None, *, allow_team: bool
+) -> list[Any]:
     scope = "team" if allow_team else "solo"
     return await _cached_tool_loader(
         f"tools:langsmith:{profile_login or '-'}:{scope}",
@@ -592,7 +630,9 @@ async def _cached_langsmith_tools(profile_login: str | None, *, allow_team: bool
     )
 
 
-async def _load_observability_tools(authorized: bool, profile_login: str | None) -> list[Any]:
+async def _load_observability_tools(
+    authorized: bool, profile_login: str | None
+) -> list[Any]:
     """Load team observability tools for an authorized triggering user."""
     if not authorized:
         return []
@@ -603,7 +643,9 @@ async def _load_observability_tools(authorized: bool, profile_login: str | None)
     return [*datadog_tools, *langsmith_tools]
 
 
-async def _observability_tools_for(config: RunnableConfig, profile_login: str | None) -> list[Any]:
+async def _observability_tools_for(
+    config: RunnableConfig, profile_login: str | None
+) -> list[Any]:
     """Observability tools the triggering user is allowed to see.
 
     The authorization gate itself stays uncached — it reads per-run config — so
@@ -616,7 +658,9 @@ async def _observability_tools_for(config: RunnableConfig, profile_login: str | 
     return await _cached_langsmith_tools(profile_login, allow_team=False)
 
 
-async def _load_integration_tools(profile_login: str | None) -> tuple[list[Any], list[Any]]:
+async def _load_integration_tools(
+    profile_login: str | None,
+) -> tuple[list[Any], list[Any]]:
     if not profile_login:
         return [], []
     currents_tools, notion_tools = await asyncio.gather(
@@ -770,7 +814,9 @@ class PrepareAgentRunMiddleware(BasePrepareRunMiddleware):
         }
 
     @staticmethod
-    def _sender_context_messages(state: PrepareRunState, sender_context: str) -> list[Any]:
+    def _sender_context_messages(
+        state: PrepareRunState, sender_context: str
+    ) -> list[Any]:
         """Sender context as its own message, appended after the run's input.
 
         Splicing it into the triggering message rewrote history: that message is
@@ -780,7 +826,8 @@ class PrepareAgentRunMiddleware(BasePrepareRunMiddleware):
         inside the user's own text.
         """
         if not any(
-            isinstance(candidate, HumanMessage) for candidate in state.get("messages") or []
+            isinstance(candidate, HumanMessage)
+            for candidate in state.get("messages") or []
         ):
             return []
         sender_id = next(
@@ -788,7 +835,8 @@ class PrepareAgentRunMiddleware(BasePrepareRunMiddleware):
                 sender_id
                 for candidate in reversed(state.get("messages") or [])
                 if isinstance(candidate, HumanMessage)
-                and (sender_id := message_sender_id(candidate.content, kind="human")) is not None
+                and (sender_id := message_sender_id(candidate.content, kind="human"))
+                is not None
             ),
             None,
         )
@@ -799,7 +847,9 @@ class PrepareAgentRunMiddleware(BasePrepareRunMiddleware):
             "subject_id": sender_id,
             "context_hash": hashlib.sha256(sender_context.encode()).hexdigest(),
         }
-        introduction_hash = dynamic_context_hash(system_introduction(identity)["content"])
+        introduction_hash = dynamic_context_hash(
+            system_introduction(identity)["content"]
+        )
         if introduction_hash in visible_dynamic_context_hashes(state):
             return []
         return cast(
@@ -815,7 +865,9 @@ class PrepareAgentRunMiddleware(BasePrepareRunMiddleware):
             ),
         )
 
-    async def _prepare(self, state: PrepareRunState, runtime: Runtime) -> dict[str, Any]:  # noqa: ARG002
+    async def _prepare(
+        self, state: PrepareRunState, runtime: Runtime
+    ) -> dict[str, Any]:  # noqa: ARG002
         schedule_thread_title_generation(
             thread_id=self._thread_id,
             messages=state.get("messages") or [],
@@ -826,7 +878,9 @@ class PrepareAgentRunMiddleware(BasePrepareRunMiddleware):
         configurable["draft_prs"] = self._draft_prs
         if is_desktop_run(configurable):
             async with aphase(self._thread_id, "prepare.await_sandbox"):
-                sandbox_backend = await get_or_create_sandbox_backend_proxy(self._thread_id).ready()
+                sandbox_backend = await get_or_create_sandbox_backend_proxy(
+                    self._thread_id
+                ).ready()
             async with aphase(self._thread_id, "prepare.work_dir"):
                 work_dir = await resolve_sandbox_work_dir(sandbox_backend)
             return {
@@ -837,12 +891,16 @@ class PrepareAgentRunMiddleware(BasePrepareRunMiddleware):
                 ),
             }
         async with aphase(self._thread_id, "prepare.github_token"):
-            github_token, _expires_at = await resolve_github_token(self._config, self._thread_id)
+            github_token, _expires_at = await resolve_github_token(
+                self._config, self._thread_id
+            )
         async with aphase(self._thread_id, "prepare.default_repo"):
             prompt_default_repo = await _resolve_prompt_default_repo(configurable)
         triggering_user_identity_task = asyncio.create_task(
             asyncio.to_thread(
-                resolve_triggering_user_identity, as_json_object(self._config), github_token
+                resolve_triggering_user_identity,
+                as_json_object(self._config),
+                github_token,
             )
         )
         sandbox_task = asyncio.create_task(
@@ -876,7 +934,9 @@ class PrepareAgentRunMiddleware(BasePrepareRunMiddleware):
                 user_custom_instructions=sender_instructions,
                 draft_prs=self._draft_prs,
                 thread_url=dashboard_thread_url(self._thread_id),
-                workspace_admin=await _workspace_admin(self._config or {}, self._profile_login),
+                workspace_admin=await _workspace_admin(
+                    self._config or {}, self._profile_login
+                ),
                 participant_identities=participant_identities,
             )
         sender_messages = self._sender_context_messages(state, sender_context)
@@ -905,7 +965,9 @@ class PrepareAgentRunMiddleware(BasePrepareRunMiddleware):
                     )
         except Exception:
             logger.debug(
-                "Failed to record agent usage for thread %s", self._thread_id, exc_info=True
+                "Failed to record agent usage for thread %s",
+                self._thread_id,
+                exc_info=True,
             )
 
         return {
@@ -922,7 +984,9 @@ class PrepareAgentRunMiddleware(BasePrepareRunMiddleware):
                 repo_custom_instructions=self._repo_instructions,
                 corridor_enabled=self._corridor_enabled,
                 environment_name=environment.name if environment else None,
-                environment_instructions=environment.instructions if environment else None,
+                environment_instructions=(
+                    environment.instructions if environment else None
+                ),
                 admin_environments=self._admin_environments,
                 source=self._source,
                 slack_context=_slack_tools_enabled(configurable),
@@ -939,7 +1003,9 @@ async def get_agent(config: RunnableConfig) -> Pregel:
     config["recursion_limit"] = DEFAULT_RECURSION_LIMIT
 
     if thread_id is None or not graph_loaded_for_execution(config):
-        logger.info("No thread_id or not for execution, returning agent without sandbox")
+        logger.info(
+            "No thread_id or not for execution, returning agent without sandbox"
+        )
         return create_deep_agent(
             system_prompt="",
             tools=[],
@@ -991,7 +1057,9 @@ async def get_agent(config: RunnableConfig) -> Pregel:
                 _cached_team_default_model_pair("agent"),
                 _cached_thread_title_model(),
                 _cached_gateway_enabled(),
-                _cached_profile(None if thread_settings.get("model_id") else profile_login),
+                _cached_profile(
+                    None if thread_settings.get("model_id") else profile_login
+                ),
                 _cached_fable_enabled(),
             )
 
@@ -1001,7 +1069,9 @@ async def get_agent(config: RunnableConfig) -> Pregel:
 
     (model_id, profile_effort), (subagent_model_id, subagent_effort) = team_defaults
     title_model_id, title_effort = title_defaults
-    logger.info("Using team default agent model: model=%s effort=%s", model_id, profile_effort)
+    logger.info(
+        "Using team default agent model: model=%s effort=%s", model_id, profile_effort
+    )
 
     if profile_login and profile:
         overridden_model, overridden_effort = normalize_profile_overrides(profile)
@@ -1035,7 +1105,9 @@ async def get_agent(config: RunnableConfig) -> Pregel:
         profile_effort = thread_settings.get("effort")
         subagent_model_id = thread_settings.get("subagent_model_id") or stored_model
         subagent_effort = thread_settings.get("subagent_effort")
-        logger.info("Using stored thread settings: model=%s effort=%s", model_id, profile_effort)
+        logger.info(
+            "Using stored thread settings: model=%s effort=%s", model_id, profile_effort
+        )
 
     # An explicit per-run model choice is the one thing allowed to move a thread
     # off its stored settings; the new choice is then stored in turn.
@@ -1061,7 +1133,9 @@ async def get_agent(config: RunnableConfig) -> Pregel:
         subagent_effort = per_thread_effort
 
     async with aphase(thread_id, "factory.sender_profile"):
-        sender_profile = profile if profile is not None else await _cached_profile(profile_login)
+        sender_profile = (
+            profile if profile is not None else await _cached_profile(profile_login)
+        )
     sender_draft_prs = profile_draft_prs(sender_profile)
     configurable["draft_prs"] = sender_draft_prs
     if isinstance(thread_settings.get("model_id"), str):
@@ -1084,7 +1158,9 @@ async def get_agent(config: RunnableConfig) -> Pregel:
         settings_changed or {**thread_settings, **resolved_settings} != thread_settings
     ):
         async with aphase(thread_id, "factory.store_settings"):
-            await store_thread_settings(client, thread_id, {**thread_settings, **resolved_settings})
+            await store_thread_settings(
+                client, thread_id, {**thread_settings, **resolved_settings}
+            )
 
     model_id, profile_effort = gate_fable_model(
         model_id, profile_effort, fable_enabled=fable_enabled
@@ -1112,7 +1188,9 @@ async def get_agent(config: RunnableConfig) -> Pregel:
         max_tokens=TITLE_GENERATION_MAX_TOKENS,
     )
 
-    fallback_model_id = os.environ.get("LLM_FALLBACK_MODEL_ID") or fallback_model_id_for(model_id)
+    fallback_model_id = os.environ.get(
+        "LLM_FALLBACK_MODEL_ID"
+    ) or fallback_model_id_for(model_id)
     fallback_middleware: list[Any] = []
     if fallback_model_id and fallback_model_id != model_id:
         fallback_kwargs: ModelKwargs = {"max_tokens": DEFAULT_LLM_MAX_TOKENS}
@@ -1120,7 +1198,9 @@ async def get_agent(config: RunnableConfig) -> Pregel:
             fallback_kwargs["reasoning"] = DEFAULT_LLM_REASONING
         fallback_middleware.append(
             ModelFallbackMiddleware(
-                _make_model_or_defer(fallback_model_id, use_gateway=use_gateway, **fallback_kwargs)
+                _make_model_or_defer(
+                    fallback_model_id, use_gateway=use_gateway, **fallback_kwargs
+                )
             )
         )
         logger.info("Configured model fallback %s -> %s", model_id, fallback_model_id)
@@ -1205,7 +1285,11 @@ async def get_agent(config: RunnableConfig) -> Pregel:
         notify_automation_channel,
         open_pull_request,
         *(
-            (output_iframe, create_sandbox_file_download_url, create_sandbox_service_url)
+            (
+                output_iframe,
+                create_sandbox_file_download_url,
+                create_sandbox_service_url,
+            )
             if sandbox_file_downloads
             else ()
         ),
@@ -1272,7 +1356,10 @@ async def get_agent(config: RunnableConfig) -> Pregel:
         if profile_login:
             skill_routes[USER_SKILLS_ROUTE] = ReadOnlyBackend(
                 StoreBackend(
-                    namespace=lambda _runtime, login=profile_login: (SKILLS_NAMESPACE, login)
+                    namespace=lambda _runtime, login=profile_login: (
+                        SKILLS_NAMESPACE,
+                        login,
+                    )
                 )
             )
             skill_sources.insert(0, USER_SKILLS_ROUTE)
@@ -1305,7 +1392,11 @@ async def get_agent(config: RunnableConfig) -> Pregel:
                 dynamic_tools=dynamic_tool_middleware,
                 sandbox_file_downloads=sandbox_file_downloads,
             ),
-            *([_browser_subagent(subagent_model, browser_tools)] if browser_tools else []),
+            *(
+                [_browser_subagent(subagent_model, browser_tools)]
+                if browser_tools
+                else []
+            ),
         ],
         skills=skill_sources,
         backend=agent_backend,
@@ -1331,7 +1422,9 @@ async def get_agent(config: RunnableConfig) -> Pregel:
                 ),
                 *([dynamic_tool_middleware] if dynamic_tool_middleware else []),
                 SanitizeToolInputsMiddleware(),
-                ModelCallLimitMiddleware(run_limit=MODEL_CALL_RECURSION_LIMIT, exit_behavior="end"),
+                ModelCallLimitMiddleware(
+                    run_limit=MODEL_CALL_RECURSION_LIMIT, exit_behavior="end"
+                ),
                 ToolErrorMiddleware(),
                 ExcludeToolsMiddleware(
                     excluded=(

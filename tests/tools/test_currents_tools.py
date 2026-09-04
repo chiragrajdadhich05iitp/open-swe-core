@@ -7,19 +7,25 @@ from agent.integrations import currents_tools
 
 @pytest.fixture(autouse=True)
 def _resolve_key():
-    with patch.object(currents_tools, "_api_key_for", AsyncMock(return_value="test-key")):
+    with patch.object(
+        currents_tools, "_api_key_for", AsyncMock(return_value="test-key")
+    ):
         yield
 
 
 @pytest.mark.asyncio
 async def test_load_currents_tools_empty_when_not_connected() -> None:
-    with patch.object(currents_tools, "get_currents_api_key", AsyncMock(return_value=None)):
+    with patch.object(
+        currents_tools, "get_currents_api_key", AsyncMock(return_value=None)
+    ):
         assert await currents_tools.load_currents_tools("alice") == []
 
 
 @pytest.mark.asyncio
 async def test_load_currents_tools_names() -> None:
-    with patch.object(currents_tools, "get_currents_api_key", AsyncMock(return_value="k")):
+    with patch.object(
+        currents_tools, "get_currents_api_key", AsyncMock(return_value="k")
+    ):
         tools = await currents_tools.load_currents_tools("alice")
     assert {t.name for t in tools} == {
         "currents_list_projects",
@@ -42,7 +48,9 @@ async def test_currents_get_run_success() -> None:
 
 @pytest.mark.asyncio
 async def test_currents_get_run_error() -> None:
-    with patch.object(currents_tools, "_get", AsyncMock(side_effect=RuntimeError("boom"))):
+    with patch.object(
+        currents_tools, "_get", AsyncMock(side_effect=RuntimeError("boom"))
+    ):
         tools = currents_tools._make_tools()
         get_run = next(t for t in tools if t.name == "currents_get_run")
         result = await get_run.ainvoke({"on_behalf_of": "octo", "run_id": "run_123"})
@@ -130,5 +138,7 @@ async def test_currents_get_instance() -> None:
     with patch.object(currents_tools, "_get", AsyncMock(return_value=payload)):
         tools = currents_tools._make_tools()
         get_instance = next(t for t in tools if t.name == "currents_get_instance")
-        result = await get_instance.ainvoke({"on_behalf_of": "octo", "instance_id": "inst_1"})
+        result = await get_instance.ainvoke(
+            {"on_behalf_of": "octo", "instance_id": "inst_1"}
+        )
     assert result == payload

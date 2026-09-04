@@ -50,7 +50,10 @@ async def test_agent_uses_profile_subagent_model_override() -> None:
         patch(
             "agent.server.get_team_default_model_pair",
             new_callable=AsyncMock,
-            return_value=(("openai:gpt-5.6-sol", "medium"), ("openai:gpt-5.6-sol", "low")),
+            return_value=(
+                ("openai:gpt-5.6-sol", "medium"),
+                ("openai:gpt-5.6-sol", "low"),
+            ),
         ),
         patch(
             "agent.server.load_profile",
@@ -63,7 +66,9 @@ async def test_agent_uses_profile_subagent_model_override() -> None:
             },
         ),
         patch("agent.server.fallback_model_id_for", return_value=None),
-        patch("agent.server.make_model", side_effect=[main_model, subagent_model]) as make_model,
+        patch(
+            "agent.server.make_model", side_effect=[main_model, subagent_model]
+        ) as make_model,
         patch("agent.server.construct_system_prompt", return_value="prompt"),
         patch("agent.server.create_deep_agent", side_effect=fake_create_deep_agent),
     ):
@@ -86,7 +91,9 @@ async def test_agent_uses_profile_subagent_model_override() -> None:
 
 
 @pytest.mark.asyncio
-async def test_agent_subagent_inherits_profile_model_override_without_explicit_pair() -> None:
+async def test_agent_subagent_inherits_profile_model_override_without_explicit_pair() -> (
+    None
+):
     config: RunnableConfig = {
         "configurable": {
             "__is_for_execution__": True,
@@ -123,7 +130,10 @@ async def test_agent_subagent_inherits_profile_model_override_without_explicit_p
         patch(
             "agent.server.get_team_default_model_pair",
             new_callable=AsyncMock,
-            return_value=(("openai:gpt-5.6-sol", "medium"), ("openai:gpt-5.6-sol", "low")),
+            return_value=(
+                ("openai:gpt-5.6-sol", "medium"),
+                ("openai:gpt-5.6-sol", "low"),
+            ),
         ),
         patch(
             "agent.server.load_profile",
@@ -134,7 +144,9 @@ async def test_agent_subagent_inherits_profile_model_override_without_explicit_p
             },
         ),
         patch("agent.server.fallback_model_id_for", return_value=None),
-        patch("agent.server.make_model", side_effect=[main_model, subagent_model]) as make_model,
+        patch(
+            "agent.server.make_model", side_effect=[main_model, subagent_model]
+        ) as make_model,
         patch("agent.server.construct_system_prompt", return_value="prompt"),
         patch("agent.server.create_deep_agent", side_effect=fake_create_deep_agent),
     ):
@@ -172,7 +184,9 @@ async def test_agent_gate_swaps_disabled_fable_profile_to_opus() -> None:
 
     with (
         patch(
-            "agent.server.resolve_github_token", new_callable=AsyncMock, return_value=("ghp", None)
+            "agent.server.resolve_github_token",
+            new_callable=AsyncMock,
+            return_value=("ghp", None),
         ),
         patch("agent.server.resolve_triggering_user_identity", return_value=None),
         patch(
@@ -188,7 +202,10 @@ async def test_agent_gate_swaps_disabled_fable_profile_to_opus() -> None:
         patch(
             "agent.server.get_team_default_model_pair",
             new_callable=AsyncMock,
-            return_value=(("openai:gpt-5.6-sol", "medium"), ("openai:gpt-5.6-sol", "low")),
+            return_value=(
+                ("openai:gpt-5.6-sol", "medium"),
+                ("openai:gpt-5.6-sol", "low"),
+            ),
         ),
         # Profile selected Fable back when it was allowed; it's now disabled.
         patch(
@@ -199,9 +216,15 @@ async def test_agent_gate_swaps_disabled_fable_profile_to_opus() -> None:
                 "reasoning_effort": "high",
             },
         ),
-        patch("agent.server.get_team_fable_enabled", new_callable=AsyncMock, return_value=False),
+        patch(
+            "agent.server.get_team_fable_enabled",
+            new_callable=AsyncMock,
+            return_value=False,
+        ),
         patch("agent.server.fallback_model_id_for", return_value=None),
-        patch("agent.server.make_model", side_effect=[main_model, subagent_model]) as make_model,
+        patch(
+            "agent.server.make_model", side_effect=[main_model, subagent_model]
+        ) as make_model,
         patch("agent.server.construct_system_prompt", return_value="prompt"),
         patch("agent.server.create_deep_agent", side_effect=fake_create_deep_agent),
     ):

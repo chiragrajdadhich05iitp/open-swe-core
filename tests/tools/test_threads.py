@@ -21,7 +21,9 @@ def _actor(*, login: str = "octocat", admin: bool = False) -> object:
     return actor
 
 
-async def test_actor_uses_only_trusted_run_configuration(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_actor_uses_only_trusted_run_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     config = {
         "configurable": {
             "github_login": "trusted-user",
@@ -40,7 +42,9 @@ async def test_actor_uses_only_trusted_run_configuration(monkeypatch: pytest.Mon
     )
 
 
-async def test_actor_uses_latest_verified_dashboard_sender(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_actor_uses_latest_verified_dashboard_sender(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(
         threads_tool,
         "get_config",
@@ -86,15 +90,22 @@ async def test_list_threads_denies_actor_outside_allowed_org(
 
     result = await threads_tool.list_threads()
 
-    assert result == {"success": False, "error": "No verified triggering user is available"}
+    assert result == {
+        "success": False,
+        "error": "No verified triggering user is available",
+    }
     page.assert_not_awaited()
 
 
-async def test_list_threads_defaults_to_triggering_user(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_list_threads_defaults_to_triggering_user(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     actor = _actor()
     page = AsyncMock(
         return_value={
-            "items": [{"id": "thread-1", "title": "One", "messages": [], "sandboxId": "sb"}],
+            "items": [
+                {"id": "thread-1", "title": "One", "messages": [], "sandboxId": "sb"}
+            ],
             "limit": 25,
             "offset": 0,
             "hasMore": False,
@@ -150,8 +161,12 @@ async def test_list_threads_denies_cross_user_query_for_non_admin(
 async def test_list_threads_admin_participant_filter_keeps_admin_as_viewer(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    page = AsyncMock(return_value={"items": [], "limit": 25, "offset": 0, "hasMore": False})
-    monkeypatch.setattr(threads_tool, "_actor", AsyncMock(return_value=_actor(admin=True)))
+    page = AsyncMock(
+        return_value={"items": [], "limit": 25, "offset": 0, "hasMore": False}
+    )
+    monkeypatch.setattr(
+        threads_tool, "_actor", AsyncMock(return_value=_actor(admin=True))
+    )
     monkeypatch.setattr(threads_tool, "list_dashboard_threads_page", page)
 
     result = await threads_tool.list_threads(participant="other-user")
@@ -167,11 +182,17 @@ async def test_list_threads_admin_participant_filter_keeps_admin_as_viewer(
 async def test_list_threads_all_users_requires_admin_and_uses_server_filter(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    page = AsyncMock(return_value={"items": [], "limit": 10, "offset": 20, "hasMore": True})
-    monkeypatch.setattr(threads_tool, "_actor", AsyncMock(return_value=_actor(admin=True)))
+    page = AsyncMock(
+        return_value={"items": [], "limit": 10, "offset": 20, "hasMore": True}
+    )
+    monkeypatch.setattr(
+        threads_tool, "_actor", AsyncMock(return_value=_actor(admin=True))
+    )
     monkeypatch.setattr(threads_tool, "list_dashboard_threads_page", page)
 
-    result = await threads_tool.list_threads(all_users=True, limit=10, offset=20, status="running")
+    result = await threads_tool.list_threads(
+        all_users=True, limit=10, offset=20, status="running"
+    )
 
     assert result["success"] is True
     assert result["has_more"] is True
@@ -224,7 +245,9 @@ class _DetailClient:
             )
         )
         self.store = SimpleNamespace(
-            get_item=AsyncMock(return_value={"value": {"messages": [{"content": "queued"}]}})
+            get_item=AsyncMock(
+                return_value={"value": {"messages": [{"content": "queued"}]}}
+            )
         )
 
 
@@ -275,7 +298,9 @@ async def test_get_thread_returns_links_cost_last_message_and_actions(
         AsyncMock(
             return_value=SimpleNamespace(
                 total_cost=0.42,
-                last_end_time=SimpleNamespace(isoformat=lambda: "2026-08-20T12:01:00+00:00"),
+                last_end_time=SimpleNamespace(
+                    isoformat=lambda: "2026-08-20T12:01:00+00:00"
+                ),
             )
         ),
     )
@@ -322,7 +347,9 @@ def test_admin_thread_actions_require_admin() -> None:
 async def test_get_thread_reports_unavailable_cost_without_prepare_run(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    assert await threads_tool._thread_cost("thread-1", {"status": "success", "metadata": {}}) == {
+    assert await threads_tool._thread_cost(
+        "thread-1", {"status": "success", "metadata": {}}
+    ) == {
         "status": "unavailable",
         "total_usd": None,
     }
@@ -361,7 +388,9 @@ async def test_manage_thread_uses_followup_sender_for_owner_checks(
     cancel.assert_awaited_once_with("thread-1", "reviewer", email=None)
 
 
-async def test_manage_thread_requires_delete_confirmation(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_manage_thread_requires_delete_confirmation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     delete = AsyncMock()
     monkeypatch.setattr(threads_tool, "_actor", AsyncMock(return_value=_actor()))
     monkeypatch.setattr(threads_tool, "delete_dashboard_thread", delete)
@@ -379,7 +408,9 @@ async def test_manage_thread_rejects_contradictory_arguments_before_mutation(
     monkeypatch.setattr(threads_tool, "_actor", AsyncMock(return_value=_actor()))
     monkeypatch.setattr(threads_tool, "cancel_dashboard_thread", cancel)
 
-    result = await threads_tool.manage_thread("thread-1", "cancel", comment="not applicable")
+    result = await threads_tool.manage_thread(
+        "thread-1", "cancel", comment="not applicable"
+    )
 
     assert result == {
         "success": False,
@@ -388,7 +419,9 @@ async def test_manage_thread_rejects_contradictory_arguments_before_mutation(
     cancel.assert_not_awaited()
 
 
-async def test_manage_thread_rechecks_admin_cancel(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_manage_thread_rechecks_admin_cancel(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     cancel = AsyncMock()
     monkeypatch.setattr(threads_tool, "_actor", AsyncMock(return_value=_actor()))
     monkeypatch.setattr(threads_tool, "admin_cancel_dashboard_thread", cancel)
@@ -441,7 +474,9 @@ async def test_manage_thread_queues_message_for_busy_thread(
     )
     monkeypatch.setattr(threads_tool, "proxy_dashboard_thread_commands", proxy)
 
-    result = await threads_tool.manage_thread("thread-1", "send_message", message="Continue")
+    result = await threads_tool.manage_thread(
+        "thread-1", "send_message", message="Continue"
+    )
 
     assert result["success"] is True
     assert result["mode"] == "queued"
@@ -467,7 +502,9 @@ async def test_manage_thread_starts_idle_message_with_fixed_command(
     )
     monkeypatch.setattr(threads_tool, "proxy_dashboard_thread_commands", proxy)
 
-    result = await threads_tool.manage_thread("thread-1", "send_message", message="Continue")
+    result = await threads_tool.manage_thread(
+        "thread-1", "send_message", message="Continue"
+    )
 
     assert result["success"] is True
     assert result["mode"] == "started"
@@ -542,7 +579,9 @@ async def test_manage_thread_delegates_plan_and_workflow_actions(
 ) -> None:
     monkeypatch.setattr(threads_tool, "_actor", AsyncMock(return_value=_actor()))
     approve_plan = AsyncMock(return_value={"status": "approved", "run_id": "run-1"})
-    approve_workflow = AsyncMock(return_value={"status": "approved", "fingerprint": "fp"})
+    approve_workflow = AsyncMock(
+        return_value={"status": "approved", "fingerprint": "fp"}
+    )
     monkeypatch.setattr(threads_tool.plan_api, "approve_plan", approve_plan)
     monkeypatch.setattr(
         threads_tool.workflow_approval_api,
@@ -556,6 +595,10 @@ async def test_manage_thread_delegates_plan_and_workflow_actions(
     )
 
     assert plan_result == {"success": True, "status": "approved", "run_id": "run-1"}
-    assert workflow_result == {"success": True, "status": "approved", "fingerprint": "fp"}
+    assert workflow_result == {
+        "success": True,
+        "status": "approved",
+        "fingerprint": "fp",
+    }
     approve_plan.assert_awaited_once()
     approve_workflow.assert_awaited_once()

@@ -44,7 +44,9 @@ def apply() -> None:
     # with a real model — useful for manually exercising plan review etc. The
     # provider key (e.g. ANTHROPIC_API_KEY) must be in the environment.
     if os.environ.get("E2E_REAL_LLM"):
-        logger.warning("E2E_REAL_LLM set — using the real model factory, not the scripted fake")
+        logger.warning(
+            "E2E_REAL_LLM set — using the real model factory, not the scripted fake"
+        )
     else:
         from fake_llm import FakeScriptedChatModel, build_script
 
@@ -59,7 +61,9 @@ def apply() -> None:
     async def _dummy_install_token() -> str:
         return "dummy-installation-token"
 
-    auth.get_github_app_installation_token_with_expiry = _dummy_install_token_with_expiry
+    auth.get_github_app_installation_token_with_expiry = (
+        _dummy_install_token_with_expiry
+    )
     opr.__dict__["get_github_app_installation_token"] = _dummy_install_token
 
     # Point the real PR/Slack code at the in-process fakes.
@@ -74,7 +78,12 @@ def apply() -> None:
     # OAuth-token store is an external credential boundary. Stub it so a web
     # follow-up (dashboard run.start) and PR-as-user resolution have a token;
     # the real ownership/authorization checks still run.
-    from agent.dashboard import profiles, pull_request_context, pull_request_status, thread_api
+    from agent.dashboard import (
+        profiles,
+        pull_request_context,
+        pull_request_status,
+        thread_api,
+    )
 
     async def _dummy_user_token(login: str, **_kwargs: object) -> str:  # noqa: ARG001
         return "dummy-user-oauth-token"

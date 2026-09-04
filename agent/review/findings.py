@@ -242,7 +242,9 @@ def new_finding(
         "last_reconciliation_note": None,
         "resolution_note": None,
         "diff_hunk": diff_hunk,
-        "fingerprint": _finding_fingerprint(file, side, start_line, end_line, description),
+        "fingerprint": _finding_fingerprint(
+            file, side, start_line, end_line, description
+        ),
         "interactions": [],
     }
     return finding
@@ -270,7 +272,9 @@ def _finding_fingerprint(
 def _int_list(value: Any) -> list[int]:
     if not isinstance(value, list):
         return []
-    return [item for item in value if isinstance(item, int) and not isinstance(item, bool)]
+    return [
+        item for item in value if isinstance(item, int) and not isinstance(item, bool)
+    ]
 
 
 def _str_list(value: Any) -> list[str]:
@@ -304,7 +308,11 @@ def posted_resolution_comment_ids_for_finding(finding: FindingLike) -> list[int]
 
 def review_id_for_finding(finding: FindingLike) -> int | None:
     review_id = finding.get("github_review_id")
-    return review_id if isinstance(review_id, int) and not isinstance(review_id, bool) else None
+    return (
+        review_id
+        if isinstance(review_id, int) and not isinstance(review_id, bool)
+        else None
+    )
 
 
 def surface_state_of(finding: FindingLike) -> SurfaceState:
@@ -338,7 +346,9 @@ def set_surface_state(finding: Finding, state: SurfaceState) -> bool:
     return True
 
 
-def _legacy_surface_state(record: dict[str, Any], surface: dict[str, Any]) -> SurfaceState:
+def _legacy_surface_state(
+    record: dict[str, Any], surface: dict[str, Any]
+) -> SurfaceState:
     if record.get("github_thread_resolved") is True:
         return "resolved"
     if (
@@ -379,13 +389,18 @@ def _normalize_publication_identity(record: dict[str, Any]) -> None:
         record.pop("github_review_thread_id", None),
         surface.get("github_review_thread_id"),
     ):
-        if isinstance(legacy_thread_id, str) and legacy_thread_id not in ("", *thread_ids):
+        if isinstance(legacy_thread_id, str) and legacy_thread_id not in (
+            "",
+            *thread_ids,
+        ):
             thread_ids.insert(0, legacy_thread_id)
     record["github_review_thread_ids"] = thread_ids
 
     if not isinstance(record.get("github_review_id"), int):
         legacy_review_id = surface.get("github_review_id")
-        record["github_review_id"] = legacy_review_id if isinstance(legacy_review_id, int) else None
+        record["github_review_id"] = (
+            legacy_review_id if isinstance(legacy_review_id, int) else None
+        )
 
     states: list[SurfaceState] = [_legacy_surface_state(record, surface)]
     for candidate in (record.get("surface_state"), surface.get("state")):
@@ -424,7 +439,9 @@ def get_thread_id_from_runtime() -> str:
     """Return the thread id from the current LangGraph runnable config."""
     config = get_config()
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
-    thread_id = configurable.get("thread_id") if isinstance(configurable, dict) else None
+    thread_id = (
+        configurable.get("thread_id") if isinstance(configurable, dict) else None
+    )
     if not isinstance(thread_id, str) or not thread_id:
         msg = "No thread_id available in runtime config"
         raise RuntimeError(msg)
@@ -467,7 +484,9 @@ async def resolve_review_head_sha(thread_id: str, configurable: dict[str, Any]) 
     thread metadata, so prefer that; fall back to the run's config when metadata
     carries no head (first review, eval, tests).
     """
-    config_head = configurable.get("head_sha") if isinstance(configurable, dict) else None
+    config_head = (
+        configurable.get("head_sha") if isinstance(configurable, dict) else None
+    )
     config_head = config_head if isinstance(config_head, str) else ""
     if not thread_id:
         return config_head
@@ -505,7 +524,9 @@ async def replace_findings(thread_id: str, findings: list[Finding]) -> None:
 async def _replace_findings_unlocked(thread_id: str, findings: list[Finding]) -> None:
     client = get_client()
     try:
-        await client.threads.update(thread_id=thread_id, metadata={"findings": findings})
+        await client.threads.update(
+            thread_id=thread_id, metadata={"findings": findings}
+        )
     except LangGraphSDKNotFoundError as exc:
         raise ReviewerThreadMissingError(thread_id, exc) from exc
     from ..dashboard.agent_usage import record_reviewer_finding_state
@@ -634,7 +655,8 @@ async def append_finding_interaction(
                 interactions = []
             github_comment_id = interaction.get("github_comment_id")
             if isinstance(github_comment_id, int) and any(
-                isinstance(item, dict) and item.get("github_comment_id") == github_comment_id
+                isinstance(item, dict)
+                and item.get("github_comment_id") == github_comment_id
                 for item in interactions
             ):
                 return False

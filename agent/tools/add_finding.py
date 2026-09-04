@@ -103,7 +103,10 @@ async def add_finding(
 
     normalized_title = normalize_finding_title(title)
     if normalized_title == DEFAULT_FINDING_TITLE:
-        return {"success": False, "error": "title must be a non-empty generated headline"}
+        return {
+            "success": False,
+            "error": "title must be a non-empty generated headline",
+        }
 
     if severity not in {"low", "medium", "high", "critical"}:
         return {"success": False, "error": f"Invalid severity: {severity}"}
@@ -189,12 +192,16 @@ async def _resolve_diff_context(
         state_line_set = state.get("diff_line_set")
         state_diff_text = state.get("diff_text")
         if isinstance(state_line_set, dict):
-            return state_line_set, state_diff_text if isinstance(state_diff_text, str) else ""
+            return state_line_set, (
+                state_diff_text if isinstance(state_diff_text, str) else ""
+            )
     if isinstance(configurable, dict):
         config_line_set = configurable.get("diff_line_set")
         config_diff_text = configurable.get("diff_text")
         if isinstance(config_line_set, dict):
-            return config_line_set, config_diff_text if isinstance(config_diff_text, str) else ""
+            return config_line_set, (
+                config_diff_text if isinstance(config_diff_text, str) else ""
+            )
         repo_config = configurable.get("repo")
         pr_number = configurable.get("pr_number")
         token = get_github_token()

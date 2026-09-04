@@ -85,7 +85,9 @@ def test_audience_without_subjects_stays_off(monkeypatch: pytest.MonkeyPatch) ->
 
 async def test_audience_defaults_to_open_swe(configured: None) -> None:
     """`configured` leaves ADMIN_OIDC_AUDIENCE unset."""
-    session = await admin_session_for_actions_oidc(_token(audience=DEFAULT_OIDC_AUDIENCE))
+    session = await admin_session_for_actions_oidc(
+        _token(audience=DEFAULT_OIDC_AUDIENCE)
+    )
 
     assert session["sub"] == "actions:acme/images"
 
@@ -128,7 +130,9 @@ async def test_accepts_exact_subject(monkeypatch: pytest.MonkeyPatch) -> None:
     assert session["sub"] == "actions:acme/images"
 
     with pytest.raises(HTTPException) as exc:
-        await admin_session_for_actions_oidc(_token(sub="repo:acme/images:ref:refs/heads/feature"))
+        await admin_session_for_actions_oidc(
+            _token(sub="repo:acme/images:ref:refs/heads/feature")
+        )
     assert exc.value.status_code == 403
 
 

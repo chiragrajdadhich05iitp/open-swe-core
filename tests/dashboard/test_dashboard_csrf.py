@@ -71,7 +71,9 @@ async def test_require_same_origin_allows_desktop_origin(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_require_same_origin_normalizes_case_and_trailing_slash(monkeypatch) -> None:
+async def test_require_same_origin_normalizes_case_and_trailing_slash(
+    monkeypatch,
+) -> None:
     monkeypatch.setenv("DASHBOARD_BASE_URL", "HTTPS://Dashboard.Example/")
     monkeypatch.setenv("DASHBOARD_ALLOWED_ORIGINS", "https://Preview.Example/")
 
@@ -83,11 +85,15 @@ async def test_require_same_origin_normalizes_case_and_trailing_slash(monkeypatc
 async def test_require_same_origin_accepts_referer(monkeypatch) -> None:
     monkeypatch.setenv("DASHBOARD_BASE_URL", "https://dashboard.example")
 
-    oauth.require_same_origin(_request(referer="https://dashboard.example/agents/thread-id"))
+    oauth.require_same_origin(
+        _request(referer="https://dashboard.example/agents/thread-id")
+    )
 
 
 @pytest.mark.asyncio
-async def test_require_same_origin_rejects_missing_origin_and_referer(monkeypatch) -> None:
+async def test_require_same_origin_rejects_missing_origin_and_referer(
+    monkeypatch,
+) -> None:
     monkeypatch.setenv("DASHBOARD_BASE_URL", "https://dashboard.example")
 
     with pytest.raises(HTTPException) as exc:
@@ -137,7 +143,9 @@ async def test_require_same_origin_rejects_prefix_bypass(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_require_same_origin_does_not_fallback_when_origin_invalid(monkeypatch) -> None:
+async def test_require_same_origin_does_not_fallback_when_origin_invalid(
+    monkeypatch,
+) -> None:
     monkeypatch.setenv("DASHBOARD_BASE_URL", "https://dashboard.example")
 
     with pytest.raises(HTTPException) as exc:
@@ -167,7 +175,9 @@ async def test_require_same_origin_for_mutations_enforces_post(monkeypatch) -> N
     assert exc.value.status_code == 403
 
 
-def test_router_rejects_cross_site_text_plain_post(dashboard_client: TestClient) -> None:
+def test_router_rejects_cross_site_text_plain_post(
+    dashboard_client: TestClient,
+) -> None:
     response = dashboard_client.post(
         "/dashboard/api/auth/logout",
         headers={"Origin": "https://evil.example", "Content-Type": "text/plain"},
@@ -197,7 +207,11 @@ def test_router_allows_allowed_origin_post(dashboard_client: TestClient) -> None
 
 
 async def test_proxy_commands_rejects_non_json_content_type() -> None:
-    for content_type in ("text/plain", "application/x-www-form-urlencoded", "multipart/form-data"):
+    for content_type in (
+        "text/plain",
+        "application/x-www-form-urlencoded",
+        "multipart/form-data",
+    ):
         with pytest.raises(HTTPException) as exc:
             await thread_api.proxy_dashboard_thread_commands(
                 "tid",

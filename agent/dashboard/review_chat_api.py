@@ -52,14 +52,18 @@ _TITLE_MAX_CHARS = 60
 
 async def _reviewer_thread_exists(owner: str, repo: str, pr_number: int) -> bool:
     try:
-        thread = await langgraph_client().threads.get(reviewer_thread_id(owner, repo, pr_number))
+        thread = await langgraph_client().threads.get(
+            reviewer_thread_id(owner, repo, pr_number)
+        )
     except Exception:  # noqa: BLE001
         return False
     metadata = thread.get("metadata") if isinstance(thread, dict) else None
     return isinstance(metadata, dict) and metadata.get("kind") == REVIEWER_THREAD_KIND
 
 
-async def get_review_chat(owner: str, repo: str, pr_number: int, login: str) -> dict[str, Any]:
+async def get_review_chat(
+    owner: str, repo: str, pr_number: int, login: str
+) -> dict[str, Any]:
     """Chat availability for this PR. Threads are minted client-side per chat."""
     return {
         "available": await _reviewer_thread_exists(owner, repo, pr_number),
@@ -93,7 +97,11 @@ async def list_review_chat_threads(
         )
     except Exception:  # noqa: BLE001
         logger.debug(
-            "chat thread search failed for %s/%s#%s", owner, repo, pr_number, exc_info=True
+            "chat thread search failed for %s/%s#%s",
+            owner,
+            repo,
+            pr_number,
+            exc_info=True,
         )
         return []
     out: list[dict[str, Any]] = []
@@ -108,9 +116,11 @@ async def list_review_chat_threads(
             {
                 "thread_id": thread_id,
                 "title": metadata.get("title") or "New chat",
-                "updated_at": thread.get("updated_at")
-                if isinstance(thread.get("updated_at"), str)
-                else None,
+                "updated_at": (
+                    thread.get("updated_at")
+                    if isinstance(thread.get("updated_at"), str)
+                    else None
+                ),
             }
         )
     return out
@@ -235,7 +245,10 @@ async def _build_pr_context(
         else []
     )
     head_sha = _review_head_sha(review)
-    diff = await fetch_pr_diff(owner=owner, repo=repo, pr_number=pr_number, token=token) or ""
+    diff = (
+        await fetch_pr_diff(owner=owner, repo=repo, pr_number=pr_number, token=token)
+        or ""
+    )
     if len(diff) > _MAX_DIFF_CHARS:
         diff = diff[:_MAX_DIFF_CHARS] + "\n\n[diff truncated]\n"
     files = {
@@ -303,7 +316,9 @@ async def _create_chat_thread(
     )
 
 
-def _normalize_chat_model(configurable: dict[str, Any]) -> tuple[str | None, str | None]:
+def _normalize_chat_model(
+    configurable: dict[str, Any]
+) -> tuple[str | None, str | None]:
     model_id = configurable.get("chat_model_id")
     effort = configurable.get("chat_effort")
     if (
@@ -402,7 +417,10 @@ async def _enrich_chat_command(
                 if isinstance(exc, HTTPException):
                     raise
                 logger.warning(
-                    "Failed to seed PR chat context for %s/%s#%s", owner, repo, pr_number
+                    "Failed to seed PR chat context for %s/%s#%s",
+                    owner,
+                    repo,
+                    pr_number,
                 )
                 raise HTTPException(502, "could not load PR context") from exc
             logger.warning(
@@ -474,7 +492,9 @@ async def proxy_review_chat_commands(
     url = f"{langgraph_url().rstrip('/')}/threads/{thread_id}/commands"
     headers = _langgraph_proxy_headers(content_type=content_type)
     async with httpx.AsyncClient(timeout=_PROXY_REQUEST_TIMEOUT) as client:
-        response = await client.post(url, content=json.dumps(enriched).encode(), headers=headers)
+        response = await client.post(
+            url, content=json.dumps(enriched).encode(), headers=headers
+        )
     return response.status_code, response.content, response.headers.get("content-type")
 
 

@@ -2,7 +2,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from agent.dashboard.review_styles import REVIEW_STYLES, ReviewStyle, reconcile_running_status
+from agent.dashboard.review_styles import (
+    REVIEW_STYLES,
+    ReviewStyle,
+    reconcile_running_status,
+)
 
 
 @pytest.mark.asyncio
@@ -42,7 +46,9 @@ async def test_reconcile_running_marks_failed_when_run_success_without_prompt() 
 
 
 @pytest.mark.asyncio
-async def test_reconcile_running_marks_completed_when_run_missing_but_prompt_exists() -> None:
+async def test_reconcile_running_marks_completed_when_run_missing_but_prompt_exists() -> (
+    None
+):
     record = ReviewStyle(
         full_name="keycloak/keycloak",
         status="running",

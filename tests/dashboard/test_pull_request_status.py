@@ -31,26 +31,36 @@ def test_pull_request_identity_rejects_untrusted_path_components() -> None:
         is None
     )
     assert (
-        pull_request_status._pull_request_identity({"repo_full_name": "owner/repo", "number": True})
+        pull_request_status._pull_request_identity(
+            {"repo_full_name": "owner/repo", "number": True}
+        )
         is None
     )
     assert (
-        pull_request_status._pull_request_identity({"repo_full_name": "owner/..", "number": 7})
+        pull_request_status._pull_request_identity(
+            {"repo_full_name": "owner/..", "number": 7}
+        )
         is None
     )
 
 
 def test_merge_conflict_state_only_marks_confirmed_clean_as_mergeable() -> None:
     assert (
-        pull_request_status._merge_conflict_state({"mergeable": True, "mergeable_state": "clean"})
+        pull_request_status._merge_conflict_state(
+            {"mergeable": True, "mergeable_state": "clean"}
+        )
         == "mergeable"
     )
     assert (
-        pull_request_status._merge_conflict_state({"mergeable": True, "mergeable_state": "blocked"})
+        pull_request_status._merge_conflict_state(
+            {"mergeable": True, "mergeable_state": "blocked"}
+        )
         == "unknown"
     )
     assert (
-        pull_request_status._merge_conflict_state({"mergeable": False, "mergeable_state": "dirty"})
+        pull_request_status._merge_conflict_state(
+            {"mergeable": False, "mergeable_state": "dirty"}
+        )
         == "conflicting"
     )
 
@@ -58,7 +68,12 @@ def test_merge_conflict_state_only_marks_confirmed_clean_as_mergeable() -> None:
 def test_normalize_checks_classifies_failures_and_pending() -> None:
     failing, pending, inconclusive = pull_request_status._normalize_checks(
         [
-            {"name": "unit", "status": "completed", "conclusion": "failure", "details_url": "u"},
+            {
+                "name": "unit",
+                "status": "completed",
+                "conclusion": "failure",
+                "details_url": "u",
+            },
             {"name": "deploy", "status": "in_progress", "conclusion": None},
             {"name": "lint", "status": "completed", "conclusion": "skipped"},
         ],
@@ -116,7 +131,9 @@ async def test_get_statuses_normalizes_live_state_and_paginates_review_threads(
                                                 "comments": {
                                                     "nodes": [
                                                         {
-                                                            "author": {"login": "alice"},
+                                                            "author": {
+                                                                "login": "alice"
+                                                            },
                                                             "body": "fix this",
                                                             "url": "https://github.com/o/r/pull/7#discussion_r1",
                                                         }
@@ -125,7 +142,10 @@ async def test_get_statuses_normalizes_live_state_and_paginates_review_threads(
                                             },
                                             {"isResolved": True},
                                         ],
-                                        "pageInfo": {"hasNextPage": True, "endCursor": "next"},
+                                        "pageInfo": {
+                                            "hasNextPage": True,
+                                            "endCursor": "next",
+                                        },
                                     }
                                 }
                             }
@@ -156,7 +176,10 @@ async def test_get_statuses_normalizes_live_state_and_paginates_review_threads(
                                             },
                                         }
                                     ],
-                                    "pageInfo": {"hasNextPage": False, "endCursor": None},
+                                    "pageInfo": {
+                                        "hasNextPage": False,
+                                        "endCursor": None,
+                                    },
                                 }
                             }
                         }
@@ -211,7 +234,11 @@ async def test_get_statuses_normalizes_live_state_and_paginates_review_threads(
             "mergeConflictState": "conflicting",
             "checksAvailable": True,
             "failingChecks": [
-                {"name": "unit", "conclusion": "timed_out", "url": "https://checks/unit"},
+                {
+                    "name": "unit",
+                    "conclusion": "timed_out",
+                    "url": "https://checks/unit",
+                },
                 {
                     "name": "legacy",
                     "conclusion": "failure",
@@ -297,7 +324,10 @@ async def test_partial_check_failure_cannot_appear_green(
                             "pullRequest": {
                                 "reviewThreads": {
                                     "nodes": [],
-                                    "pageInfo": {"hasNextPage": False, "endCursor": None},
+                                    "pageInfo": {
+                                        "hasNextPage": False,
+                                        "endCursor": None,
+                                    },
                                 }
                             }
                         }
@@ -338,9 +368,15 @@ async def test_thread_status_authorizes_read_access_before_token_or_metadata_use
         {"repo_full_name": "o/two", "number": 2},
     ]
 
-    async def readable(thread_id: str, *, login: str | None = None, email: str | None = None):
+    async def readable(
+        thread_id: str, *, login: str | None = None, email: str | None = None
+    ):
         order.append("readable")
-        assert (thread_id, login, email) == ("thread-1", "teammate", "teammate@example.com")
+        assert (thread_id, login, email) == (
+            "thread-1",
+            "teammate",
+            "teammate@example.com",
+        )
         return {"pull_requests": records}
 
     async def token(login: str):
@@ -386,7 +422,9 @@ async def test_thread_status_read_denial_does_not_resolve_oauth_token(
     monkeypatch.setattr(thread_api, "_github_token_for_login", token)
 
     with pytest.raises(HTTPException) as exc_info:
-        await thread_api.get_dashboard_thread_pull_request_status("thread-1", "intruder")
+        await thread_api.get_dashboard_thread_pull_request_status(
+            "thread-1", "intruder"
+        )
 
     assert exc_info.value.status_code == 403
     token.assert_not_awaited()

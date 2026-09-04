@@ -8,7 +8,12 @@ import httpx
 
 _MAX_REDIRECTS = 5
 _REDIRECT_CODES = {301, 302, 303, 307, 308}
-_ENTITY_HEADERS = {"content-encoding", "content-language", "content-length", "content-type"}
+_ENTITY_HEADERS = {
+    "content-encoding",
+    "content-language",
+    "content-length",
+    "content-type",
+}
 _SENSITIVE_HEADERS = {"authorization", "cookie", "proxy-authorization"}
 
 
@@ -17,7 +22,12 @@ def resolve_and_validate(url: str) -> tuple[bool, str, str | None, list | None]:
     try:
         parsed = urlparse(url)
         if parsed.scheme not in {"http", "https"}:
-            return False, f"Unsupported URL scheme: {parsed.scheme or '<missing>'}", None, None
+            return (
+                False,
+                f"Unsupported URL scheme: {parsed.scheme or '<missing>'}",
+                None,
+                None,
+            )
 
         hostname = parsed.hostname
         if not hostname:
@@ -36,12 +46,22 @@ def resolve_and_validate(url: str) -> tuple[bool, str, str | None, list | None]:
             try:
                 ip = ipaddress.ip_address(ip_str)
             except ValueError:
-                return False, f"Could not parse resolved address: {ip_str}", hostname, None
+                return (
+                    False,
+                    f"Could not parse resolved address: {ip_str}",
+                    hostname,
+                    None,
+                )
 
             if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped is not None:
                 ip = ip.ipv4_mapped
             if not ip.is_global:
-                return False, f"URL resolves to blocked address: {ip_str}", hostname, None
+                return (
+                    False,
+                    f"URL resolves to blocked address: {ip_str}",
+                    hostname,
+                    None,
+                )
 
         return True, "", hostname, addr_infos
     except Exception as e:
@@ -83,7 +103,9 @@ def _origin(url: str) -> tuple[str, str, int]:
 def _is_sensitive_header(name: str) -> bool:
     normalized = name.lower()
     return (
-        normalized in _SENSITIVE_HEADERS or "api-key" in normalized or normalized.endswith("-token")
+        normalized in _SENSITIVE_HEADERS
+        or "api-key" in normalized
+        or normalized.endswith("-token")
     )
 
 
@@ -124,7 +146,9 @@ async def request_with_safe_redirects(
             return None, _blocked_response(current_url, reason)
 
         parsed = urlparse(current_url)
-        per_hop_headers = dict(headers_for_url(url, current_url) or {}) if headers_for_url else {}
+        per_hop_headers = (
+            dict(headers_for_url(url, current_url) or {}) if headers_for_url else {}
+        )
         headers = {**caller_headers, **per_hop_headers, "Host": parsed.netloc}
         extensions = {**caller_extensions, "sni_hostname": hostname}
 

@@ -36,7 +36,9 @@ def test_extract_image_urls_ignores_non_images() -> None:
 
 
 def test_extract_image_urls_markdown_syntax() -> None:
-    text = "Check out this screenshot: ![Screenshot](https://example.com/screenshot.png)"
+    text = (
+        "Check out this screenshot: ![Screenshot](https://example.com/screenshot.png)"
+    )
 
     assert extract_image_urls(text) == ["https://example.com/screenshot.png"]
 
@@ -74,11 +76,15 @@ def test_extract_image_urls_various_formats() -> None:
 def test_extract_image_urls_with_query_params() -> None:
     text = "Image with params: https://cdn.example.com/image.png?width=800&height=600"
 
-    assert extract_image_urls(text) == ["https://cdn.example.com/image.png?width=800&height=600"]
+    assert extract_image_urls(text) == [
+        "https://cdn.example.com/image.png?width=800&height=600"
+    ]
 
 
 def test_extract_image_urls_case_insensitive() -> None:
-    text = "Mixed case: https://example.com/Image.PNG and https://example.com/photo.JpEg"
+    text = (
+        "Mixed case: https://example.com/Image.PNG and https://example.com/photo.JpEg"
+    )
 
     assert extract_image_urls(text) == [
         "https://example.com/Image.PNG",
@@ -149,7 +155,9 @@ class FakeImageResponse:
             raise httpx.HTTPStatusError(
                 f"{self.status_code} error",
                 request=httpx.Request("GET", self.url),
-                response=httpx.Response(self.status_code, request=httpx.Request("GET", self.url)),
+                response=httpx.Response(
+                    self.status_code, request=httpx.Request("GET", self.url)
+                ),
             )
 
 
@@ -164,7 +172,9 @@ class FakeImageClient:
 
 
 def _patch_image_dns(monkeypatch: Any) -> None:
-    def fake_getaddrinfo(host: str, port: int | None, *args: Any, **kwargs: Any) -> list[tuple]:
+    def fake_getaddrinfo(
+        host: str, port: int | None, *args: Any, **kwargs: Any
+    ) -> list[tuple]:
         public_hosts = {
             "cdn.example.com",
             "example.com",
@@ -177,7 +187,9 @@ def _patch_image_dns(monkeypatch: Any) -> None:
     monkeypatch.setattr(url_safety.socket, "getaddrinfo", fake_getaddrinfo)
 
 
-async def test_fetch_image_block_blocks_redirect_to_internal_url(monkeypatch: Any) -> None:
+async def test_fetch_image_block_blocks_redirect_to_internal_url(
+    monkeypatch: Any,
+) -> None:
     _patch_image_dns(monkeypatch)
 
     def responder(method: str, url: str, **kwargs: Any) -> FakeImageResponse:
@@ -247,13 +259,16 @@ async def test_fetch_image_block_accepts_image_at_size_limit(monkeypatch: Any) -
         )
 
     result = await fetch_image_block(
-        "https://example.com/image.png", cast(httpx.AsyncClient, FakeImageClient(responder))
+        "https://example.com/image.png",
+        cast(httpx.AsyncClient, FakeImageClient(responder)),
     )
 
     assert result == {"base64": "cG5n", "mime_type": "image/png"}
 
 
-async def test_fetch_image_block_warns_about_image_above_size_limit(monkeypatch: Any) -> None:
+async def test_fetch_image_block_warns_about_image_above_size_limit(
+    monkeypatch: Any,
+) -> None:
     _patch_image_dns(monkeypatch)
     monkeypatch.setattr(multimodal, "_MAX_IMAGE_BYTES", 3)
     monkeypatch.setattr(multimodal, "create_image_block", lambda **kwargs: kwargs)
@@ -267,7 +282,8 @@ async def test_fetch_image_block_warns_about_image_above_size_limit(monkeypatch:
         )
 
     result = await fetch_image_block(
-        "https://example.com/image.png", cast(httpx.AsyncClient, FakeImageClient(responder))
+        "https://example.com/image.png",
+        cast(httpx.AsyncClient, FakeImageClient(responder)),
     )
 
     assert result is not None
@@ -344,7 +360,9 @@ async def test_fetch_image_block_does_not_add_slack_auth_after_untrusted_redirec
     assert all("Authorization" not in call["headers"] for call in client.calls)
 
 
-async def test_fetch_image_block_keeps_auth_within_slack_host_family(monkeypatch: Any) -> None:
+async def test_fetch_image_block_keeps_auth_within_slack_host_family(
+    monkeypatch: Any,
+) -> None:
     _patch_image_dns(monkeypatch)
     monkeypatch.setenv("SLACK_BOT_TOKEN", "test-slack-token")
     monkeypatch.setattr(multimodal, "create_image_block", lambda **kwargs: kwargs)
@@ -372,5 +390,6 @@ async def test_fetch_image_block_keeps_auth_within_slack_host_family(monkeypatch
     assert result == {"base64": "cG5n", "mime_type": "image/png"}
     assert len(client.calls) == 2
     assert all(
-        call["headers"]["Authorization"] == "Bearer test-slack-token" for call in client.calls
+        call["headers"]["Authorization"] == "Bearer test-slack-token"
+        for call in client.calls
     )

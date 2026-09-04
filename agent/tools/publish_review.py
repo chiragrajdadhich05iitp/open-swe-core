@@ -116,10 +116,15 @@ async def publish_review(
         GitHub Review was created.
     """
     if severity_threshold not in {"low", "medium", "high", "critical"}:
-        return {"success": False, "error": f"Invalid severity_threshold: {severity_threshold}"}
+        return {
+            "success": False,
+            "error": f"Invalid severity_threshold: {severity_threshold}",
+        }
 
     config = get_config()
-    raw_configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
+    raw_configurable = (
+        config.get("configurable", {}) if isinstance(config, dict) else {}
+    )
     configurable = raw_configurable if isinstance(raw_configurable, dict) else {}
     repo_config = configurable.get("repo")
     pr_number = configurable.get("pr_number")
@@ -196,7 +201,9 @@ def _cast_severity(value: str) -> Severity:
     return value  # type: ignore[return-value]
 
 
-async def _resolve_review_trace_url(thread_id: str, config_override: object) -> str | None:
+async def _resolve_review_trace_url(
+    thread_id: str, config_override: object
+) -> str | None:
     if config_override is False:
         return None
     if not await get_team_review_trace_links_enabled():
@@ -220,7 +227,9 @@ async def _publish_review_eval_dry_run_async(
     thread_id = get_thread_id_from_runtime()
     findings = await list_findings_async(thread_id)
     unpublished_findings = [f for f in findings if not _has_publication_identity(f)]
-    open_unpublished = [f for f in unpublished_findings if f.get("status", "open") == "open"]
+    open_unpublished = [
+        f for f in unpublished_findings if f.get("status", "open") == "open"
+    ]
     # Out-of-diff findings are disabled: only in-diff findings are surfaced.
     in_diff_unpublished = [f for f in unpublished_findings if f.get("in_diff", True)]
     eligible = filter_findings_for_publish(
@@ -280,7 +289,9 @@ async def _publish_review_async(
     # review anchors to (and last_reviewed_sha advances to) the commit actually
     # reviewed, not the stale one this run was created for.
     head_sha = await resolve_review_head_sha(thread_id, {"head_sha": head_sha})
-    review_trace_url = await _resolve_review_trace_url(thread_id, trace_link_config_override)
+    review_trace_url = await _resolve_review_trace_url(
+        thread_id, trace_link_config_override
+    )
     review_ui_url = dashboard_review_url(owner, repo, pr_number)
     findings = await _backfill_findings_from_pr_threads(
         thread_id=thread_id,
@@ -299,7 +310,9 @@ async def _publish_review_async(
         unpublished_findings = [
             f for f in unpublished_findings if f.get("first_seen_sha") == head_sha
         ]
-    open_unpublished = [f for f in unpublished_findings if f.get("status", "open") == "open"]
+    open_unpublished = [
+        f for f in unpublished_findings if f.get("status", "open") == "open"
+    ]
     # In-diff findings become inline comments. Out-of-diff findings are disabled:
     # they are never surfaced on the PR (any legacy in-state ones are treated as
     # hidden).
@@ -361,7 +374,9 @@ async def _publish_review_async(
             head_sha=head_sha,
             findings=await list_findings_async(thread_id),
         )
-        await clear_review_started_comment(thread_id=thread_id, owner=owner, repo=repo, token=token)
+        await clear_review_started_comment(
+            thread_id=thread_id, owner=owner, repo=repo, token=token
+        )
         conclusion, check_title, check_summary = review_check_conclusion(0)
         await settle_review_check_run(
             thread_id=thread_id,
@@ -512,7 +527,9 @@ async def _publish_review_async(
 
     if review_id is not None and inline_comments:
         current_findings = await list_findings_async(thread_id)
-        if _missing_comment_ids_for_published_findings(current_findings, eligible_with_payload):
+        if _missing_comment_ids_for_published_findings(
+            current_findings, eligible_with_payload
+        ):
             await _backfill_findings_from_pr_threads(
                 thread_id=thread_id,
                 owner=owner,
@@ -555,8 +572,12 @@ async def _publish_review_async(
         head_sha=head_sha,
         findings=await list_findings_async(thread_id),
     )
-    await clear_review_started_comment(thread_id=thread_id, owner=owner, repo=repo, token=token)
-    conclusion, check_title, check_summary = review_check_conclusion(len(inline_comments))
+    await clear_review_started_comment(
+        thread_id=thread_id, owner=owner, repo=repo, token=token
+    )
+    conclusion, check_title, check_summary = review_check_conclusion(
+        len(inline_comments)
+    )
     await settle_review_check_run(
         thread_id=thread_id,
         owner=owner,
@@ -612,12 +633,17 @@ async def _open_swe_already_reviewed(
     metadata = await get_thread_metadata(thread_id)
     if get_thread_last_reviewed_sha(metadata):
         return True
-    exists = await open_swe_review_exists(owner=owner, repo=repo, pr_number=pr_number, token=token)
+    exists = await open_swe_review_exists(
+        owner=owner, repo=repo, pr_number=pr_number, token=token
+    )
     return exists is True
 
 
 def _has_publication_identity(finding: Finding) -> bool:
-    return bool(comment_ids_for_finding(finding)) or review_id_for_finding(finding) is not None
+    return (
+        bool(comment_ids_for_finding(finding))
+        or review_id_for_finding(finding) is not None
+    )
 
 
 async def _backfill_findings_from_pr_threads(
@@ -665,7 +691,10 @@ def _apply_review_id(
 ) -> bool:
     updated = False
     for finding in findings:
-        if finding.get("id") in finding_ids and review_id_for_finding(finding) != review_id:
+        if (
+            finding.get("id") in finding_ids
+            and review_id_for_finding(finding) != review_id
+        ):
             finding["github_review_id"] = review_id
             mark_surfaced(finding)
             updated = True
@@ -750,7 +779,9 @@ async def _record_review_publication(
         for finding, _payload in inline_with_payload
         if isinstance(finding.get("id"), str)
     }
-    comment_id_by_finding_id = _comment_id_by_finding_id(inline_with_payload, comment_records)
+    comment_id_by_finding_id = _comment_id_by_finding_id(
+        inline_with_payload, comment_records
+    )
 
     latest = await list_findings_async(thread_id)
     changed = _apply_review_id(
@@ -793,11 +824,15 @@ async def _resolve_diff_line_set(
             return state_cached
     config = get_config()
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
-    cached = configurable.get("diff_line_set") if isinstance(configurable, dict) else None
+    cached = (
+        configurable.get("diff_line_set") if isinstance(configurable, dict) else None
+    )
     if isinstance(cached, dict):
         return cached
 
-    diff_text = await fetch_pr_diff(owner=owner, repo=repo, pr_number=pr_number, token=token)
+    diff_text = await fetch_pr_diff(
+        owner=owner, repo=repo, pr_number=pr_number, token=token
+    )
     if diff_text is None:
         return None
     return compute_diff_line_set(diff_text)
@@ -838,7 +873,9 @@ async def _filter_against_pr_diff(
                 end_line = payload_line
                 if start_line is None:
                     start_line = payload_line
-        side = finding.get("side") if finding.get("side") in {"LEFT", "RIGHT"} else "RIGHT"
+        side = (
+            finding.get("side") if finding.get("side") in {"LEFT", "RIGHT"} else "RIGHT"
+        )
         if isinstance(path, str) and is_range_in_diff(
             diff_line_set, path, start_line, end_line, side=side
         ):
@@ -885,7 +922,9 @@ async def _maybe_post_slack_completion_reply(
         review_url = f"{review_url}#pullrequestreview-{review_id}"
     text = f"{headline} <{review_url}|View review>"
 
-    await post_slack_thread_reply(channel_id, thread_ts, text, agent_thread_id=thread_id)
+    await post_slack_thread_reply(
+        channel_id, thread_ts, text, agent_thread_id=thread_id
+    )
 
 
 async def _store_thread_ids_on_findings(
@@ -901,7 +940,11 @@ async def _store_thread_ids_on_findings(
     for finding in findings:
         finding_id = finding.get("id")
         comment_ids = comment_ids_for_finding(finding)
-        if isinstance(finding_id, str) and comment_ids and not thread_ids_for_finding(finding):
+        if (
+            isinstance(finding_id, str)
+            and comment_ids
+            and not thread_ids_for_finding(finding)
+        ):
             comment_ids_by_finding_id[finding_id] = comment_ids
     if not comment_ids_by_finding_id:
         return
@@ -982,7 +1025,9 @@ async def _resolve_threads_for_resolved_findings(
             continue
 
         resolved_thread_ids = resolved_thread_ids_for_finding(finding)
-        posted_resolution_comment_ids = posted_resolution_comment_ids_for_finding(finding)
+        posted_resolution_comment_ids = posted_resolution_comment_ids_for_finding(
+            finding
+        )
 
         for idx, thread_node_id in enumerate(thread_node_ids):
             if thread_node_id in resolved_thread_ids:
@@ -1016,7 +1061,9 @@ async def _resolve_threads_for_resolved_findings(
         if resolved_thread_ids:
             finding["github_resolved_thread_ids"] = resolved_thread_ids
         if posted_resolution_comment_ids:
-            finding["github_posted_resolution_comment_ids"] = posted_resolution_comment_ids
+            finding["github_posted_resolution_comment_ids"] = (
+                posted_resolution_comment_ids
+            )
         finding["github_review_thread_ids"] = thread_node_ids
         if all(thread_id in resolved_thread_ids for thread_id in thread_node_ids):
             set_surface_state(finding, "resolved")

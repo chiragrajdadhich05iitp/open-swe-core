@@ -58,7 +58,9 @@ async def test_paginate_converts_github_status_error_to_502() -> None:
 
 @pytest.mark.asyncio
 async def test_list_repos_propagates_repository_page_timeouts(monkeypatch) -> None:
-    monkeypatch.setattr(routes, "get_valid_access_token", AsyncMock(return_value="token"))
+    monkeypatch.setattr(
+        routes, "get_valid_access_token", AsyncMock(return_value="token")
+    )
     calls = 0
 
     async def fake_paginate(*args: object, **kwargs: object) -> list[dict[str, object]]:
@@ -79,7 +81,9 @@ async def test_list_repos_propagates_repository_page_timeouts(monkeypatch) -> No
 
 @pytest.mark.asyncio
 async def test_list_repos_skips_inaccessible_installations(monkeypatch) -> None:
-    monkeypatch.setattr(routes, "get_valid_access_token", AsyncMock(return_value="token"))
+    monkeypatch.setattr(
+        routes, "get_valid_access_token", AsyncMock(return_value="token")
+    )
     calls = 0
 
     async def fake_paginate(*args: object, **kwargs: object) -> list[dict[str, object]]:
@@ -94,15 +98,24 @@ async def test_list_repos_skips_inaccessible_installations(monkeypatch) -> None:
     result = await routes.list_repos(session={"sub": "octocat"})
 
     assert result == {
-        "installations": [{"id": 123, "account": "acme", "account_type": "Organization"}],
+        "installations": [
+            {"id": 123, "account": "acme", "account_type": "Organization"}
+        ],
         "repositories": [],
     }
 
 
 @pytest.mark.asyncio
-async def test_list_repos_serves_fresh_cache_without_calling_github(monkeypatch) -> None:
-    cached = {"installations": [], "repositories": [{"full_name": "acme/api", "private": True}]}
-    monkeypatch.setattr(routes, "read_cached_repos", AsyncMock(return_value=(cached, 1_000)))
+async def test_list_repos_serves_fresh_cache_without_calling_github(
+    monkeypatch,
+) -> None:
+    cached = {
+        "installations": [],
+        "repositories": [{"full_name": "acme/api", "private": True}],
+    }
+    monkeypatch.setattr(
+        routes, "read_cached_repos", AsyncMock(return_value=(cached, 1_000))
+    )
     fetch = AsyncMock(return_value=([], []))
     monkeypatch.setattr(routes, "_fetch_user_installations_and_repos", fetch)
     schedule = MagicMock()
@@ -117,7 +130,10 @@ async def test_list_repos_serves_fresh_cache_without_calling_github(monkeypatch)
 
 @pytest.mark.asyncio
 async def test_list_repos_serves_stale_cache_and_schedules_refresh(monkeypatch) -> None:
-    cached = {"installations": [], "repositories": [{"full_name": "acme/api", "private": True}]}
+    cached = {
+        "installations": [],
+        "repositories": [{"full_name": "acme/api", "private": True}],
+    }
     monkeypatch.setattr(
         routes,
         "read_cached_repos",
@@ -156,14 +172,18 @@ async def test_list_repos_refresh_bypasses_cache_and_writes_it(monkeypatch) -> N
 
     read.assert_not_awaited()
     assert result == {
-        "installations": [{"id": 123, "account": "acme", "account_type": "Organization"}],
+        "installations": [
+            {"id": 123, "account": "acme", "account_type": "Organization"}
+        ],
         "repositories": [{"full_name": "acme/api", "private": True}],
     }
     write.assert_awaited_once_with("octocat", result)
 
 
 @pytest.mark.asyncio
-async def test_read_cached_repos_rejects_expired_and_malformed_entries(monkeypatch) -> None:
+async def test_read_cached_repos_rejects_expired_and_malformed_entries(
+    monkeypatch,
+) -> None:
     now_ms = store.now_ms()
 
     async def fake_get_item(namespace: list[str], key: str) -> dict[str, object]:

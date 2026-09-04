@@ -23,7 +23,9 @@ PR_ATTRIBUTION_FOOTER = f"{PR_ATTRIBUTION_TEXT}({PR_ATTRIBUTION_DEFAULT_URL})"
 
 def build_pr_attribution_footer(thread_url: str | None = None) -> str:
     """Build the Open SWE PR footer, linking the run's thread when available."""
-    url = thread_url.strip() if isinstance(thread_url, str) and thread_url.strip() else ""
+    url = (
+        thread_url.strip() if isinstance(thread_url, str) and thread_url.strip() else ""
+    )
     return f"{PR_ATTRIBUTION_TEXT}({url or PR_ATTRIBUTION_DEFAULT_URL})"
 
 
@@ -59,7 +61,9 @@ def _github_noreply_email(login: str, user_id: Any = None) -> str:
     return f"{normalized_login}@users.noreply.github.com"
 
 
-def _identity_from_github_token(github_token: str | None) -> CollaboratorIdentity | None:
+def _identity_from_github_token(
+    github_token: str | None,
+) -> CollaboratorIdentity | None:
     if not github_token:
         return None
 
@@ -80,9 +84,9 @@ def _identity_from_github_token(github_token: str | None) -> CollaboratorIdentit
         payload = response.json()
         login = _normalize_text(payload.get("login"))
         display_name = _normalize_text(payload.get("name")) or login
-        commit_email = _github_noreply_email(login, payload.get("id")) or _normalize_text(
-            payload.get("email")
-        )
+        commit_email = _github_noreply_email(
+            login, payload.get("id")
+        ) or _normalize_text(payload.get("email"))
         if not display_name or not commit_email:
             return None
         if commit_email == OPEN_SWE_BOT_EMAIL and display_name == OPEN_SWE_BOT_NAME:
@@ -114,9 +118,9 @@ def _identity_from_config(config: dict[str, Any]) -> CollaboratorIdentity | None
         github_user_id = configurable.get("github_user_id")
         from ..dashboard.user_mappings import cached_email_for_login
 
-        commit_email = _github_noreply_email(github_login, github_user_id) or _normalize_text(
-            cached_email_for_login(github_login)
-        )
+        commit_email = _github_noreply_email(
+            github_login, github_user_id
+        ) or _normalize_text(cached_email_for_login(github_login))
         if commit_email:
             commit_name = display_name or github_login
             return CollaboratorIdentity(
@@ -151,11 +155,15 @@ def resolve_triggering_user_identity(
     return _identity_from_github_token(github_token) or _identity_from_config(config)
 
 
-async def resolve_participant_identities(logins: Iterable[str]) -> list[CollaboratorIdentity]:
+async def resolve_participant_identities(
+    logins: Iterable[str],
+) -> list[CollaboratorIdentity]:
     """Git identities for thread participants the agent may author commits as."""
     from ..dashboard.user_mappings import email_for_login
 
-    unique = sorted({login.strip() for login in logins if isinstance(login, str) and login.strip()})
+    unique = sorted(
+        {login.strip() for login in logins if isinstance(login, str) and login.strip()}
+    )
     emails = await asyncio.gather(*(email_for_login(login) for login in unique))
     identities: list[CollaboratorIdentity] = []
     for login, email in zip(unique, emails, strict=True):
@@ -210,7 +218,9 @@ def add_pr_collaboration_note(
         legacy_footers.append(
             f"_Opened collaboratively by {identity.pr_attribution_name} and open-swe._"
         )
-        legacy_footers.append(f"_Opened collaboratively by {identity.display_name} and open-swe._")
+        legacy_footers.append(
+            f"_Opened collaboratively by {identity.display_name} and open-swe._"
+        )
     for legacy in legacy_footers:
         if legacy in normalized_body:
             return normalized_body.replace(legacy, note)

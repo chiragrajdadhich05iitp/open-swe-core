@@ -271,14 +271,21 @@ async def fetch_pr_metadata(
             response.raise_for_status()
             payload = response.json()
     except httpx.HTTPError:
-        logger.exception("Failed to fetch PR metadata for %s/%s#%s", owner, repo, pr_number)
+        logger.exception(
+            "Failed to fetch PR metadata for %s/%s#%s", owner, repo, pr_number
+        )
         return None
     except ValueError:
-        logger.exception("Failed to parse PR metadata for %s/%s#%s", owner, repo, pr_number)
+        logger.exception(
+            "Failed to parse PR metadata for %s/%s#%s", owner, repo, pr_number
+        )
         return None
     title = payload.get("title")
     body = payload.get("body")
-    return (title if isinstance(title, str) else "", body if isinstance(body, str) else "")
+    return (
+        title if isinstance(title, str) else "",
+        body if isinstance(body, str) else "",
+    )
 
 
 def review_diff_range(
@@ -295,7 +302,9 @@ def review_diff_range(
     return base_ref.lower(), head_sha.lower(), not re_review
 
 
-def review_diff_path(work_dir: str, base_ref: str, head_ref: str, merge_base: bool) -> str:
+def review_diff_path(
+    work_dir: str, base_ref: str, head_ref: str, merge_base: bool
+) -> str:
     """Return a deterministic sandbox path for one review diff range."""
     operator = "..." if merge_base else ".."
     digest = hashlib.sha256(f"{base_ref}{operator}{head_ref}".encode()).hexdigest()[:16]
@@ -337,7 +346,9 @@ async def materialize_review_diff(
     responses = await sandbox_backend.aupload_files([(path, diff_text.encode())])
     response = responses[0] if responses else None
     error = (
-        response.get("error") if isinstance(response, dict) else getattr(response, "error", None)
+        response.get("error")
+        if isinstance(response, dict)
+        else getattr(response, "error", None)
     )
     if error:
         raise RuntimeError(f"failed to materialize review diff: {error}")

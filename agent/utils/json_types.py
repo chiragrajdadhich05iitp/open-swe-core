@@ -17,7 +17,9 @@ def as_json_object(value: Any) -> JsonObject:
 
 
 def thread_metadata(thread: ThreadLike) -> JsonObject:
-    return as_json_object(thread.get("metadata") if isinstance(thread, Mapping) else None)
+    return as_json_object(
+        thread.get("metadata") if isinstance(thread, Mapping) else None
+    )
 
 
 def run_metadata(run: RunLike) -> JsonObject:

@@ -2,12 +2,18 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from agent.dashboard.profiles import ProfileUpdate, normalize_profile_for_response, upsert_profile
+from agent.dashboard.profiles import (
+    ProfileUpdate,
+    normalize_profile_for_response,
+    upsert_profile,
+)
 
 
 @pytest.mark.asyncio
 async def test_omitted_draft_preference_preserves_existing_value() -> None:
-    update = ProfileUpdate(default_model="openai:gpt-5.6-sol", reasoning_effort="medium")
+    update = ProfileUpdate(
+        default_model="openai:gpt-5.6-sol", reasoning_effort="medium"
+    )
     put_item = AsyncMock()
 
     with (
@@ -36,7 +42,11 @@ async def test_explicit_draft_preference_is_persisted() -> None:
     put_item = AsyncMock()
 
     with (
-        patch("agent.dashboard.profiles.get_profile", new_callable=AsyncMock, return_value=None),
+        patch(
+            "agent.dashboard.profiles.get_profile",
+            new_callable=AsyncMock,
+            return_value=None,
+        ),
         patch("agent.store.store_client") as client,
     ):
         client.return_value.store.put_item = put_item
@@ -55,7 +65,9 @@ def test_profile_response_hides_legacy_create_prs_setting() -> None:
 
 @pytest.mark.asyncio
 async def test_profile_save_removes_legacy_create_prs_setting() -> None:
-    update = ProfileUpdate(default_model="openai:gpt-5.6-sol", reasoning_effort="medium")
+    update = ProfileUpdate(
+        default_model="openai:gpt-5.6-sol", reasoning_effort="medium"
+    )
     put_item = AsyncMock()
 
     with (

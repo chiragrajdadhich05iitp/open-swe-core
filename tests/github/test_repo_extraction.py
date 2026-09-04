@@ -25,7 +25,9 @@ class TestExtractRepoFromText:
         assert result == {"owner": "langchain-ai", "name": "langchainplus"}
 
     def test_repo_space_name_only_uses_default_owner(self) -> None:
-        result = extract_repo_from_text("fix bug in repo open-swe", default_owner="langchain-ai")
+        result = extract_repo_from_text(
+            "fix bug in repo open-swe", default_owner="langchain-ai"
+        )
         assert result == {"owner": "langchain-ai", "name": "open-swe"}
 
     def test_repo_name_only_custom_default_owner(self) -> None:
@@ -63,7 +65,10 @@ class TestExtractChannelDescriptionText:
             "topic": {"value": "repo:my-org/my-repo"},
             "purpose": {"value": "Team channel"},
         }
-        assert extract_channel_description_text(channel) == "repo:my-org/my-repo\nTeam channel"
+        assert (
+            extract_channel_description_text(channel)
+            == "repo:my-org/my-repo\nTeam channel"
+        )
 
     def test_handles_missing_sections(self) -> None:
         assert extract_channel_description_text({"topic": {"value": "hi"}}) == "hi"
@@ -76,7 +81,10 @@ class TestExtractChannelDescriptionText:
         assert extract_channel_description_text(channel) == ""
 
     def test_repo_token_extractable_from_description(self) -> None:
-        channel = {"topic": {"value": "Use repo:langchain-ai/open-swe here"}, "purpose": {}}
+        channel = {
+            "topic": {"value": "Use repo:langchain-ai/open-swe here"},
+            "purpose": {},
+        }
         description = extract_channel_description_text(channel)
         assert extract_repo_from_text(description) == {
             "owner": "langchain-ai",
@@ -104,7 +112,9 @@ class TestLinearWebhookRepoOverride:
         }
 
     @pytest.mark.asyncio
-    async def test_comment_repo_overrides_team_mapping(self, _base_payload: dict) -> None:
+    async def test_comment_repo_overrides_team_mapping(
+        self, _base_payload: dict
+    ) -> None:
         from agent.webhooks.linear_routes import linear_webhook
 
         with (

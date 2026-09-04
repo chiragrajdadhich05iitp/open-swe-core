@@ -69,7 +69,9 @@ async def test_list_reviews_applies_accessibility_and_has_more(monkeypatch) -> N
     async def is_accessible(summary: dict[str, Any]) -> bool:
         return summary["full_name"] == "acme/a"
 
-    reviews, has_more = await review_api.list_reviews(1, offset=0, is_accessible=is_accessible)
+    reviews, has_more = await review_api.list_reviews(
+        1, offset=0, is_accessible=is_accessible
+    )
 
     assert [r["number"] for r in reviews] == [1]
     # two accessible records exist (1 and 3); page of 1 leaves more.
@@ -78,7 +80,9 @@ async def test_list_reviews_applies_accessibility_and_has_more(monkeypatch) -> N
 
 @pytest.mark.asyncio
 async def test_accessible_repo_full_names_lowercases(monkeypatch) -> None:
-    fetch = AsyncMock(return_value=([], [{"full_name": "Acme/Repo"}, {"full_name": "Acme/Other"}]))
+    fetch = AsyncMock(
+        return_value=([], [{"full_name": "Acme/Repo"}, {"full_name": "Acme/Other"}])
+    )
     monkeypatch.setattr(routes, "_fetch_user_installations_and_repos", fetch)
 
     names = await routes.accessible_repo_full_names("octocat")

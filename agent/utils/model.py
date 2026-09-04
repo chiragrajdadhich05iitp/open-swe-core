@@ -4,7 +4,10 @@ from typing import Any, Literal, TypedDict, Unpack, cast
 
 from langchain.chat_models import init_chat_model
 
-from agent.auth.openai_oauth import build_desktop_openai_oauth_model, desktop_openai_oauth_available
+from agent.auth.openai_oauth import (
+    build_desktop_openai_oauth_model,
+    desktop_openai_oauth_available,
+)
 
 from ..dashboard.options import DEFAULT_MODEL_ID, model_profile_with_context_override
 from .gateway import gateway_env_default, gateway_overrides
@@ -129,7 +132,9 @@ def _configure_openai_responses_kwargs(model_kwargs: dict[str, object]) -> None:
         include.append("reasoning.encrypted_content")
 
 
-def make_model(model_id: str, *, use_gateway: bool | None = None, **kwargs: Unpack[ModelKwargs]):
+def make_model(
+    model_id: str, *, use_gateway: bool | None = None, **kwargs: Unpack[ModelKwargs]
+):
     """Build a chat model, optionally routed through the LangSmith LLM Gateway.
 
     ``use_gateway`` resolves the deployment default (``LANGSMITH_GATEWAY_ENABLED``)
@@ -181,7 +186,9 @@ def make_model(model_id: str, *, use_gateway: bool | None = None, **kwargs: Unpa
         if not gateway_applied:
             api_key = os.environ.get("BASETEN_API_KEY")
             if not api_key:
-                raise ValueError("BASETEN_API_KEY is required when Gateway routing is disabled")
+                raise ValueError(
+                    "BASETEN_API_KEY is required when Gateway routing is disabled"
+                )
             model_kwargs["base_url"] = BASETEN_BASE_URL
             model_kwargs["api_key"] = api_key
 
@@ -206,7 +213,9 @@ def make_model(model_id: str, *, use_gateway: bool | None = None, **kwargs: Unpa
             model_id.split(":", 1)[1], **cast(dict[str, Any], model_kwargs)
         )
     else:
-        model = init_chat_model(model=init_model_id, **cast(dict[str, Any], model_kwargs))
+        model = init_chat_model(
+            model=init_model_id, **cast(dict[str, Any], model_kwargs)
+        )
     _MODEL_CACHE[key] = model
     return model
 
@@ -273,7 +282,9 @@ def anthropic_effort_for(profile_effort: str | None) -> AnthropicEffort | None:
     return None
 
 
-def fireworks_reasoning_effort_for(profile_effort: str | None) -> FireworksReasoningEffort | None:
+def fireworks_reasoning_effort_for(
+    profile_effort: str | None,
+) -> FireworksReasoningEffort | None:
     """Map profile effort to a Fireworks ``reasoning_effort`` value.
 
     Fireworks' OpenAI-compatible API accepts ``reasoning_effort`` on its reasoning
@@ -365,10 +376,14 @@ def validate_local_dev_llm_config() -> None:
     ):
         raise ValueError(f"OPENAI_API_KEY is required for configured model {model_id}")
     elif model_id.startswith("anthropic:") and not os.environ.get("ANTHROPIC_API_KEY"):
-        raise ValueError(f"ANTHROPIC_API_KEY is required for configured model {model_id}")
+        raise ValueError(
+            f"ANTHROPIC_API_KEY is required for configured model {model_id}"
+        )
     elif model_id.startswith("google_genai:") and not os.environ.get("GOOGLE_API_KEY"):
         raise ValueError(f"GOOGLE_API_KEY is required for configured model {model_id}")
     elif model_id.startswith("groq:") and not os.environ.get("GROQ_API_KEY"):
         raise ValueError(f"GROQ_API_KEY is required for configured model {model_id}")
     elif model_id.startswith("fireworks:") and not os.environ.get("FIREWORKS_API_KEY"):
-        raise ValueError(f"FIREWORKS_API_KEY is required for configured model {model_id}")
+        raise ValueError(
+            f"FIREWORKS_API_KEY is required for configured model {model_id}"
+        )

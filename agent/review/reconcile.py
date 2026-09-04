@@ -50,7 +50,9 @@ def _human_replies_after_bot_comment(
 
 def _index_review_threads(
     review_threads: list[ReviewThread],
-) -> tuple[dict[str, ReviewThread], dict[int, ReviewThread], dict[str, list[ReviewThreadMatch]]]:
+) -> tuple[
+    dict[str, ReviewThread], dict[int, ReviewThread], dict[str, list[ReviewThreadMatch]]
+]:
     by_thread_id = {
         thread_id: review_thread
         for review_thread in review_threads
@@ -73,7 +75,9 @@ def _index_review_threads(
                 continue
             marker = parse_review_comment_marker(body)
             if marker is not None and isinstance(comment_id, int):
-                by_marker_id.setdefault(marker["id"], []).append((review_thread, comment_id))
+                by_marker_id.setdefault(marker["id"], []).append(
+                    (review_thread, comment_id)
+                )
     return by_thread_id, by_comment_id, by_marker_id
 
 
@@ -118,7 +122,11 @@ def _sync_publication_identity(
 
     new_thread_id = review_thread.get("id")
     thread_ids = thread_ids_for_finding(finding)
-    if isinstance(new_thread_id, str) and new_thread_id and new_thread_id not in thread_ids:
+    if (
+        isinstance(new_thread_id, str)
+        and new_thread_id
+        and new_thread_id not in thread_ids
+    ):
         thread_ids.append(new_thread_id)
         finding["github_review_thread_ids"] = thread_ids
         updated = True
@@ -130,7 +138,9 @@ def _is_terminal_thread(review_thread: ReviewThread) -> bool:
 
 
 def _sync_thread_status(finding: Finding, matches: list[ReviewThreadMatch]) -> bool:
-    if not matches or not all(_is_terminal_thread(review_thread) for review_thread, _ in matches):
+    if not matches or not all(
+        _is_terminal_thread(review_thread) for review_thread, _ in matches
+    ):
         return False
 
     updated = False
@@ -138,7 +148,11 @@ def _sync_thread_status(finding: Finding, matches: list[ReviewThreadMatch]) -> b
     all_resolved = True
     for review_thread, _comment_id in matches:
         thread_id = review_thread.get("id")
-        if review_thread.get("is_resolved") and isinstance(thread_id, str) and thread_id:
+        if (
+            review_thread.get("is_resolved")
+            and isinstance(thread_id, str)
+            and thread_id
+        ):
             if thread_id not in resolved_thread_ids:
                 resolved_thread_ids.append(thread_id)
                 finding["github_resolved_thread_ids"] = resolved_thread_ids
@@ -169,7 +183,9 @@ def _sync_latest_human_reply(
             return False
         github_comment_id = recorded[0]
 
-    replies = _human_replies_after_bot_comment(review_thread, bot_comment_id=github_comment_id)
+    replies = _human_replies_after_bot_comment(
+        review_thread, bot_comment_id=github_comment_id
+    )
     if not replies:
         return False
 
@@ -236,9 +252,13 @@ async def reconcile_findings_with_review_threads(
             by_marker_id=by_marker_id,
         )
         for review_thread, comment_id in matches:
-            updated = _sync_publication_identity(finding, review_thread, comment_id) or updated
             updated = (
-                _sync_latest_human_reply(finding, review_thread, comment_id=comment_id) or updated
+                _sync_publication_identity(finding, review_thread, comment_id)
+                or updated
+            )
+            updated = (
+                _sync_latest_human_reply(finding, review_thread, comment_id=comment_id)
+                or updated
             )
         updated = _sync_thread_status(finding, matches) or updated
 

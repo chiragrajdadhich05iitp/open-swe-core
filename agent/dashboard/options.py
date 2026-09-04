@@ -181,7 +181,9 @@ def model_profile_context_window(model_id: str) -> int | None:
     return _PROFILE_CONTEXT_WINDOW_FALLBACKS.get(model_id)
 
 
-def models_with_profile_context_windows(models: Sequence[ModelOption]) -> list[ModelOption]:
+def models_with_profile_context_windows(
+    models: Sequence[ModelOption],
+) -> list[ModelOption]:
     enriched: list[ModelOption] = []
     for model in models:
         option: ModelOption = {
@@ -271,11 +273,15 @@ def is_deprecated_model(model_id: object) -> bool:
     return isinstance(model_id, str) and model_id in DEPRECATED_MODEL_IDS
 
 
-def canonical_model_pair(model_id: object, effort: object = None) -> tuple[str, str] | None:
+def canonical_model_pair(
+    model_id: object, effort: object = None
+) -> tuple[str, str] | None:
     return None
 
 
-def normalize_model_choice(model_id: object, effort: object) -> tuple[str | None, str | None]:
+def normalize_model_choice(
+    model_id: object, effort: object
+) -> tuple[str | None, str | None]:
     if (
         not isinstance(model_id, str)
         or model_id not in SUPPORTED_MODEL_IDS
@@ -286,7 +292,9 @@ def normalize_model_choice(model_id: object, effort: object) -> tuple[str | None
     return model_id, effort
 
 
-def provider_fallback_pair(model_id: object, effort: object = None) -> tuple[str, str] | None:
+def provider_fallback_pair(
+    model_id: object, effort: object = None
+) -> tuple[str, str] | None:
     """Newest supported ``(model_id, effort)`` for the same provider/family.
 
     Keeps a stored selection on its original provider when its exact id has
@@ -306,7 +314,10 @@ def provider_fallback_pair(model_id: object, effort: object = None) -> tuple[str
     family = _claude_family_of(model_id)
     if family is not None:
         for m in SUPPORTED_MODELS:
-            if _provider_of(m["id"]) == provider and _claude_family_of(m["id"]) == family:
+            if (
+                _provider_of(m["id"]) == provider
+                and _claude_family_of(m["id"]) == family
+            ):
                 return m["id"], _fallback_effort_for(m, effort) or m["default_effort"]
     for m in SUPPORTED_MODELS:
         if _provider_of(m["id"]) == provider:
@@ -334,6 +345,9 @@ def default_vision_model_pair() -> tuple[str, str]:
     ):
         return DEFAULT_MODEL_ID, DEFAULT_MODEL_EFFORT
     for model in SUPPORTED_MODELS:
-        if model["id"].startswith(("openai:", "anthropic:")) and model["supports_images"]:
+        if (
+            model["id"].startswith(("openai:", "anthropic:"))
+            and model["supports_images"]
+        ):
             return model["id"], model["default_effort"]
     return default_model_pair()

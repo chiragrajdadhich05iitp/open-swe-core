@@ -37,7 +37,9 @@ def normalize_permissions(permissions: PermissionMap | None) -> PermissionKey:
     """Return a stable, hashable permission scope key."""
     if not permissions:
         return ()
-    return tuple(sorted((str(k), str(v)) for k, v in permissions.items() if str(k) and str(v)))
+    return tuple(
+        sorted((str(k), str(v)) for k, v in permissions.items() if str(k) and str(v))
+    )
 
 
 def _scope_key(
@@ -112,15 +114,26 @@ async def get_github_app_installation_id_for_org(org: str) -> int | None:
             )
         response.raise_for_status()
         installation_id = response.json().get("id")
-        return installation_id if isinstance(installation_id, int) and installation_id > 0 else None
+        return (
+            installation_id
+            if isinstance(installation_id, int) and installation_id > 0
+            else None
+        )
     except Exception:
-        logger.warning("Failed to resolve GitHub App installation for %s", org, exc_info=True)
+        logger.warning(
+            "Failed to resolve GitHub App installation for %s", org, exc_info=True
+        )
         return None
 
 
 async def get_github_app_installation_id_for_repo(owner: str, repo: str) -> int | None:
     """Resolve the GitHub App installation that can access a repository."""
-    if not GITHUB_APP_ID or not GITHUB_APP_PRIVATE_KEY or not owner.strip() or not repo.strip():
+    if (
+        not GITHUB_APP_ID
+        or not GITHUB_APP_PRIVATE_KEY
+        or not owner.strip()
+        or not repo.strip()
+    ):
         return None
     url = (
         "https://api.github.com/repos/"
@@ -138,10 +151,17 @@ async def get_github_app_installation_id_for_repo(owner: str, repo: str) -> int 
             )
         response.raise_for_status()
         installation_id = response.json().get("id")
-        return installation_id if isinstance(installation_id, int) and installation_id > 0 else None
+        return (
+            installation_id
+            if isinstance(installation_id, int) and installation_id > 0
+            else None
+        )
     except Exception:
         logger.warning(
-            "Failed to resolve GitHub App installation for %s/%s", owner, repo, exc_info=True
+            "Failed to resolve GitHub App installation for %s/%s",
+            owner,
+            repo,
+            exc_info=True,
         )
         return None
 
@@ -186,7 +206,9 @@ async def get_github_app_installation_token_with_expiry(
         logger.debug("GitHub App env vars not fully configured, skipping app token")
         return None, None
 
-    key = _scope_key(resolved_installation_id, repository_ids, repositories, permissions)
+    key = _scope_key(
+        resolved_installation_id, repository_ids, repositories, permissions
+    )
     now = datetime.now(UTC)
     cached = _cached_token(key, now=now)
     if cached is not None:

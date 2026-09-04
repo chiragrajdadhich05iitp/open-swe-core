@@ -17,7 +17,9 @@ class _QueuedItem:
 
 
 class _FakeStore:
-    def __init__(self, items: dict[tuple[tuple[str, ...], str], dict[str, Any]]) -> None:
+    def __init__(
+        self, items: dict[tuple[tuple[str, ...], str], dict[str, Any]]
+    ) -> None:
         self.items = items
         self.deleted: list[tuple[tuple[str, ...], str]] = []
 
@@ -82,7 +84,9 @@ async def test_check_message_queue_injects_dashboard_handoff_instruction() -> No
     user_message = ElementTree.fromstring(_envelope(messages[3]))
     assert handoff_entity.attrib["id"] == "system:dashboard-handoff"
     assert handoff_message.attrib["kind"] == "system"
-    assert "conversation has moved to Web" in (handoff_message.findtext("content") or "")
+    assert "conversation has moved to Web" in (
+        handoff_message.findtext("content") or ""
+    )
     assert user_entity.attrib["id"] == "github:octocat"
     assert user_message.findtext("content") == "continue in web"
     # The handoff is carried by the injected message alone. Rewriting the system

@@ -146,10 +146,14 @@ class DynamicToolMiddleware(AgentMiddleware[DynamicToolState]):
         )
         if self._group_of:
             example_name = (
-                "analyzePlan" if "analyzePlan" in self._group_of else next(iter(self._group_of))
+                "analyzePlan"
+                if "analyzePlan" in self._group_of
+                else next(iter(self._group_of))
             )
             example = json.dumps({"tool_names": [example_name]}, separators=(",", ":"))
-            description += f"\nExample: {example}\nAvailable tools:\n" + "\n".join(catalog)
+            description += f"\nExample: {example}\nAvailable tools:\n" + "\n".join(
+                catalog
+            )
         self.tools = [
             StructuredTool.from_function(
                 coroutine=load_integration_tools,
@@ -173,7 +177,9 @@ class DynamicToolMiddleware(AgentMiddleware[DynamicToolState]):
             try:
                 tools = await self._groups[group].load()
             except Exception:
-                logger.warning("Failed to load %s integration tools", group, exc_info=True)
+                logger.warning(
+                    "Failed to load %s integration tools", group, exc_info=True
+                )
                 tools = []
             resolved.tools = {tool.name: tool for tool in tools}
             resolved.done = True
@@ -191,7 +197,9 @@ class DynamicToolMiddleware(AgentMiddleware[DynamicToolState]):
             return None
         return self._resolved.get(group, _Resolved()).tools.get(name)
 
-    async def abefore_agent(self, state: DynamicToolState, runtime: Runtime) -> dict[str, Any]:  # noqa: ARG002
+    async def abefore_agent(
+        self, state: DynamicToolState, runtime: Runtime
+    ) -> dict[str, Any]:  # noqa: ARG002
         return {"loaded_integration_tools": Overwrite([])}
 
     async def awrap_model_call(

@@ -33,11 +33,15 @@ def _load_sandbox_factory(sandbox_type: str) -> SandboxFactory:
     factory_path = SANDBOX_FACTORIES.get(sandbox_type)
     if factory_path is None:
         supported = ", ".join(sorted(SANDBOX_FACTORIES))
-        raise ValueError(f"Invalid sandbox type: {sandbox_type}. Supported types: {supported}")
+        raise ValueError(
+            f"Invalid sandbox type: {sandbox_type}. Supported types: {supported}"
+        )
     module_name, function_name = factory_path
     factory = getattr(import_module(module_name), function_name)
     if not callable(factory):
-        raise TypeError(f"Sandbox factory {module_name}.{function_name} is not callable")
+        raise TypeError(
+            f"Sandbox factory {module_name}.{function_name} is not callable"
+        )
     return factory
 
 

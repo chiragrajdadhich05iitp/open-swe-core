@@ -43,7 +43,9 @@ async def _flush_in_traced_node(thread_id: str) -> _FakeClient:
     graph.add_edge("node", END)
     client = _FakeClient()
     tracer = LangChainTracer(client=cast(Any, client), project_name="test")
-    await graph.compile().ainvoke({"done": False}, config=cast(Any, {"callbacks": [tracer]}))
+    await graph.compile().ainvoke(
+        {"done": False}, config=cast(Any, {"callbacks": [tracer]})
+    )
     return client
 
 
@@ -62,7 +64,13 @@ async def test_phases_replay_as_child_spans_of_the_current_run() -> None:
     client = await _flush_in_traced_node("thread-1")
 
     names = [run["name"] for run in client.created]
-    assert names == ["LangGraph", "node", "startup", "sandbox.boot", "sandbox.git_identity"]
+    assert names == [
+        "LangGraph",
+        "node",
+        "startup",
+        "sandbox.boot",
+        "sandbox.git_identity",
+    ]
     boot = next(run for run in client.created if run["name"] == "sandbox.boot")
     assert boot["inputs"]["snapshot_id"] == "snap-1"
     wrapper = next(run for run in client.updated if run["name"] == "startup")
@@ -147,7 +155,8 @@ async def test_prepare_middleware_flushes_phases_when_the_latch_skips_prepare() 
     assert (
         await middleware.abefore_agent(
             cast(
-                AgentState, {"messages": [], "run_prepared": True, "run_prepared_for": fingerprint}
+                AgentState,
+                {"messages": [], "run_prepared": True, "run_prepared_for": fingerprint},
             ),
             cast(Runtime[None], MagicMock()),
         )

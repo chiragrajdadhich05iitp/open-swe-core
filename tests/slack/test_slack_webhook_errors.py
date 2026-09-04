@@ -24,7 +24,9 @@ class _FakeClient:
 async def test_slack_processing_error_posts_dashboard_link(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    async def fail_processing(event_data: dict[str, Any], repo_config: dict[str, str]) -> None:
+    async def fail_processing(
+        event_data: dict[str, Any], repo_config: dict[str, str]
+    ) -> None:
         raise RuntimeError("boom")
 
     client = _FakeClient()
@@ -41,7 +43,9 @@ async def test_slack_processing_error_posts_dashboard_link(
     monkeypatch.setattr(slack_webhook.common, "upsert_agent_thread_metadata", upsert)
     monkeypatch.setattr(slack_webhook, "get_langgraph_client", lambda: client)
     monkeypatch.setattr(
-        slack_webhook.common, "dashboard_thread_url", lambda thread_id: f"https://ui/{thread_id}"
+        slack_webhook.common,
+        "dashboard_thread_url",
+        lambda thread_id: f"https://ui/{thread_id}",
     )
     monkeypatch.setattr(slack_webhook.common, "post_slack_thread_reply", post_reply)
 
@@ -71,7 +75,9 @@ async def test_slack_processing_error_posts_dashboard_link(
     assert "<https://ui/t1|Open SWE Web>" in await_args.args[2]
 
 
-async def test_slack_plan_button_uses_verified_actor(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_slack_plan_button_uses_verified_actor(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     approve = AsyncMock(return_value={"status": "approved", "run_id": "run-1"})
     monkeypatch.setattr(plan_api, "approve_plan_for_thread", approve)
     event_data = {
@@ -99,7 +105,9 @@ async def test_non_owner_can_send_untagged_ready_plan_reply(
     lookup_thread = AsyncMock(return_value="t1")
     monkeypatch.setattr(slack_webhook.common, "lookup_slack_thread_id", lookup_thread)
 
-    allowed = await slack_webhook._slack_user_can_reply_to_ready_plan("C1", "123.45", "U2")
+    allowed = await slack_webhook._slack_user_can_reply_to_ready_plan(
+        "C1", "123.45", "U2"
+    )
 
     assert allowed is True
     lookup_thread.assert_awaited_once()
@@ -136,7 +144,9 @@ async def test_untagged_reply_allowed_for_two_party_thread(
 ) -> None:
     messages = _thread("UHUMAN", "BOT", "UHUMAN")
     monkeypatch.setattr(
-        slack_webhook.common, "fetch_slack_thread_messages", AsyncMock(return_value=messages)
+        slack_webhook.common,
+        "fetch_slack_thread_messages",
+        AsyncMock(return_value=messages),
     )
 
     assert await slack_webhook._slack_thread_allows_untagged_reply(
@@ -150,7 +160,9 @@ async def test_untagged_reply_blocked_when_mentioning_other_user(
 ) -> None:
     messages = _thread("UHUMAN", "BOT")
     monkeypatch.setattr(
-        slack_webhook.common, "fetch_slack_thread_messages", AsyncMock(return_value=messages)
+        slack_webhook.common,
+        "fetch_slack_thread_messages",
+        AsyncMock(return_value=messages),
     )
 
     assert not await slack_webhook._slack_thread_allows_untagged_reply(
@@ -164,7 +176,9 @@ async def test_untagged_reply_mentioning_only_bot_allowed(
 ) -> None:
     messages = _thread("UHUMAN", "BOT")
     monkeypatch.setattr(
-        slack_webhook.common, "fetch_slack_thread_messages", AsyncMock(return_value=messages)
+        slack_webhook.common,
+        "fetch_slack_thread_messages",
+        AsyncMock(return_value=messages),
     )
 
     assert await slack_webhook._slack_thread_allows_untagged_reply(
@@ -178,7 +192,9 @@ async def test_untagged_reply_blocked_for_three_party_thread(
 ) -> None:
     messages = _thread("UHUMAN", "BOT", "USECOND")
     monkeypatch.setattr(
-        slack_webhook.common, "fetch_slack_thread_messages", AsyncMock(return_value=messages)
+        slack_webhook.common,
+        "fetch_slack_thread_messages",
+        AsyncMock(return_value=messages),
     )
 
     assert not await slack_webhook._slack_thread_allows_untagged_reply(
@@ -192,7 +208,9 @@ async def test_untagged_reply_blocked_when_bot_absent(
 ) -> None:
     messages = _thread("UHUMAN", "UHUMAN")
     monkeypatch.setattr(
-        slack_webhook.common, "fetch_slack_thread_messages", AsyncMock(return_value=messages)
+        slack_webhook.common,
+        "fetch_slack_thread_messages",
+        AsyncMock(return_value=messages),
     )
 
     assert not await slack_webhook._slack_thread_allows_untagged_reply(
@@ -211,7 +229,9 @@ async def test_untagged_reply_blocked_when_only_third_party_bot_present(
         {"ts": "1.1", "user": "UGH", "bot_id": "BGITHUB"},
     ]
     monkeypatch.setattr(
-        slack_webhook.common, "fetch_slack_thread_messages", AsyncMock(return_value=messages)
+        slack_webhook.common,
+        "fetch_slack_thread_messages",
+        AsyncMock(return_value=messages),
     )
 
     assert not await slack_webhook._slack_thread_allows_untagged_reply(
@@ -290,11 +310,18 @@ async def test_untagged_reply_ignores_a_third_party_who_went_quiet(
         _msg(base + 1331, "BOT"),
     ]
     monkeypatch.setattr(
-        slack_webhook.common, "fetch_slack_thread_messages", AsyncMock(return_value=messages)
+        slack_webhook.common,
+        "fetch_slack_thread_messages",
+        AsyncMock(return_value=messages),
     )
 
     assert await slack_webhook._slack_thread_allows_untagged_reply(
-        "C1", "123.45", "why do you not see this message", "BOT", "URAMON", f"{base + 1423:.6f}"
+        "C1",
+        "123.45",
+        "why do you not see this message",
+        "BOT",
+        "URAMON",
+        f"{base + 1423:.6f}",
     )
 
 
@@ -309,7 +336,9 @@ async def test_untagged_reply_blocked_while_a_third_party_is_still_active(
         _msg(base + 1400, "UMUKIL"),  # spoke 23s ago — still in the conversation
     ]
     monkeypatch.setattr(
-        slack_webhook.common, "fetch_slack_thread_messages", AsyncMock(return_value=messages)
+        slack_webhook.common,
+        "fetch_slack_thread_messages",
+        AsyncMock(return_value=messages),
     )
 
     assert not await slack_webhook._slack_thread_allows_untagged_reply(
@@ -329,7 +358,9 @@ async def test_untagged_reply_blocked_when_third_party_spoke_after_the_bot(
         _msg(base + 60, "UMUKIL"),  # after the bot, so never stale however old
     ]
     monkeypatch.setattr(
-        slack_webhook.common, "fetch_slack_thread_messages", AsyncMock(return_value=messages)
+        slack_webhook.common,
+        "fetch_slack_thread_messages",
+        AsyncMock(return_value=messages),
     )
 
     assert not await slack_webhook._slack_thread_allows_untagged_reply(
@@ -348,7 +379,9 @@ async def test_untagged_reply_ignores_joins_and_leaves(
         _msg(base + 10, "ULURKER", subtype="channel_join"),
     ]
     monkeypatch.setattr(
-        slack_webhook.common, "fetch_slack_thread_messages", AsyncMock(return_value=messages)
+        slack_webhook.common,
+        "fetch_slack_thread_messages",
+        AsyncMock(return_value=messages),
     )
 
     assert await slack_webhook._slack_thread_allows_untagged_reply(
@@ -373,7 +406,9 @@ async def test_untagged_reply_blocked_when_bot_never_posted(
 
 
 @pytest.mark.asyncio
-async def test_rapid_follow_up_allowed_before_bot_posts(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_rapid_follow_up_allowed_before_bot_posts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     base = 1786723299.0
     monkeypatch.setattr(
         slack_webhook.common,
@@ -387,7 +422,9 @@ async def test_rapid_follow_up_allowed_before_bot_posts(monkeypatch: pytest.Monk
 
 
 @pytest.mark.asyncio
-async def test_each_rapid_follow_up_extends_the_window(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_each_rapid_follow_up_extends_the_window(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     base = 1786723299.0
     messages = [
         _msg(base, "URAMON", text="<@BOT> start this"),
@@ -446,14 +483,22 @@ async def test_message_update_dispatches_a_new_message_without_old_context(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     client = _FakeClient()
-    fetch_messages = AsyncMock(return_value=[{"ts": "1.0", "user": "U1", "text": "old text"}])
+    fetch_messages = AsyncMock(
+        return_value=[{"ts": "1.0", "user": "U1", "text": "old text"}]
+    )
     dispatch = AsyncMock(return_value={"run_id": "run-1"})
     store_mapping = AsyncMock()
     monkeypatch.setattr(slack_webhook, "get_langgraph_client", lambda: client)
     monkeypatch.setattr(slack_webhook.common, "refresh_user_mapping_cache", AsyncMock())
-    monkeypatch.setattr(slack_webhook.common, "get_slack_user_info", AsyncMock(return_value=None))
-    monkeypatch.setattr(slack_webhook.common, "fetch_slack_thread_messages", fetch_messages)
-    monkeypatch.setattr(slack_webhook.common, "get_slack_user_names", AsyncMock(return_value={}))
+    monkeypatch.setattr(
+        slack_webhook.common, "get_slack_user_info", AsyncMock(return_value=None)
+    )
+    monkeypatch.setattr(
+        slack_webhook.common, "fetch_slack_thread_messages", fetch_messages
+    )
+    monkeypatch.setattr(
+        slack_webhook.common, "get_slack_user_names", AsyncMock(return_value={})
+    )
     monkeypatch.setattr(
         slack_webhook.common,
         "resolve_slack_links_in_context",
@@ -462,15 +507,25 @@ async def test_message_update_dispatches_a_new_message_without_old_context(
     monkeypatch.setattr(
         slack_webhook, "_format_slack_run_links_section", AsyncMock(return_value="")
     )
-    monkeypatch.setattr(slack_webhook.common, "login_for_slack_id", AsyncMock(return_value=None))
+    monkeypatch.setattr(
+        slack_webhook.common, "login_for_slack_id", AsyncMock(return_value=None)
+    )
     monkeypatch.setattr(slack_webhook.common, "is_bot_token_only_mode", lambda: True)
-    monkeypatch.setattr(slack_webhook.common, "_thread_exists", AsyncMock(return_value=True))
+    monkeypatch.setattr(
+        slack_webhook.common, "_thread_exists", AsyncMock(return_value=True)
+    )
     monkeypatch.setattr(
         slack_webhook.common, "_get_thread_environment", AsyncMock(return_value=None)
     )
-    monkeypatch.setattr(slack_webhook.common, "_get_thread_plan_mode", AsyncMock(return_value=None))
-    monkeypatch.setattr(slack_webhook.common, "_upsert_slack_thread_repo_metadata", AsyncMock())
-    monkeypatch.setattr(slack_webhook.common, "upsert_agent_thread_metadata", AsyncMock())
+    monkeypatch.setattr(
+        slack_webhook.common, "_get_thread_plan_mode", AsyncMock(return_value=None)
+    )
+    monkeypatch.setattr(
+        slack_webhook.common, "_upsert_slack_thread_repo_metadata", AsyncMock()
+    )
+    monkeypatch.setattr(
+        slack_webhook.common, "upsert_agent_thread_metadata", AsyncMock()
+    )
     monkeypatch.setattr(slack_webhook, "_dispatch_or_queue_slack_run", dispatch)
     thinking = AsyncMock()
     monkeypatch.setattr(slack_webhook, "stream_slack_thinking_steps", thinking)
@@ -514,7 +569,10 @@ def test_untagged_prompt_tells_the_agent_it_was_not_tagged() -> None:
     assert "You were NOT tagged" in preamble
     assert "end your turn without calling any tool and post nothing" in preamble
     assert "Staying silent is the right" in preamble
-    assert slack_webhook._slack_request_heading(untagged_reply=True) == "## Untagged Message"
+    assert (
+        slack_webhook._slack_request_heading(untagged_reply=True)
+        == "## Untagged Message"
+    )
 
 
 def test_tagged_prompt_keeps_the_mention_wording() -> None:
@@ -522,4 +580,7 @@ def test_tagged_prompt_keeps_the_mention_wording() -> None:
 
     assert preamble == "You were mentioned in Slack.\n\n"
     assert "NOT tagged" not in preamble
-    assert slack_webhook._slack_request_heading(untagged_reply=False) == "## Latest Mention Request"
+    assert (
+        slack_webhook._slack_request_heading(untagged_reply=False)
+        == "## Latest Mention Request"
+    )

@@ -16,7 +16,9 @@ async def github_webhook(
     body = await request.body()
 
     signature = request.headers.get("X-Hub-Signature-256", "")
-    if not common.verify_github_signature(body, signature, secret=common.GITHUB_WEBHOOK_SECRET):
+    if not common.verify_github_signature(
+        body, signature, secret=common.GITHUB_WEBHOOK_SECRET
+    ):
         common.logger.warning("Invalid GitHub webhook signature")
         raise common.HTTPException(status_code=401, detail="Invalid signature")
 
@@ -38,15 +40,21 @@ async def github_webhook(
     }
 
     issue = payload.get("issue", {})
-    is_pull_request_comment = bool(event_type == "issue_comment" and issue.get("pull_request"))
-    is_issue_comment = bool(event_type == "issue_comment" and not issue.get("pull_request"))
+    is_pull_request_comment = bool(
+        event_type == "issue_comment" and issue.get("pull_request")
+    )
+    is_issue_comment = bool(
+        event_type == "issue_comment" and not issue.get("pull_request")
+    )
     is_issue_event = event_type == "issues"
     is_pull_request_event = event_type == "pull_request"
 
     if is_pull_request_event:
         action = payload.get("action", "")
         if action not in common._SUPPORTED_GH_PULL_REQUEST_ACTIONS:
-            common.logger.info("Ignoring unsupported GitHub pull_request action: %s", action)
+            common.logger.info(
+                "Ignoring unsupported GitHub pull_request action: %s", action
+            )
             return {
                 "status": "ignored",
                 "reason": f"Unsupported GitHub pull_request action: {action}",
@@ -59,22 +67,38 @@ async def github_webhook(
                 common.logger.debug("Failed to update Agent PR usage", exc_info=True)
         if action in common._GH_PR_WATCH_TOGGLE_ACTIONS:
             common.logger.info(
-                "Accepted GitHub PR %s webhook, scheduling reviewer watch update", action
+                "Accepted GitHub PR %s webhook, scheduling reviewer watch update",
+                action,
             )
             background_tasks.add_task(service.process_github_pr_close, payload)
-            return {"status": "accepted", "message": f"Processing PR {action} for reviewer watch"}
+            return {
+                "status": "accepted",
+                "message": f"Processing PR {action} for reviewer watch",
+            }
         if action in common._GH_PR_FIRST_REVIEW_ACTIONS:
             if not await common._is_repo_auto_review_enabled(webhook_repo_config):
-                return {"status": "ignored", "reason": "Automatic review disabled for repository"}
-            gate_rejection = await common._enforce_public_repo_org_gate(payload, "pull_request")
+                return {
+                    "status": "ignored",
+                    "reason": "Automatic review disabled for repository",
+                }
+            gate_rejection = await common._enforce_public_repo_org_gate(
+                payload, "pull_request"
+            )
             if gate_rejection is not None:
                 return gate_rejection
-            common.logger.info("Accepted GitHub PR %s webhook, scheduling auto-review task", action)
+            common.logger.info(
+                "Accepted GitHub PR %s webhook, scheduling auto-review task", action
+            )
             background_tasks.add_task(service.process_github_pr_ready, payload)
-            return {"status": "accepted", "message": f"Processing PR {action} for auto-review"}
+            return {
+                "status": "accepted",
+                "message": f"Processing PR {action} for auto-review",
+            }
         if action in common._GH_PR_AGENT_STATE_ACTIONS:
             return {"status": "accepted", "message": f"Processing PR {action} state"}
-        common.logger.info("Ignoring unsupported GitHub pull_request action: %s", action)
+        common.logger.info(
+            "Ignoring unsupported GitHub pull_request action: %s", action
+        )
         return {
             "status": "ignored",
             "reason": f"Unsupported GitHub pull_request action: {action}",
@@ -82,10 +106,18 @@ async def github_webhook(
 
     if event_type == "push":
         if not await common._is_repo_auto_review_enabled(webhook_repo_config):
-            return {"status": "ignored", "reason": "Automatic review disabled for repository"}
-        common.logger.info("Accepted GitHub push webhook, scheduling reviewer watch evaluation")
+            return {
+                "status": "ignored",
+                "reason": "Automatic review disabled for repository",
+            }
+        common.logger.info(
+            "Accepted GitHub push webhook, scheduling reviewer watch evaluation"
+        )
         background_tasks.add_task(service.process_github_push_event, payload)
-        return {"status": "accepted", "message": "Processing GitHub push for reviewer watch"}
+        return {
+            "status": "accepted",
+            "message": "Processing GitHub push for reviewer watch",
+        }
 
     if not common._is_repo_allowed(webhook_repo_config):
         common.logger.debug(
@@ -109,12 +141,20 @@ async def github_webhook(
         action = payload.get("action", "")
         if action not in common._SUPPORTED_GH_ISSUE_ACTIONS:
             common.logger.info("Ignoring unsupported GitHub issue action: %s", action)
-            return {"status": "ignored", "reason": f"Unsupported GitHub issue action: {action}"}
+            return {
+                "status": "ignored",
+                "reason": f"Unsupported GitHub issue action: {action}",
+            }
         if action == "edited":
             changes = payload.get("changes", {})
             if not any(field in changes for field in ("body", "title")):
-                common.logger.info("Ignoring GitHub issue edit without title/body changes")
-                return {"status": "ignored", "reason": "Issue edit did not change title or body"}
+                common.logger.info(
+                    "Ignoring GitHub issue edit without title/body changes"
+                )
+                return {
+                    "status": "ignored",
+                    "reason": "Issue edit did not change title or body",
+                }
 
         issue_text = f"{issue.get('title', '')}\n\n{issue.get('body', '')}"
         if not common.mentions_open_swe(issue_text):
@@ -133,11 +173,21 @@ async def github_webhook(
     action = payload.get("action", "")
     supported_comment_actions = common._SUPPORTED_GH_COMMENT_ACTIONS.get(event_type)
     if supported_comment_actions is None:
-        common.logger.info("Ignoring unsupported GitHub payload shape for event=%s", event_type)
-        return {"status": "ignored", "reason": f"Unsupported payload for event type: {event_type}"}
+        common.logger.info(
+            "Ignoring unsupported GitHub payload shape for event=%s", event_type
+        )
+        return {
+            "status": "ignored",
+            "reason": f"Unsupported payload for event type: {event_type}",
+        }
     if action and action not in supported_comment_actions:
-        common.logger.debug("Ignoring unsupported GitHub %s action: %s", event_type, action)
-        return {"status": "ignored", "reason": f"Unsupported GitHub {event_type} action: {action}"}
+        common.logger.debug(
+            "Ignoring unsupported GitHub %s action: %s", event_type, action
+        )
+        return {
+            "status": "ignored",
+            "reason": f"Unsupported GitHub {event_type} action: {action}",
+        }
 
     comment = payload.get("comment") or payload.get("review", {})
     comment_body = (comment.get("body") or "") if comment else ""
@@ -166,17 +216,29 @@ async def github_webhook(
     if gate_rejection is not None:
         return gate_rejection
 
-    common.logger.info("Accepted GitHub webhook: event=%s, scheduling background task", event_type)
+    common.logger.info(
+        "Accepted GitHub webhook: event=%s, scheduling background task", event_type
+    )
     if is_pull_request_comment or event_type in {
         "pull_request_review_comment",
         "pull_request_review",
     }:
-        background_tasks.add_task(service.process_github_pr_comment, payload, event_type)
+        background_tasks.add_task(
+            service.process_github_pr_comment, payload, event_type
+        )
         return {"status": "accepted", "message": f"Processing {event_type} event"}
 
     if is_issue_comment:
         background_tasks.add_task(service.process_github_issue, payload, event_type)
-        return {"status": "accepted", "message": "Processing GitHub issue comment event"}
+        return {
+            "status": "accepted",
+            "message": "Processing GitHub issue comment event",
+        }
 
-    common.logger.info("Ignoring unsupported GitHub payload shape for event=%s", event_type)
-    return {"status": "ignored", "reason": f"Unsupported payload for event type: {event_type}"}
+    common.logger.info(
+        "Ignoring unsupported GitHub payload shape for event=%s", event_type
+    )
+    return {
+        "status": "ignored",
+        "reason": f"Unsupported payload for event type: {event_type}",
+    }

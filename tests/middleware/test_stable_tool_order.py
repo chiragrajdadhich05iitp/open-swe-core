@@ -11,7 +11,12 @@ def _ai(*call_ids: str) -> AIMessage:
     return AIMessage(
         content="",
         tool_calls=[
-            {"name": "execute", "args": {"command": "ls"}, "id": call_id, "type": "tool_call"}
+            {
+                "name": "execute",
+                "args": {"command": "ls"},
+                "id": call_id,
+                "type": "tool_call",
+            }
             for call_id in call_ids
         ],
     )
@@ -36,7 +41,13 @@ async def _forward(messages: list[AnyMessage]) -> list[AnyMessage]:
 async def test_sorts_parallel_results_into_tool_call_order() -> None:
     ai = _ai("call_a", "call_b", "call_c")
     forwarded = await _forward(
-        [HumanMessage(content="go"), ai, _result("call_c"), _result("call_a"), _result("call_b")]
+        [
+            HumanMessage(content="go"),
+            ai,
+            _result("call_c"),
+            _result("call_a"),
+            _result("call_b"),
+        ]
     )
 
     assert [getattr(message, "tool_call_id", None) for message in forwarded[2:]] == [

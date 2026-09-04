@@ -29,7 +29,9 @@ JUDGE_MODEL = "claude-opus-4-5"
 # gateway and 403s for this model — silently nulling every judge score.
 JUDGE_BASE_URL = os.environ.get("JUDGE_ANTHROPIC_BASE_URL", "https://api.anthropic.com")
 
-JUDGE_SYSTEM = "You are a precise code review evaluator. Always respond with valid JSON."
+JUDGE_SYSTEM = (
+    "You are a precise code review evaluator. Always respond with valid JSON."
+)
 
 JUDGE_PROMPT = """You are evaluating AI code review tools.
 Determine if the candidate issue matches the golden (expected) comment.
@@ -90,7 +92,9 @@ class ExampleCounts(TypedDict):
 def _get_judge() -> ChatAnthropic:
     global _judge
     if _judge is None:
-        api_key = os.environ.get("JUDGE_ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+        api_key = os.environ.get("JUDGE_ANTHROPIC_API_KEY") or os.environ.get(
+            "ANTHROPIC_API_KEY"
+        )
         if not api_key:
             raise RuntimeError(
                 "No Anthropic API key for the judge. Set JUDGE_ANTHROPIC_API_KEY or "
@@ -134,16 +138,27 @@ def _judge_pair(golden: ReviewComment, candidate: ReviewComment) -> PairResult:
         candidate=_format_candidate(candidate),
     )
     msg = _get_judge().invoke(
-        [{"role": "system", "content": JUDGE_SYSTEM}, {"role": "user", "content": prompt}]
+        [
+            {"role": "system", "content": JUDGE_SYSTEM},
+            {"role": "user", "content": prompt},
+        ]
     )
     raw = msg.content if isinstance(msg.content, str) else str(msg.content)
     try:
         start, end = raw.find("{"), raw.rfind("}")
         parsed = json.loads(raw[start : end + 1])
     except (ValueError, json.JSONDecodeError):
-        return {"match": False, "confidence": 0.0, "reasoning": f"unparseable: {raw[:200]}"}
+        return {
+            "match": False,
+            "confidence": 0.0,
+            "reasoning": f"unparseable: {raw[:200]}",
+        }
     if not isinstance(parsed, dict):
-        return {"match": False, "confidence": 0.0, "reasoning": "judge returned non-object"}
+        return {
+            "match": False,
+            "confidence": 0.0,
+            "reasoning": "judge returned non-object",
+        }
     match = parsed.get("match")
     confidence = parsed.get("confidence")
     reasoning = parsed.get("reasoning")
@@ -201,14 +216,20 @@ def _coerce_comments(value: object) -> list[ReviewComment]:
     return comments
 
 
-def _dedupe_candidates(candidates: list[ReviewComment]) -> tuple[list[ReviewComment], int]:
+def _dedupe_candidates(
+    candidates: list[ReviewComment],
+) -> tuple[list[ReviewComment], int]:
     unique: list[ReviewComment] = []
     seen: set[tuple[str, int | None, str]] = set()
     for candidate in candidates:
         key = (
             candidate.get("file", ""),
             candidate.get("line"),
-            " ".join((candidate.get("body") or candidate.get("comment") or "").casefold().split()),
+            " ".join(
+                (candidate.get("body") or candidate.get("comment") or "")
+                .casefold()
+                .split()
+            ),
         )
         if key in seen:
             continue
@@ -220,7 +241,10 @@ def _dedupe_candidates(candidates: list[ReviewComment]) -> tuple[list[ReviewComm
 def _build_matrix(
     candidates: list[ReviewComment], goldens: list[ReviewComment]
 ) -> list[list[PairResult]]:
-    return [[_judge_pair(golden, candidate) for golden in goldens] for candidate in candidates]
+    return [
+        [_judge_pair(golden, candidate) for golden in goldens]
+        for candidate in candidates
+    ]
 
 
 def _select_pairs(matrix: list[list[PairResult]]) -> tuple[tuple[int, int], ...]:
@@ -272,7 +296,9 @@ def _recall_at_cap(tp: int, golden_count: int, cap: int) -> tuple[float, float]:
     if golden_count == 0:
         return 0.0, 0.0
     reachable_goldens = min(cap, golden_count)
-    recall_at_cap = min(tp, reachable_goldens) / reachable_goldens if reachable_goldens else 0.0
+    recall_at_cap = (
+        min(tp, reachable_goldens) / reachable_goldens if reachable_goldens else 0.0
+    )
     return recall_at_cap, reachable_goldens / golden_count
 
 
@@ -293,9 +319,14 @@ def judge_match(run: Run, example: Example) -> dict[str, Any]:
     medium_candidate_indices = [
         i for i, candidate in enumerate(candidates) if _is_medium_plus(candidate)
     ]
-    medium_golden_indices = [i for i, golden in enumerate(goldens) if _is_medium_plus(golden)]
+    medium_golden_indices = [
+        i for i, golden in enumerate(goldens) if _is_medium_plus(golden)
+    ]
     medium_matrix = [
-        [matrix[candidate_index][golden_index] for golden_index in medium_golden_indices]
+        [
+            matrix[candidate_index][golden_index]
+            for golden_index in medium_golden_indices
+        ]
         for candidate_index in medium_candidate_indices
     ]
     medium_tp = len(_select_pairs(medium_matrix))
@@ -303,7 +334,9 @@ def judge_match(run: Run, example: Example) -> dict[str, Any]:
         medium_tp, len(medium_candidate_indices), len(medium_golden_indices)
     )
     repo = (example.inputs or {}).get("repo")
-    is_synthetic = isinstance(repo, str) and repo.startswith("ai-code-review-evaluation/")
+    is_synthetic = isinstance(repo, str) and repo.startswith(
+        "ai-code-review-evaluation/"
+    )
 
     _record_counts(
         example.id,
@@ -349,7 +382,9 @@ def judge_match(run: Run, example: Example) -> dict[str, Any]:
             if not any(pair[0] == index for pair in selected)
         ],
     }
-    recall_at_cap, recall_ceiling_at_cap = _recall_at_cap(tp, len(goldens), REVIEW_FINDING_CAP)
+    recall_at_cap, recall_ceiling_at_cap = _recall_at_cap(
+        tp, len(goldens), REVIEW_FINDING_CAP
+    )
 
     return {
         "results": [
@@ -390,7 +425,9 @@ def aggregate_pr(runs: list[Run], examples: list[Example]) -> dict[str, Any]:
 
     results = _aggregate_metrics(counts)
     results.extend(
-        _aggregate_metrics(counts, key_prefix="medium_plus_", field_prefix="medium_plus_")
+        _aggregate_metrics(
+            counts, key_prefix="medium_plus_", field_prefix="medium_plus_"
+        )
     )
     synthetic = [count for count in counts if count["is_synthetic"]]
     upstream = [count for count in counts if not count["is_synthetic"]]

@@ -12,10 +12,16 @@ from agent.sandboxes import state as sandbox_state
 
 class FakeReadResult:
     def __init__(
-        self, *, content: str | None = None, encoding: str = "utf-8", error: str | None = None
+        self,
+        *,
+        content: str | None = None,
+        encoding: str = "utf-8",
+        error: str | None = None,
     ) -> None:
         self.error = error
-        self.file_data = None if content is None else {"content": content, "encoding": encoding}
+        self.file_data = (
+            None if content is None else {"content": content, "encoding": encoding}
+        )
 
 
 class FakeBackend:
@@ -41,7 +47,9 @@ def _request(name: str, args: dict[str, Any], thread_id: str = "t1") -> Any:
 
 
 def _ok(name: str, content: str = "file content") -> ToolMessage:
-    return ToolMessage(content=content, tool_call_id="call-1", status="success", name=name)
+    return ToolMessage(
+        content=content, tool_call_id="call-1", status="success", name=name
+    )
 
 
 def _tool_result(result: object) -> ToolMessage:
@@ -63,7 +71,9 @@ def register_backend():
         sandbox_state.SANDBOX_BACKENDS.pop(thread_id, None)
 
 
-async def test_read_file_appends_applicable_agents_in_root_to_leaf_order(register_backend) -> None:
+async def test_read_file_appends_applicable_agents_in_root_to_leaf_order(
+    register_backend,
+) -> None:
     backend = FakeBackend(
         {
             "/repo/AGENTS.md": FakeReadResult(content="root rules"),
@@ -76,14 +86,19 @@ async def test_read_file_appends_applicable_agents_in_root_to_leaf_order(registe
     async def handler(_req: Any) -> ToolMessage:
         return _ok("read_file")
 
-    result = _tool_result(await SubdirAgentsReadMiddleware().awrap_tool_call(request, handler))
+    result = _tool_result(
+        await SubdirAgentsReadMiddleware().awrap_tool_call(request, handler)
+    )
 
     assert isinstance(result.content, str)
     assert "<system-reminder>" in result.content
-    assert "Loaded applicable AGENTS.md instructions for `/repo/pkg/src/app.py`" in result.content
-    assert result.content.index("Instructions from: /repo/AGENTS.md") < result.content.index(
-        "Instructions from: /repo/pkg/AGENTS.md"
+    assert (
+        "Loaded applicable AGENTS.md instructions for `/repo/pkg/src/app.py`"
+        in result.content
     )
+    assert result.content.index(
+        "Instructions from: /repo/AGENTS.md"
+    ) < result.content.index("Instructions from: /repo/pkg/AGENTS.md")
     assert "root rules" in result.content
     assert "pkg rules" in result.content
     assert backend.reads == [
@@ -119,7 +134,9 @@ async def test_read_file_does_not_reload_same_agents_file(register_backend) -> N
     assert backend.reads == ["/repo/AGENTS.md", "/repo/pkg/AGENTS.md"]
 
 
-async def test_reading_agents_md_directly_does_not_append_reminder(register_backend) -> None:
+async def test_reading_agents_md_directly_does_not_append_reminder(
+    register_backend,
+) -> None:
     backend = FakeBackend({"/repo/pkg/AGENTS.md": FakeReadResult(content="pkg rules")})
     register_backend("t1", backend)
     request = _request("read_file", {"file_path": "/repo/pkg/AGENTS.md"})
@@ -127,7 +144,9 @@ async def test_reading_agents_md_directly_does_not_append_reminder(register_back
     async def handler(_req: Any) -> ToolMessage:
         return _ok("read_file", "pkg rules")
 
-    result = _tool_result(await SubdirAgentsReadMiddleware().awrap_tool_call(request, handler))
+    result = _tool_result(
+        await SubdirAgentsReadMiddleware().awrap_tool_call(request, handler)
+    )
 
     assert result.content == "pkg rules"
     assert backend.reads == []
@@ -141,19 +160,25 @@ async def test_non_read_file_tool_is_untouched(register_backend) -> None:
     async def handler(_req: Any) -> ToolMessage:
         return _ok("edit_file")
 
-    result = _tool_result(await SubdirAgentsReadMiddleware().awrap_tool_call(request, handler))
+    result = _tool_result(
+        await SubdirAgentsReadMiddleware().awrap_tool_call(request, handler)
+    )
 
     assert result.content == "file content"
     assert backend.reads == []
 
 
 async def test_missing_backend_is_graceful() -> None:
-    request = _request("read_file", {"file_path": "/repo/a.py"}, thread_id="absent-thread")
+    request = _request(
+        "read_file", {"file_path": "/repo/a.py"}, thread_id="absent-thread"
+    )
 
     async def handler(_req: Any) -> ToolMessage:
         return _ok("read_file")
 
-    result = _tool_result(await SubdirAgentsReadMiddleware().awrap_tool_call(request, handler))
+    result = _tool_result(
+        await SubdirAgentsReadMiddleware().awrap_tool_call(request, handler)
+    )
 
     assert result.content == "file content"
 

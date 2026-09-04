@@ -15,7 +15,9 @@ import os
 
 logger = logging.getLogger(__name__)
 
-API_STANDARDS_SKILL_HANDLE = os.environ.get("API_STANDARDS_SKILL_HANDLE", "api-standards")
+API_STANDARDS_SKILL_HANDLE = os.environ.get(
+    "API_STANDARDS_SKILL_HANDLE", "api-standards"
+)
 
 
 def _pull_api_standards_skill_sync(handle: str) -> str | None:
@@ -39,7 +41,9 @@ async def fetch_api_standards_skill(handle: str | None = None) -> str | None:
     try:
         content = await asyncio.to_thread(_pull_api_standards_skill_sync, resolved)
     except Exception:  # noqa: BLE001
-        logger.warning("Failed to pull API-standards skill '%s'", resolved, exc_info=True)
+        logger.warning(
+            "Failed to pull API-standards skill '%s'", resolved, exc_info=True
+        )
         return None
     if content:
         logger.info(

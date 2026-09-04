@@ -199,7 +199,9 @@ def _apply_langsmith_project(project: str | None) -> None:
     ``project`` is expected to be the resolved value after CLI/env/config
     precedence has already been applied.
     """
-    resolved = project or os.environ.get("LANGSMITH_PROJECT") or DEFAULT_LANGSMITH_PROJECT
+    resolved = (
+        project or os.environ.get("LANGSMITH_PROJECT") or DEFAULT_LANGSMITH_PROJECT
+    )
     os.environ["LANGSMITH_PROJECT"] = resolved
     os.environ["LANGCHAIN_PROJECT"] = resolved
     os.environ.setdefault("LANGSMITH_TRACING", "true")
@@ -269,7 +271,9 @@ def _resolve_total(dataset_name: str, data: str | list[Example]) -> int | None:
     try:
         return Client().read_dataset(dataset_name=dataset_name).example_count
     except Exception:
-        logger.warning("Could not resolve dataset example count for progress", exc_info=True)
+        logger.warning(
+            "Could not resolve dataset example count for progress", exc_info=True
+        )
         return None
 
 
@@ -295,7 +299,9 @@ async def main() -> None:
     load_dotenv()
 
     ap = argparse.ArgumentParser()
-    ap.add_argument("--limit", type=int, default=None, help="Run only the first N examples.")
+    ap.add_argument(
+        "--limit", type=int, default=None, help="Run only the first N examples."
+    )
     ap.add_argument("--dataset-name", dest="dataset_name")
     ap.add_argument("--experiment-prefix", dest="experiment_prefix")
     ap.add_argument("--max-concurrency", dest="max_concurrency", type=int)
@@ -304,7 +310,9 @@ async def main() -> None:
     ap.add_argument("--assistant-id", dest="assistant_id")
     ap.add_argument("--model-id", dest="model_id")
     ap.add_argument("--reasoning-effort", dest="reasoning_effort")
-    ap.add_argument("--score-mode", dest="score_mode", choices=sorted(_VALID_SCORE_MODES))
+    ap.add_argument(
+        "--score-mode", dest="score_mode", choices=sorted(_VALID_SCORE_MODES)
+    )
     ap.add_argument(
         "--severity-threshold",
         dest="severity_threshold",
@@ -393,7 +401,11 @@ async def main() -> None:
                 with contextlib.suppress(asyncio.CancelledError):
                     await heartbeat
             status = "failed" if eval_error is not None else "completed"
-            error = None if eval_error is None else f"{type(eval_error).__name__}: {eval_error}"
+            error = (
+                None
+                if eval_error is None
+                else f"{type(eval_error).__name__}: {eval_error}"
+            )
             await reporter.finish(status=status, error=error)
         if log_handler is not None:
             logging.getLogger().removeHandler(log_handler)

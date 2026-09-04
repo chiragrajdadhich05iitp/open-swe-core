@@ -47,13 +47,19 @@ async def _require_app_token() -> str:
 
 
 async def _github_get(
-    path: str, token: str, *, accept: str | None = None, params: dict[str, Any] | None = None
+    path: str,
+    token: str,
+    *,
+    accept: str | None = None,
+    params: dict[str, Any] | None = None,
 ) -> Any:
     headers = github_headers(token)
     if accept:
         headers["Accept"] = accept
     async with httpx.AsyncClient(timeout=_GITHUB_TIMEOUT) as client:
-        response = await client.get(f"{_GITHUB_API}{path}", headers=headers, params=params)
+        response = await client.get(
+            f"{_GITHUB_API}{path}", headers=headers, params=params
+        )
     if response.status_code == 404:
         raise HTTPException(404, "not found on GitHub")
     if response.status_code >= 400:
@@ -96,10 +102,14 @@ async def _github_write(
         )
     if response.status_code >= 400:
         message = _github_error_message(response)
-        logger.warning("GitHub %s %s failed: %s %s", method, path, response.status_code, message)
+        logger.warning(
+            "GitHub %s %s failed: %s %s", method, path, response.status_code, message
+        )
         # Pass 4xx through verbatim (422 = line not in diff, 403 = perms); collapse
         # 5xx to a 502 so a GitHub outage doesn't masquerade as a client error.
-        raise HTTPException(response.status_code if response.status_code < 500 else 502, message)
+        raise HTTPException(
+            response.status_code if response.status_code < 500 else 502, message
+        )
     return response.json()
 
 
@@ -153,7 +163,9 @@ def _serialize_finding(finding: dict[str, Any], head_sha: str | None) -> dict[st
 _BUG_SEVERITIES = frozenset({"high", "critical"})
 
 
-def classify_finding(finding: dict[str, Any]) -> Literal["bug", "investigate", "informational"]:
+def classify_finding(
+    finding: dict[str, Any]
+) -> Literal["bug", "investigate", "informational"]:
     """Map our severity/confidence model onto the UI's Bugs/Flags split."""
     severity = finding.get("severity", "low")
     confidence = finding.get("confidence", "medium")
@@ -200,7 +212,10 @@ def _serialize_diff_groups(
         )
     groups_head = raw.get("head_sha")
     stale = bool(
-        head_sha and isinstance(groups_head, str) and groups_head and groups_head != head_sha
+        head_sha
+        and isinstance(groups_head, str)
+        and groups_head
+        and groups_head != head_sha
     )
     return groups, stale
 
@@ -238,7 +253,9 @@ def _thread_review_summary(thread: ThreadLike) -> dict[str, Any] | None:
     owner = pr.get("owner")
     name = pr.get("name")
     number = pr.get("number")
-    if not (isinstance(owner, str) and isinstance(name, str) and isinstance(number, int)):
+    if not (
+        isinstance(owner, str) and isinstance(name, str) and isinstance(number, int)
+    ):
         return None
     findings = _findings_list(metadata)
     updated_at = thread.get("updated_at")
@@ -355,7 +372,9 @@ def _serialize_pr_details(payload: dict[str, Any]) -> dict[str, Any]:
         ],
         "requested_reviewers": [
             user
-            for user in (_user_ref(value) for value in payload.get("requested_reviewers") or [])
+            for user in (
+                _user_ref(value) for value in payload.get("requested_reviewers") or []
+            )
             if user is not None
         ],
         "labels": [
@@ -366,7 +385,9 @@ def _serialize_pr_details(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def _fetch_check_runs(owner: str, repo: str, sha: str, token: str) -> list[dict[str, Any]]:
+async def _fetch_check_runs(
+    owner: str, repo: str, sha: str, token: str
+) -> list[dict[str, Any]]:
     if not sha:
         return []
     try:
@@ -505,8 +526,12 @@ def _normalize_review_comment(item: dict[str, Any]) -> dict[str, Any]:
         "line": line,
         "side": item.get("side") if item.get("side") in ("LEFT", "RIGHT") else "RIGHT",
         "body": _clean_comment_body(body),
-        "html_url": item.get("html_url") if isinstance(item.get("html_url"), str) else "",
-        "created_at": item.get("created_at") if isinstance(item.get("created_at"), str) else "",
+        "html_url": (
+            item.get("html_url") if isinstance(item.get("html_url"), str) else ""
+        ),
+        "created_at": (
+            item.get("created_at") if isinstance(item.get("created_at"), str) else ""
+        ),
         "is_open_swe": bool(_OPEN_SWE_COMMENT_RE.search(body)),
         # GitHub nulls `position` when the line no longer appears in the current
         # diff — i.e. the comment is outdated and can't be rendered inline.
@@ -538,7 +563,9 @@ async def list_review_comments(owner: str, repo: str, pr_number: int) -> dict[st
         )
         if not isinstance(raw, list) or not raw:
             break
-        comments.extend(_normalize_review_comment(item) for item in raw if isinstance(item, dict))
+        comments.extend(
+            _normalize_review_comment(item) for item in raw if isinstance(item, dict)
+        )
         if len(raw) < _REVIEW_COMMENTS_PER_PAGE:
             break
     return {"comments": comments}
@@ -564,7 +591,9 @@ async def get_review(owner: str, repo: str, pr_number: int) -> dict[str, Any]:
     head_sha = details["head_sha"] or summary["head_sha"]
     checks = await _fetch_check_runs(owner, repo, head_sha, token)
 
-    findings = [_serialize_finding(finding, head_sha) for finding in _findings_list(metadata)]
+    findings = [
+        _serialize_finding(finding, head_sha) for finding in _findings_list(metadata)
+    ]
     findings.sort(
         key=lambda f: (
             f["status"] != "open",
@@ -595,7 +624,9 @@ async def get_review_diff(owner: str, repo: str, pr_number: int) -> dict[str, An
     is viewing the review. The client renders these with pierre's MultiFileDiff.
     """
     token = await _require_app_token()
-    async with httpx.AsyncClient(headers=github_headers(token), timeout=_GITHUB_TIMEOUT) as client:
+    async with httpx.AsyncClient(
+        headers=github_headers(token), timeout=_GITHUB_TIMEOUT
+    ) as client:
         diff = await build_pr_diff_files(client, f"{owner}/{repo}", pr_number)
     files = diff["files"]
     return {
@@ -661,7 +692,9 @@ def _validate_image_url(url: str) -> None:
         raise HTTPException(400, "image host not allowed")
 
 
-async def _require_image_in_pr(owner: str, repo: str, pr_number: int, url: str, token: str) -> None:
+async def _require_image_in_pr(
+    owner: str, repo: str, pr_number: int, url: str, token: str
+) -> None:
     """Bind the requested image to the authorized PR.
 
     The proxy fetches with the App installation token, which can read every repo
@@ -688,22 +721,31 @@ async def proxy_pr_image(owner: str, repo: str, pr_number: int, url: str) -> Res
     headers = {"Authorization": f"Bearer {token}", "Accept": "image/*"}
 
     current_url = url
-    async with httpx.AsyncClient(timeout=_GITHUB_TIMEOUT, follow_redirects=False) as client:
+    async with httpx.AsyncClient(
+        timeout=_GITHUB_TIMEOUT, follow_redirects=False
+    ) as client:
         for _ in range(_MAX_IMAGE_REDIRECTS + 1):
             async with client.stream("GET", current_url, headers=headers) as response:
                 if response.is_redirect:
                     location = response.headers.get("Location")
                     if not location:
-                        raise HTTPException(502, "image fetch failed (redirect without target)")
+                        raise HTTPException(
+                            502, "image fetch failed (redirect without target)"
+                        )
                     current_url = urljoin(str(response.url), location)
                     _validate_image_url(current_url)
                     continue
 
                 if response.status_code >= 400:
-                    raise HTTPException(502, f"image fetch failed ({response.status_code})")
+                    raise HTTPException(
+                        502, f"image fetch failed ({response.status_code})"
+                    )
 
                 content_type = (
-                    response.headers.get("Content-Type", "").lower().split(";", 1)[0].strip()
+                    response.headers.get("Content-Type", "")
+                    .lower()
+                    .split(";", 1)[0]
+                    .strip()
                 )
                 if content_type not in _ALLOWED_IMAGE_CONTENT_TYPES:
                     raise HTTPException(415, "unsupported image type")
@@ -729,7 +771,9 @@ async def proxy_pr_image(owner: str, repo: str, pr_number: int, url: str) -> Res
     raise HTTPException(502, "too many redirects fetching image")
 
 
-async def trigger_re_review(owner: str, repo: str, pr_number: int, login: str) -> dict[str, Any]:
+async def trigger_re_review(
+    owner: str, repo: str, pr_number: int, login: str
+) -> dict[str, Any]:
     from ..utils.slack import GitHubPrRef
 
     pr_ref = GitHubPrRef(
@@ -738,13 +782,17 @@ async def trigger_re_review(owner: str, repo: str, pr_number: int, login: str) -
         number=pr_number,
         url=f"https://github.com/{owner}/{repo}/pull/{pr_number}",
     )
-    result = await trigger_pr_review_from_ref(pr_ref, source="dashboard", github_login=login)
+    result = await trigger_pr_review_from_ref(
+        pr_ref, source="dashboard", github_login=login
+    )
     if not result.get("success"):
         raise HTTPException(502, str(result.get("error") or "could not trigger review"))
     return result
 
 
-async def dry_run_trace_resolution(owner: str, repo: str, pr_number: int) -> dict[str, Any]:
+async def dry_run_trace_resolution(
+    owner: str, repo: str, pr_number: int
+) -> dict[str, Any]:
     """Resolve a PR to its author coding-agent thread without running a review."""
     from dataclasses import asdict
 

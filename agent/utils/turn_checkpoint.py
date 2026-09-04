@@ -136,7 +136,9 @@ print(json.dumps({
     for i, path in enumerate(S['paths'])
 }))
 PY"""
-    script = script.replace("__PAYLOAD__", payload).replace("__MAX__", str(_MAX_FILE_BYTES))
+    script = script.replace("__PAYLOAD__", payload).replace(
+        "__MAX__", str(_MAX_FILE_BYTES)
+    )
     return f"{_cd_repo(work_dir, repo_path)}; {script}"
 
 
@@ -185,7 +187,8 @@ def parse_name_status(raw: str) -> dict[str, str]:
     fields = [field for field in raw.split("\0") if field]
     kinds = {"A": "added", "D": "removed"}
     return {
-        fields[i + 1]: kinds.get(fields[i][:1], "modified") for i in range(0, len(fields) - 1, 2)
+        fields[i + 1]: kinds.get(fields[i][:1], "modified")
+        for i in range(0, len(fields) - 1, 2)
     }
 
 
@@ -271,14 +274,16 @@ async def read_turn_diff(
         if not isinstance(summary_payload, Mapping):
             raise TypeError
         summary = {
-            key: max(0, int(summary_payload[key])) for key in ("files", "additions", "deletions")
+            key: max(0, int(summary_payload[key]))
+            for key in ("files", "additions", "deletions")
         }
         numstat_raw = payload["numstat"]
         name_status_raw = payload["nameStatus"]
         base_tree = payload["base"]
         head_tree = payload["head"]
         if not all(
-            isinstance(value, str) for value in (numstat_raw, name_status_raw, base_tree, head_tree)
+            isinstance(value, str)
+            for value in (numstat_raw, name_status_raw, base_tree, head_tree)
         ):
             raise TypeError
     except (IndexError, KeyError, TypeError, ValueError, json.JSONDecodeError):

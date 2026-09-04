@@ -58,10 +58,18 @@ async def slack_attach_html(
 
         comment = initial_comment.strip() if isinstance(initial_comment, str) else None
         if comment and len(comment) > _MAX_COMMENT_CHARS:
-            return {"success": False, "error": "initial_comment exceeds 3000 characters"}
+            return {
+                "success": False,
+                "error": "initial_comment exceeds 3000 characters",
+            }
         if comment and _has_control_chars(comment, allowed="\n\t"):
-            return {"success": False, "error": "initial_comment contains control characters"}
-        display_title = title.strip() if isinstance(title, str) and title.strip() else None
+            return {
+                "success": False,
+                "error": "initial_comment contains control characters",
+            }
+        display_title = (
+            title.strip() if isinstance(title, str) and title.strip() else None
+        )
         if display_title and len(display_title) > 255:
             return {"success": False, "error": "title exceeds 255 characters"}
         if display_title and _has_control_chars(display_title):
@@ -100,7 +108,10 @@ async def slack_attach_html(
                 channel_id,
                 thread_ts,
             ):
-                return {"success": False, "error": "Slack thread moved; retry the attachment"}
+                return {
+                    "success": False,
+                    "error": "Slack thread moved; retry the attachment",
+                }
 
             file_id, error = await upload_slack_thread_file(
                 channel_id,

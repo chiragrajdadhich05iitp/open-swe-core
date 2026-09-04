@@ -25,7 +25,9 @@ from agent.sandboxes.state import (
 class _FakeSandboxBackend:
     id = "sandbox-1"
 
-    async def aexecute(self, command: str, *, timeout: int | None = None) -> ExecuteResponse:
+    async def aexecute(
+        self, command: str, *, timeout: int | None = None
+    ) -> ExecuteResponse:
         return ExecuteResponse(output=f"{self.id}: {command}: {timeout}", exit_code=0)
 
     async def adelete(self, file_path: str) -> DeleteResult:
@@ -45,7 +47,9 @@ class _OffloadCapableBackend(BaseSandbox):
     def execute(self, command: str, *, timeout: int | None = None) -> ExecuteResponse:
         return ExecuteResponse(output=command, exit_code=0)
 
-    async def aexecute(self, command: str, *, timeout: int | None = None) -> ExecuteResponse:
+    async def aexecute(
+        self, command: str, *, timeout: int | None = None
+    ) -> ExecuteResponse:
         return ExecuteResponse(output=command, exit_code=0)
 
     def upload_files(self, files):  # noqa: ANN001, ANN201 - unused stub
@@ -109,16 +113,22 @@ async def test_sandbox_proxy_delegates_offload_to_live_backend() -> None:
 async def test_sandbox_proxy_offload_falls_back_when_backend_lacks_it() -> None:
     # A backend implementing only the protocol (no capture-offload) must not
     # error: the proxy runs it plainly and reports offloaded=False.
-    proxy = SandboxBackendProxy(cast(SandboxBackendProtocol, _FakeSandboxBackend()), thread_id="t")
+    proxy = SandboxBackendProxy(
+        cast(SandboxBackendProtocol, _FakeSandboxBackend()), thread_id="t"
+    )
 
-    result = await proxy.aexecute_with_offload("cmd", "/capture/path", max_inline_bytes=80_000)
+    result = await proxy.aexecute_with_offload(
+        "cmd", "/capture/path", max_inline_bytes=80_000
+    )
 
     assert result.offloaded is False
     assert result.response.output == "sandbox-1: cmd: None"
 
 
 @pytest.mark.asyncio
-async def test_sandbox_proxy_reconnects_from_metadata_once(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_sandbox_proxy_reconnects_from_metadata_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     thread_id = "thread-1"
     SANDBOX_BACKENDS.pop(thread_id, None)
     created: list[str] = []

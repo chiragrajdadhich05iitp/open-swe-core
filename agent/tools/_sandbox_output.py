@@ -15,7 +15,9 @@ OUTPUT_CHUNK_CHARS = 500
 def chunk_output_as_jsonl(content: str) -> str:
     records = (
         {"chunk": index, "text": content[offset : offset + OUTPUT_CHUNK_CHARS]}
-        for index, offset in enumerate(range(0, max(len(content), 1), OUTPUT_CHUNK_CHARS), start=1)
+        for index, offset in enumerate(
+            range(0, max(len(content), 1), OUTPUT_CHUNK_CHARS), start=1
+        )
     )
     return "\n".join(json.dumps(record, ensure_ascii=False) for record in records)
 
@@ -23,7 +25,9 @@ def chunk_output_as_jsonl(content: str) -> str:
 async def write_sandbox_output(tool_name: str, content: str, extension: str) -> str:
     config = get_config()
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
-    thread_id = configurable.get("thread_id") if isinstance(configurable, dict) else None
+    thread_id = (
+        configurable.get("thread_id") if isinstance(configurable, dict) else None
+    )
     if not thread_id:
         raise RuntimeError("no thread_id in run config")
 

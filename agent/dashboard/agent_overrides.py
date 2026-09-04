@@ -118,7 +118,9 @@ def _normalize_profile_model_pair(
     return None, None
 
 
-def normalize_profile_overrides(profile: dict[str, Any]) -> tuple[str | None, str | None]:
+def normalize_profile_overrides(
+    profile: dict[str, Any]
+) -> tuple[str | None, str | None]:
     """Return ``(model_id, reasoning_effort)`` if both are valid, else ``(None, None)``."""
     return _normalize_profile_model_pair(
         profile,

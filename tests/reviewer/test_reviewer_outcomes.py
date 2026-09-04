@@ -38,8 +38,14 @@ def test_outcome_from_status_open_is_none() -> None:
 
 
 def test_outcome_from_score() -> None:
-    assert outcome_from_score(1.0, source="github") == (TRUE_POSITIVE, "github_thumbs_up")
-    assert outcome_from_score(0.0, source="github") == (FALSE_POSITIVE, "github_thumbs_down")
+    assert outcome_from_score(1.0, source="github") == (
+        TRUE_POSITIVE,
+        "github_thumbs_up",
+    )
+    assert outcome_from_score(0.0, source="github") == (
+        FALSE_POSITIVE,
+        "github_thumbs_down",
+    )
     assert outcome_from_score(1.0, source="slack") == (TRUE_POSITIVE, "slack_thumbs_up")
     assert outcome_from_score(None, source="github") is None
 
@@ -88,9 +94,13 @@ def _patch_client(monkeypatch, fake: _FakeClient | None) -> None:  # noqa: ANN00
     if fake is None:
         monkeypatch.setattr(reviewer_outcomes, "_outcomes_credentials", lambda: None)
         return
-    monkeypatch.setattr(reviewer_outcomes, "_outcomes_credentials", lambda: ("k", "https://api"))
+    monkeypatch.setattr(
+        reviewer_outcomes, "_outcomes_credentials", lambda: ("k", "https://api")
+    )
     monkeypatch.setattr(reviewer_outcomes, "async_langsmith_client", lambda *a: fake)
-    monkeypatch.setattr(reviewer_outcomes, "sync_langsmith_client", lambda *a: cast(Any, fake))
+    monkeypatch.setattr(
+        reviewer_outcomes, "sync_langsmith_client", lambda *a: cast(Any, fake)
+    )
 
 
 def _finding() -> Finding:
@@ -115,7 +125,9 @@ def _finding() -> Finding:
     )
 
 
-async def test_upsert_finding_outcome_builds_payload(monkeypatch) -> None:  # noqa: ANN001
+async def test_upsert_finding_outcome_builds_payload(
+    monkeypatch,
+) -> None:  # noqa: ANN001
     fake = _FakeClient()
     _patch_client(monkeypatch, fake)
 
@@ -145,7 +157,9 @@ async def test_upsert_finding_outcome_builds_payload(monkeypatch) -> None:  # no
     assert call["metadata"]["run_id"] == "run_1"
 
 
-async def test_upsert_finding_outcome_updates_on_conflict(monkeypatch) -> None:  # noqa: ANN001
+async def test_upsert_finding_outcome_updates_on_conflict(
+    monkeypatch,
+) -> None:  # noqa: ANN001
     fake = _FakeClient()
     fake.conflict_once = True
     _patch_client(monkeypatch, fake)
@@ -161,12 +175,16 @@ async def test_upsert_finding_outcome_updates_on_conflict(monkeypatch) -> None: 
 async def test_upsert_no_client_is_noop(monkeypatch) -> None:  # noqa: ANN001
     _patch_client(monkeypatch, None)
     assert (
-        await upsert_finding_outcome(_finding(), label=TRUE_POSITIVE, label_source="x", repo="o/r")
+        await upsert_finding_outcome(
+            _finding(), label=TRUE_POSITIVE, label_source="x", repo="o/r"
+        )
         is False
     )
 
 
-async def test_emit_finding_status_outcome_maps_and_calls(monkeypatch) -> None:  # noqa: ANN001
+async def test_emit_finding_status_outcome_maps_and_calls(
+    monkeypatch,
+) -> None:  # noqa: ANN001
     captured: dict[str, Any] = {}
 
     async def fake_upsert(finding, **kwargs: Any) -> bool:  # noqa: ANN001
@@ -192,9 +210,16 @@ async def test_emit_finding_status_outcome_maps_and_calls(monkeypatch) -> None: 
     assert captured["pr_number"] == 7
 
 
-async def test_emit_finding_status_outcome_no_repo_is_noop(monkeypatch) -> None:  # noqa: ANN001
-    monkeypatch.setattr(reviewer_outcomes, "upsert_finding_outcome", lambda *a, **k: pytest_fail())
-    assert await emit_finding_status_outcome(_finding(), "dismissed", configurable={}) is False
+async def test_emit_finding_status_outcome_no_repo_is_noop(
+    monkeypatch,
+) -> None:  # noqa: ANN001
+    monkeypatch.setattr(
+        reviewer_outcomes, "upsert_finding_outcome", lambda *a, **k: pytest_fail()
+    )
+    assert (
+        await emit_finding_status_outcome(_finding(), "dismissed", configurable={})
+        is False
+    )
 
 
 def pytest_fail() -> bool:

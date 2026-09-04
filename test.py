@@ -1,1 +1,1 @@
-print('System operational')
+print("System operational")

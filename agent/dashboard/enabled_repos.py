@@ -54,6 +54,8 @@ async def is_review_repo_enabled(owner: str, name: str) -> bool:
     try:
         enabled = await list_enabled_review_repos()
     except Exception:
-        logger.warning("enabled review repos lookup failed; skipping auto-review", exc_info=True)
+        logger.warning(
+            "enabled review repos lookup failed; skipping auto-review", exc_info=True
+        )
         return False
     return any(r.lower() == full_name for r in enabled)

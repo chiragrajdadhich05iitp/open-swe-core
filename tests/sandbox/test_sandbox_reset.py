@@ -102,10 +102,16 @@ async def test_reset_sandbox_clears_stale_proxy_metadata() -> None:
             new_callable=AsyncMock,
             return_value=("ghs_install", "expiry", None),
         ),
-        patch("agent.sandboxes.lifecycle._configure_github_proxy", new_callable=AsyncMock),
+        patch(
+            "agent.sandboxes.lifecycle._configure_github_proxy", new_callable=AsyncMock
+        ),
         patch("agent.sandboxes.lifecycle.record_proxy_token_expiry"),
-        patch("agent.sandboxes.lifecycle.configure_git_identity", new_callable=AsyncMock),
-        patch("agent.sandboxes.lifecycle.client.threads.update", new_callable=AsyncMock) as update,
+        patch(
+            "agent.sandboxes.lifecycle.configure_git_identity", new_callable=AsyncMock
+        ),
+        patch(
+            "agent.sandboxes.lifecycle.client.threads.update", new_callable=AsyncMock
+        ) as update,
     ):
         await reset_sandbox_for_thread(thread_id, {})
 
@@ -140,9 +146,13 @@ async def test_reset_sandbox_does_not_record_proxy_before_metadata_persists() ->
             new_callable=AsyncMock,
             return_value=("ghs_install", "expiry", None),
         ),
-        patch("agent.sandboxes.lifecycle._configure_github_proxy", new_callable=AsyncMock),
+        patch(
+            "agent.sandboxes.lifecycle._configure_github_proxy", new_callable=AsyncMock
+        ),
         patch("agent.sandboxes.lifecycle.record_proxy_token_expiry") as record_proxy,
-        patch("agent.sandboxes.lifecycle.configure_git_identity", new_callable=AsyncMock),
+        patch(
+            "agent.sandboxes.lifecycle.configure_git_identity", new_callable=AsyncMock
+        ),
         patch(
             "agent.sandboxes.lifecycle.client.threads.update",
             new_callable=AsyncMock,
@@ -158,7 +168,9 @@ async def test_reset_sandbox_does_not_record_proxy_before_metadata_persists() ->
 
 
 @pytest.mark.asyncio
-async def test_reset_sandbox_rejects_other_providers(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_reset_sandbox_rejects_other_providers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("SANDBOX_TYPE", "modal")
 
     with pytest.raises(ValueError, match="only supported by the LangSmith"):

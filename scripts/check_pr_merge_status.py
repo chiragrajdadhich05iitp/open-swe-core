@@ -68,7 +68,9 @@ def load_pr_urls(input_path: Path) -> list[str]:
     seen_urls: set[str] = set()
     for item in payload:
         if not isinstance(item, str) or not item:
-            raise ValueError(f"Expected every item in {input_path} to be a non-empty string")
+            raise ValueError(
+                f"Expected every item in {input_path} to be a non-empty string"
+            )
         if item not in seen_urls:
             seen_urls.add(item)
             unique_urls.append(item)
@@ -126,7 +128,9 @@ async def summarize_pr_statuses(
     semaphore = asyncio.Semaphore(concurrency)
     async with httpx.AsyncClient(timeout=30.0) as http_client:
         tasks = [
-            _fetch_pr_state(http_client, parse_github_pr_url(pr_url), github_pat, semaphore)
+            _fetch_pr_state(
+                http_client, parse_github_pr_url(pr_url), github_pat, semaphore
+            )
             for pr_url in pr_urls
         ]
         states = await asyncio.gather(*tasks)
@@ -140,7 +144,9 @@ async def summarize_pr_statuses(
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Check merge status for GitHub PR URLs.")
+    parser = argparse.ArgumentParser(
+        description="Check merge status for GitHub PR URLs."
+    )
     parser.add_argument(
         "--input",
         default=DEFAULT_INPUT_PATH,

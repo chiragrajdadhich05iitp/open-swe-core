@@ -3,7 +3,9 @@ import pytest
 from agent.dashboard.admin import is_admin, is_observability_authorized
 
 
-def test_is_admin_accepts_email_or_github_login(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_is_admin_accepts_email_or_github_login(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("CONFIGURED_ADMINS", "Alice, bob@langchain.dev")
 
     assert is_admin("bob@langchain.dev", login="not-bob") is True
@@ -29,7 +31,9 @@ def test_observability_authorized_treats_admin_login_as_admin(
     assert is_observability_authorized("other@langchain.dev", login="mallory") is False
 
 
-def test_observability_allowlist_still_uses_email(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_observability_allowlist_still_uses_email(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("CONFIGURED_ADMINS", "")
     monkeypatch.setenv("OBSERVABILITY_AUTHORIZED_EMAILS", "trusted@langchain.dev")
 

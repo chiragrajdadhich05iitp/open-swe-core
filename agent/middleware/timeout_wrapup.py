@@ -3,7 +3,11 @@ import time
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from langchain.agents.middleware.types import AgentMiddleware, ModelRequest, ModelResponse
+from langchain.agents.middleware.types import (
+    AgentMiddleware,
+    ModelRequest,
+    ModelResponse,
+)
 from langchain_core.messages import BaseMessage, SystemMessage
 
 from ..input_messages import wrap_system_prompt
@@ -63,7 +67,9 @@ class TimeoutWrapupMiddleware(AgentMiddleware):
                 request.system_message.content, additions=[_WRAPUP_INSTRUCTION.strip()]
             )
         else:
-            content = _content_with_instruction(request.system_message, _WRAPUP_INSTRUCTION)
+            content = _content_with_instruction(
+                request.system_message, _WRAPUP_INSTRUCTION
+            )
         return request.override(system_message=SystemMessage(content=content))
 
     async def awrap_model_call(

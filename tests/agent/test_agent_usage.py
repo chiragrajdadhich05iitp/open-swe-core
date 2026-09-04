@@ -15,7 +15,9 @@ class FakeStore:
     async def put_item(self, namespace: list[str], key: str, value: dict) -> None:
         self.values[(tuple(namespace), key)] = value
 
-    async def search_items(self, namespace: list[str], *, limit: int, offset: int) -> dict:
+    async def search_items(
+        self, namespace: list[str], *, limit: int, offset: int
+    ) -> dict:
         self.search_calls.append((tuple(namespace), offset))
         values = [
             {"value": value}
@@ -119,11 +121,21 @@ async def test_republishing_keeps_the_original_publication_time(monkeypatch):
     monkeypatch.setattr(agent_usage, "_client", lambda: FakeClient(store))
     monkeypatch.setattr(agent_usage, "_now_ms", lambda: 1_000)
     await agent_usage.record_reviewer_publication(
-        thread_id="review-thread", owner="o", repo="r", pr_number=1, head_sha="sha", findings=[]
+        thread_id="review-thread",
+        owner="o",
+        repo="r",
+        pr_number=1,
+        head_sha="sha",
+        findings=[],
     )
     monkeypatch.setattr(agent_usage, "_now_ms", lambda: 1_800_000_000_000)
     await agent_usage.record_reviewer_publication(
-        thread_id="review-thread", owner="o", repo="r", pr_number=1, head_sha="sha", findings=[]
+        thread_id="review-thread",
+        owner="o",
+        repo="r",
+        pr_number=1,
+        head_sha="sha",
+        findings=[],
     )
 
     reviews = await agent_usage._all(agent_usage.REVIEW_NAMESPACE)
@@ -147,7 +159,12 @@ async def test_current_user_row_survives_the_limit(monkeypatch):
             source="dashboard",
         )
 
-    kwargs = {"period": "all", "limit": 1, "current_login": "user-3", "current_email": None}
+    kwargs = {
+        "period": "all",
+        "limit": 1,
+        "current_login": "user-3",
+        "current_email": None,
+    }
     payload = await agent_usage.list_agent_usage_leaderboard(**kwargs)
     cached = await agent_usage.list_agent_usage_leaderboard(**kwargs)
 
@@ -167,7 +184,9 @@ async def test_legacy_records_are_backfilled_once(monkeypatch):
             "kind": "reviewer",
             "pr": {"owner": "o", "name": "r", "number": 3},
             "last_reviewed_sha": "sha",
-            "findings": [{"id": "f_1", "status": "open", "github_review_comment_id": 1}],
+            "findings": [
+                {"id": "f_1", "status": "open", "github_review_comment_id": 1}
+            ],
         },
     }
     monkeypatch.setattr(agent_usage, "_client", lambda: FakeClient(store, [thread]))

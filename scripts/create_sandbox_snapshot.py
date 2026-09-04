@@ -12,10 +12,14 @@ DEFAULT_FS_CAPACITY = 32 * 1024**3  # 32 GiB
 def main() -> None:
     parser = argparse.ArgumentParser(description="Create a LangSmith sandbox snapshot")
     parser.add_argument(
-        "--name", default="open-swe-gh-amd64", help="Snapshot name (default: open-swe-gh-amd64)"
+        "--name",
+        default="open-swe-gh-amd64",
+        help="Snapshot name (default: open-swe-gh-amd64)",
     )
     parser.add_argument(
-        "--image", default=DEFAULT_IMAGE, help=f"Docker image (default: {DEFAULT_IMAGE})"
+        "--image",
+        default=DEFAULT_IMAGE,
+        help=f"Docker image (default: {DEFAULT_IMAGE})",
     )
     parser.add_argument(
         "--fs-capacity",
@@ -25,7 +29,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--api-key",
-        default=os.environ.get("LANGSMITH_API_KEY") or os.environ.get("LANGSMITH_API_KEY_PROD"),
+        default=os.environ.get("LANGSMITH_API_KEY")
+        or os.environ.get("LANGSMITH_API_KEY_PROD"),
         help="LangSmith API key",
     )
     args = parser.parse_args()

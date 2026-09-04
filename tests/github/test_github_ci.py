@@ -90,11 +90,17 @@ async def test_list_failing_check_runs_filters(monkeypatch: pytest.MonkeyPatch) 
                 {"name": "lint", "status": "completed", "conclusion": "failure"},
                 {"name": "test", "status": "completed", "conclusion": "success"},
                 {"name": "build", "status": "in_progress", "conclusion": None},
-                {"name": "Open SWE Auto-fix", "status": "completed", "conclusion": "failure"},
+                {
+                    "name": "Open SWE Auto-fix",
+                    "status": "completed",
+                    "conclusion": "failure",
+                },
             ]
         },
     )
-    failing = await github_ci.list_failing_check_runs(owner="o", repo="r", ref="sha", token="t")
+    failing = await github_ci.list_failing_check_runs(
+        owner="o", repo="r", ref="sha", token="t"
+    )
     assert failing is not None
     names = {c["name"] for c in failing}
     assert names == {"lint"}
@@ -105,11 +111,16 @@ async def test_list_failing_check_runs_returns_none_on_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _patch(monkeypatch, {}, error=True)
-    assert await github_ci.list_failing_check_runs(owner="o", repo="r", ref="s", token="t") is None
+    assert (
+        await github_ci.list_failing_check_runs(owner="o", repo="r", ref="s", token="t")
+        is None
+    )
 
 
 @pytest.mark.asyncio
-async def test_list_commit_statuses_keeps_latest_context(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_list_commit_statuses_keeps_latest_context(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _patch(
         monkeypatch,
         {
@@ -120,7 +131,9 @@ async def test_list_commit_statuses_keeps_latest_context(monkeypatch: pytest.Mon
         },
     )
 
-    statuses = await github_ci.list_commit_statuses(owner="o", repo="r", ref="s", token="t")
+    statuses = await github_ci.list_commit_statuses(
+        owner="o", repo="r", ref="s", token="t"
+    )
 
     assert statuses == [{"id": 2, "context": "ci", "state": "success"}]
 
@@ -138,14 +151,19 @@ async def test_names_failing_on_base(monkeypatch: pytest.MonkeyPatch) -> None:
             "statuses": [],
         },
     )
-    names = await github_ci.names_failing_on_base(owner="o", repo="r", base_sha="base", token="t")
+    names = await github_ci.names_failing_on_base(
+        owner="o", repo="r", base_sha="base", token="t"
+    )
     assert "flaky" in names
 
 
 @pytest.mark.asyncio
 async def test_names_failing_on_base_empty_when_no_base() -> None:
     assert (
-        await github_ci.names_failing_on_base(owner="o", repo="r", base_sha="", token="t") == set()
+        await github_ci.names_failing_on_base(
+            owner="o", repo="r", base_sha="", token="t"
+        )
+        == set()
     )
 
 
@@ -158,7 +176,9 @@ async def test_has_repo_write_permission_true(monkeypatch: pytest.MonkeyPatch) -
 
 
 @pytest.mark.asyncio
-async def test_has_repo_write_permission_false_for_read(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_has_repo_write_permission_false_for_read(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _patch(monkeypatch, {"permission": "read"})
     assert not await github_ci.has_repo_write_permission(
         owner="o", repo="r", username="bob", token="t"
@@ -166,7 +186,9 @@ async def test_has_repo_write_permission_false_for_read(monkeypatch: pytest.Monk
 
 
 @pytest.mark.asyncio
-async def test_has_repo_write_permission_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_has_repo_write_permission_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _patch(monkeypatch, {}, error=True)
     assert not await github_ci.has_repo_write_permission(
         owner="o", repo="r", username="bob", token="t"

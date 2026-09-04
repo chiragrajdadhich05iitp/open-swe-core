@@ -18,7 +18,9 @@ async def test_manage_baby_sit_starts_watch_from_current_thread(
         "repo": {"owner": "acme", "name": "repo"},
         "slack_thread": {"channel_id": "C1", "thread_ts": "1.2"},
     }
-    monkeypatch.setattr(manage_tool, "get_config", lambda: {"configurable": configurable})
+    monkeypatch.setattr(
+        manage_tool, "get_config", lambda: {"configurable": configurable}
+    )
     monkeypatch.setattr(
         manage_tool, "resolve_github_token", AsyncMock(return_value=("token", None))
     )
@@ -30,7 +32,9 @@ async def test_manage_baby_sit_starts_watch_from_current_thread(
     monkeypatch.setattr(
         manage_tool,
         "fetch_pr",
-        AsyncMock(return_value={"state": "open", "head": {"sha": "head-1", "ref": "feature"}}),
+        AsyncMock(
+            return_value={"state": "open", "head": {"sha": "head-1", "ref": "feature"}}
+        ),
     )
     start = AsyncMock(
         return_value=BabySitWatch(
@@ -53,7 +57,9 @@ async def test_manage_baby_sit_starts_watch_from_current_thread(
     }
 
 
-async def test_manage_baby_sit_rejects_other_repository(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_manage_baby_sit_rejects_other_repository(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(
         manage_tool,
         "get_config",

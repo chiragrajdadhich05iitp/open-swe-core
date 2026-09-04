@@ -8,7 +8,11 @@ _DEFAULT_DASHBOARD_BASE_URL = "https://openswe.vercel.app"
 
 def dashboard_base_url() -> str:
     """Return the configured dashboard base URL."""
-    return os.environ.get("DASHBOARD_BASE_URL", _DEFAULT_DASHBOARD_BASE_URL).strip().rstrip("/")
+    return (
+        os.environ.get("DASHBOARD_BASE_URL", _DEFAULT_DASHBOARD_BASE_URL)
+        .strip()
+        .rstrip("/")
+    )
 
 
 def dashboard_thread_url(thread_id: str) -> str | None:

@@ -135,7 +135,9 @@ async def test_paginates_busy_threads(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_unparseable_created_at_is_skipped(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_unparseable_created_at_is_skipped(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     threads = _FakeThreads([[{"thread_id": "t1"}]])
     runs = _FakeRuns(
         {

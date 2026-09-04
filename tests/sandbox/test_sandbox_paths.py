@@ -7,7 +7,9 @@ from agent.sandboxes.paths import resolve_repo_dir, resolve_sandbox_work_dir
 
 
 class _FakeProvider:
-    def __init__(self, work_dir: str | None = None, home_dir: str | None = None) -> None:
+    def __init__(
+        self, work_dir: str | None = None, home_dir: str | None = None
+    ) -> None:
         self._work_dir = work_dir
         self._home_dir = home_dir
 
@@ -39,7 +41,9 @@ class _FakeSandboxBackend:
     def id(self) -> str:
         return "fake-sandbox"
 
-    async def aexecute(self, command: str, *, timeout: int | None = None) -> ExecuteResponse:
+    async def aexecute(
+        self, command: str, *, timeout: int | None = None
+    ) -> ExecuteResponse:
         del timeout
         self.commands.append(command)
 
@@ -70,7 +74,9 @@ async def test_resolve_repo_dir_uses_provider_work_dir() -> None:
     assert backend.commands == ["test -d /workspace && test -w /workspace"]
 
 
-async def test_resolve_sandbox_work_dir_falls_back_to_home_when_work_dir_is_not_writable() -> None:
+async def test_resolve_sandbox_work_dir_falls_back_to_home_when_work_dir_is_not_writable() -> (
+    None
+):
     backend = _FakeSandboxBackend(
         provider=_FakeProvider(work_dir="/workspace", home_dir="/home/daytona"),
         shell_paths={

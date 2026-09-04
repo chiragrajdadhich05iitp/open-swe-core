@@ -27,14 +27,20 @@ def _post(event_type: str, payload: dict[str, Any], *, delivery_id: str = "deliv
     )
 
 
-@pytest.mark.parametrize("event_type", ["check_run", "check_suite", "workflow_run", "status"])
+@pytest.mark.parametrize(
+    "event_type", ["check_run", "check_suite", "workflow_run", "status"]
+)
 def test_signed_ci_events_route_without_mention(
     event_type: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     captured: dict[str, Any] = {}
 
-    async def process(payload: dict[str, Any], kind: str, delivery_id: str | None) -> None:
-        captured.update({"payload": payload, "event_type": kind, "delivery_id": delivery_id})
+    async def process(
+        payload: dict[str, Any], kind: str, delivery_id: str | None
+    ) -> None:
+        captured.update(
+            {"payload": payload, "event_type": kind, "delivery_id": delivery_id}
+        )
 
     monkeypatch.setattr(common, "GITHUB_WEBHOOK_SECRET", _SECRET)
     monkeypatch.setattr(common, "_is_repo_allowed", lambda _repo: True)
@@ -44,7 +50,10 @@ def test_signed_ci_events_route_without_mention(
     response = _post(event_type, payload)
 
     assert response.status_code == 200
-    assert response.json() == {"status": "accepted", "message": "Processing GitHub CI event"}
+    assert response.json() == {
+        "status": "accepted",
+        "message": "Processing GitHub CI event",
+    }
     assert captured == {
         "payload": payload,
         "event_type": event_type,
@@ -52,7 +61,9 @@ def test_signed_ci_events_route_without_mention(
     }
 
 
-def test_ci_event_still_requires_valid_signature(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_ci_event_still_requires_valid_signature(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setattr(common, "GITHUB_WEBHOOK_SECRET", _SECRET)
     payload = {"repository": {"owner": {"login": "acme"}, "name": "repo"}}
     body = json.dumps(payload).encode()

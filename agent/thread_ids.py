@@ -33,7 +33,9 @@ def _url_uuid(stable_key: str) -> str:
 
 def _sha256_uuid(stable_key: str) -> str:
     digest = hashlib.sha256(stable_key.encode()).hexdigest()
-    return f"{digest[:8]}-{digest[8:12]}-{digest[12:16]}-{digest[16:20]}-{digest[20:32]}"
+    return (
+        f"{digest[:8]}-{digest[8:12]}-{digest[12:16]}-{digest[16:20]}-{digest[20:32]}"
+    )
 
 
 def reviewer_thread_id(owner: str, repo: str, pr_number: int) -> str:

@@ -67,7 +67,9 @@ class _RefreshingNotionMCPTool(BaseTool):
     async def _arun(self, *args: Any, **kwargs: Any) -> Any:
         payload = _tool_input(args, kwargs)
         if not isinstance(payload, dict):
-            raise TypeError("Notion MCP tools require keyword input including on_behalf_of")
+            raise TypeError(
+                "Notion MCP tools require keyword input including on_behalf_of"
+            )
         on_behalf_of = payload.pop("on_behalf_of", "")
         login = await resolve_participant(str(on_behalf_of))
         tool = await _fresh_mcp_tool(login, self.mcp_tool_name)

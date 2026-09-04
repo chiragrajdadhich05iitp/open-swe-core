@@ -25,7 +25,9 @@ async def reply_to_finding_thread(finding_id: str, body: str) -> dict[str, Any]:
     config = get_config()
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
     repo_config = configurable.get("repo") if isinstance(configurable, dict) else None
-    pr_number = configurable.get("pr_number") if isinstance(configurable, dict) else None
+    pr_number = (
+        configurable.get("pr_number") if isinstance(configurable, dict) else None
+    )
     if (
         not isinstance(repo_config, dict)
         or not repo_config.get("owner")
@@ -67,7 +69,10 @@ async def _reply_to_finding_thread_async(
 
     comment_ids = comment_ids_for_finding(finding)
     if not comment_ids:
-        return {"success": False, "error": "Finding has no GitHub review comment mapping"}
+        return {
+            "success": False,
+            "error": "Finding has no GitHub review comment mapping",
+        }
     comment_id = comment_ids[0]
 
     response = await reply_to_review_comment(
@@ -82,7 +87,9 @@ async def _reply_to_finding_thread_async(
         return {"success": False, "error": "GitHub did not accept the reply"}
 
     reply_id = response.get("id")
-    updates: dict[str, Any] = {"last_reconciliation_note": "Replied to GitHub review thread."}
+    updates: dict[str, Any] = {
+        "last_reconciliation_note": "Replied to GitHub review thread."
+    }
     if isinstance(reply_id, int):
         updates["last_review_reply_comment_id"] = reply_id
     updated = await update_finding_fields(thread_id, finding_id, updates)

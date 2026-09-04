@@ -53,7 +53,9 @@ async def test_organization_skill_uses_singleton_namespace() -> None:
 
     with patch("agent.store.store_client", return_value=client):
         await create_organization_skill(
-            SkillCreate(name="security-review", description="Apply organization security rules")
+            SkillCreate(
+                name="security-review", description="Apply organization security rules"
+            )
         )
 
     client.store.put_item.assert_awaited_once()
@@ -74,7 +76,9 @@ async def test_organization_skill_listing_uses_opaque_cursor() -> None:
 
     with patch("agent.store.store_client", return_value=client):
         first_page = await list_organization_skills(limit=1, cursor=None)
-        second_page = await list_organization_skills(limit=1, cursor=first_page["next_cursor"])
+        second_page = await list_organization_skills(
+            limit=1, cursor=first_page["next_cursor"]
+        )
         for cursor in (
             "",
             "invalid",
@@ -86,7 +90,10 @@ async def test_organization_skill_listing_uses_opaque_cursor() -> None:
             with pytest.raises(Exception, match="invalid cursor"):
                 await list_organization_skills(limit=1, cursor=cursor)
 
-    assert first_page == {"items": [{"name": "first"}], "next_cursor": "eyJuYW1lIjogImZpcnN0In0"}
+    assert first_page == {
+        "items": [{"name": "first"}],
+        "next_cursor": "eyJuYW1lIjogImZpcnN0In0",
+    }
     assert second_page == {"items": [{"name": "second"}], "next_cursor": None}
     client.store.search_items.assert_awaited_with(
         ["organization_skills"], filter=None, limit=1001, offset=0
@@ -100,7 +107,11 @@ async def test_save_user_skill_uses_triggering_user_namespace() -> None:
             "agent.tools.user_skills.get_config",
             return_value={"configurable": {"github_login": "octocat"}},
         ),
-        patch("agent.tools.user_skills.get_skill", new_callable=AsyncMock, return_value=None),
+        patch(
+            "agent.tools.user_skills.get_skill",
+            new_callable=AsyncMock,
+            return_value=None,
+        ),
         patch("agent.tools.user_skills.create_skill", create),
     ):
         result = await save_user_skill("deslop", "Minimize diffs", "Remove bloat.")
@@ -127,7 +138,9 @@ async def test_skill_listing_returns_next_offset() -> None:
     )
 
 
-async def test_save_organization_skill_requires_admin(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_save_organization_skill_requires_admin(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("CONFIGURED_ADMINS", "ramonn")
     with patch(
         "agent.tools.admin_gate.get_config",
