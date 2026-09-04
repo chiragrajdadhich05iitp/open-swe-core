@@ -149,15 +149,11 @@ async def _cached_team_chat_model() -> tuple[str, str]:
     )
 
 
-def _make_model_or_defer(
-    model_id: str, *, use_gateway: bool, **kwargs: Any
-) -> BaseChatModel:
+def _make_model_or_defer(model_id: str, *, use_gateway: bool, **kwargs: Any) -> BaseChatModel:
     try:
         return make_model(model_id, use_gateway=use_gateway, **kwargs)
     except Exception as e:  # noqa: BLE001
-        logger.warning(
-            "Deferring chat model setup failure for %s", model_id, exc_info=True
-        )
+        logger.warning("Deferring chat model setup failure for %s", model_id, exc_info=True)
         return make_deferred_error_model(e, model_id=model_id)
 
 
@@ -169,30 +165,20 @@ class PrepareChatRunMiddleware(BasePrepareRunMiddleware):
         configurable = self._config.get("configurable", {})
         return {
             "prepare_run_id": (
-                configurable.get("prepare_run_id")
-                if isinstance(configurable, dict)
-                else None
+                configurable.get("prepare_run_id") if isinstance(configurable, dict) else None
             ),
             "repo_owner": (
-                configurable.get("chat_repo_owner")
-                if isinstance(configurable, dict)
-                else None
+                configurable.get("chat_repo_owner") if isinstance(configurable, dict) else None
             ),
             "repo_name": (
-                configurable.get("chat_repo_name")
-                if isinstance(configurable, dict)
-                else None
+                configurable.get("chat_repo_name") if isinstance(configurable, dict) else None
             ),
             "pr_number": (
-                configurable.get("chat_pr_number")
-                if isinstance(configurable, dict)
-                else None
+                configurable.get("chat_pr_number") if isinstance(configurable, dict) else None
             ),
         }
 
-    async def _prepare(
-        self, state: PrepareRunState, runtime: Runtime
-    ) -> dict[str, Any]:  # noqa: ARG002
+    async def _prepare(self, state: PrepareRunState, runtime: Runtime) -> dict[str, Any]:  # noqa: ARG002
         configurable = self._config.get("configurable") or {}
         repo_owner = str(configurable.get("chat_repo_owner") or "")
         repo_name = str(configurable.get("chat_repo_name") or "")
@@ -267,9 +253,7 @@ async def get_chat_agent(config: RunnableConfig) -> Pregel:
             [
                 PrepareChatRunMiddleware(config=config),
                 SanitizeToolInputsMiddleware(),
-                ModelCallLimitMiddleware(
-                    run_limit=CHAT_MODEL_CALL_LIMIT, exit_behavior="end"
-                ),
+                ModelCallLimitMiddleware(run_limit=CHAT_MODEL_CALL_LIMIT, exit_behavior="end"),
                 ToolErrorMiddleware(),
                 ExcludeToolsMiddleware(excluded=_EXCLUDED_TOOLS),
                 SanitizeFireworksMessagesMiddleware(),

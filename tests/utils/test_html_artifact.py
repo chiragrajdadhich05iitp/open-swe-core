@@ -29,9 +29,7 @@ def test_fragment_is_wrapped_with_the_skeleton_and_reset() -> None:
 
 
 def test_fragment_title_is_lifted_into_the_head() -> None:
-    wrapped = wrap_html_artifact(
-        "<title>Real name</title>\n<h1>Body</h1>", title="Fallback"
-    )
+    wrapped = wrap_html_artifact("<title>Real name</title>\n<h1>Body</h1>", title="Fallback")
 
     assert wrapped.count("<title>") == 1
     assert "<title>Real name</title>" in wrapped
@@ -77,9 +75,7 @@ def test_sandbox_command_matches_in_process_wrapping(content: str, tmp_path) -> 
     command = sandbox_wrap_command(
         str(source), str(destination), limit=1_000_001, title="Quarterly chart"
     )
-    result = subprocess.run(
-        command, shell=True, capture_output=True, text=True, check=True
-    )
+    result = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)
 
     expected = wrap_html_artifact(content, title="Quarterly chart")
     assert destination.read_text(encoding="utf-8") == expected

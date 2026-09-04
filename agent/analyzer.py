@@ -109,15 +109,11 @@ async def _cached_gateway_enabled() -> bool:
     )
 
 
-def _make_model_or_defer(
-    model_id: str, *, use_gateway: bool, **kwargs: Any
-) -> BaseChatModel:
+def _make_model_or_defer(model_id: str, *, use_gateway: bool, **kwargs: Any) -> BaseChatModel:
     try:
         return make_model(model_id, use_gateway=use_gateway, **kwargs)
     except Exception as e:  # noqa: BLE001
-        logger.warning(
-            "Deferring analyzer model setup failure for %s", model_id, exc_info=True
-        )
+        logger.warning("Deferring analyzer model setup failure for %s", model_id, exc_info=True)
         return make_deferred_error_model(e, model_id=model_id)
 
 
@@ -130,9 +126,7 @@ class PrepareAnalyzerRunMiddleware(BasePrepareRunMiddleware):
         configurable = self._config.get("configurable", {})
         return {
             "prepare_run_id": (
-                configurable.get("prepare_run_id")
-                if isinstance(configurable, dict)
-                else None
+                configurable.get("prepare_run_id") if isinstance(configurable, dict) else None
             ),
             "thread_id": self._thread_id,
             "full_name": (
@@ -140,16 +134,10 @@ class PrepareAnalyzerRunMiddleware(BasePrepareRunMiddleware):
                 if isinstance(configurable, dict)
                 else None
             ),
-            "mode": (
-                configurable.get("analyzer_mode")
-                if isinstance(configurable, dict)
-                else None
-            ),
+            "mode": (configurable.get("analyzer_mode") if isinstance(configurable, dict) else None),
         }
 
-    async def _prepare(
-        self, state: PrepareRunState, runtime: Runtime
-    ) -> dict[str, Any]:  # noqa: ARG002
+    async def _prepare(self, state: PrepareRunState, runtime: Runtime) -> dict[str, Any]:  # noqa: ARG002
         sandbox_backend = await ensure_sandbox_for_thread(self._thread_id)
         work_dir = await resolve_sandbox_work_dir(sandbox_backend)
         configurable = self._config.get("configurable") or {}
@@ -189,9 +177,7 @@ async def get_analyzer(config: RunnableConfig) -> Pregel:
         return await ensure_sandbox_for_thread(_thread_id)
 
     default_backend = get_cached_sandbox_backend(thread_id, reconnect=reconnect_backend)
-    backend = CompositeBackend(
-        default=default_backend, routes={SKILLS_ROUTE: StateBackend()}
-    )
+    backend = CompositeBackend(default=default_backend, routes={SKILLS_ROUTE: StateBackend()})
 
     model_id = DEFAULT_LLM_MODEL_ID
     use_gateway = await _cached_gateway_enabled()

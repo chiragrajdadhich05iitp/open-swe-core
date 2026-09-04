@@ -31,12 +31,8 @@ async def save_organization_skill(
     if error := require_admin(_ACTION):
         return {"ok": False, "error": error}
     try:
-        body = store.SkillCreate(
-            name=name, description=description, instructions=instructions
-        )
-        update = store.SkillUpdate(
-            description=body.description, instructions=body.instructions
-        )
+        body = store.SkillCreate(name=name, description=description, instructions=instructions)
+        update = store.SkillUpdate(description=body.description, instructions=body.instructions)
         try:
             skill = await store.update_organization_skill(body.name, update)
             created = False

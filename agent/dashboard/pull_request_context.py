@@ -18,9 +18,7 @@ _CONTEXT_LIMIT = 100
 _FIELD_LIMIT = 4_000
 _SCAN_LIMIT = 40_000
 _TRUNCATED = "… [truncated]"
-_FAILURE_CONCLUSIONS = frozenset(
-    {"ACTION_REQUIRED", "FAILURE", "STARTUP_FAILURE", "TIMED_OUT"}
-)
+_FAILURE_CONCLUSIONS = frozenset({"ACTION_REQUIRED", "FAILURE", "STARTUP_FAILURE", "TIMED_OUT"})
 _REVIEWS_QUERY = """
 query PullRequestFixReviews(
   $owner: String!, $repo: String!, $number: Int!, $cursor: String
@@ -150,10 +148,7 @@ async def _fetch_reviews(
             nodes = opinions.get("nodes") if isinstance(opinions, dict) else None
             if isinstance(nodes, list):
                 for review in nodes:
-                    if (
-                        not isinstance(review, dict)
-                        or review.get("state") != "CHANGES_REQUESTED"
-                    ):
+                    if not isinstance(review, dict) or review.get("state") != "CHANGES_REQUESTED":
                         continue
                     reviews.append(
                         {
@@ -171,9 +166,7 @@ async def _fetch_reviews(
                 continue
             comments_connection = thread.get("comments")
             comments_nodes = (
-                comments_connection.get("nodes")
-                if isinstance(comments_connection, dict)
-                else None
+                comments_connection.get("nodes") if isinstance(comments_connection, dict) else None
             )
             if not isinstance(comments_nodes, list):
                 continue
@@ -198,14 +191,11 @@ async def _fetch_reviews(
                 {
                     "path": _text(thread.get("path")),
                     "line": (
-                        line
-                        if isinstance(line, int) and not isinstance(line, bool)
-                        else None
+                        line if isinstance(line, int) and not isinstance(line, bool) else None
                     ),
                     "isOutdated": thread.get("isOutdated") is True,
                     "commentsTruncated": bool(
-                        isinstance(page_info, dict)
-                        and page_info.get("hasNextPage") is True
+                        isinstance(page_info, dict) and page_info.get("hasNextPage") is True
                     ),
                     "comments": comments,
                 }
@@ -295,14 +285,10 @@ async def _fetch_checks(
         commit_nodes = commits.get("nodes") if isinstance(commits, dict) else None
         commit_wrapper = (
             commit_nodes[0]
-            if isinstance(commit_nodes, list)
-            and commit_nodes
-            and isinstance(commit_nodes[0], dict)
+            if isinstance(commit_nodes, list) and commit_nodes and isinstance(commit_nodes[0], dict)
             else None
         )
-        commit = (
-            commit_wrapper.get("commit") if isinstance(commit_wrapper, dict) else None
-        )
+        commit = commit_wrapper.get("commit") if isinstance(commit_wrapper, dict) else None
         if not isinstance(commit, dict):
             return {"headSha": None, "checks": [], "truncated": False}
         oid = commit.get("oid")
@@ -368,21 +354,15 @@ def build_fix_prompt(context: Mapping[str, Any]) -> str:
                 continue
             required = check.get("required")
             requirement = (
-                "required"
-                if required is True
-                else "optional" if required is False else "unknown"
+                "required" if required is True else "optional" if required is False else "unknown"
             )
-            outcome = _untrusted(
-                check.get("conclusion") or check.get("status") or "unknown"
-            )
+            outcome = _untrusted(check.get("conclusion") or check.get("status") or "unknown")
             suffix = f" — {_untrusted(check['url'])}" if check.get("url") else ""
             lines.append(
                 f"- [{requirement}] {_untrusted(check.get('name')) or 'unnamed'}: {outcome}{suffix}"
             )
     else:
-        lines.append(
-            "- None found." if context.get("checksAvailable") else "- Unavailable."
-        )
+        lines.append("- None found." if context.get("checksAvailable") else "- Unavailable.")
     lines.extend(["", "Reviews requesting changes:"])
     reviews = context.get("changesRequestedReviews")
     if isinstance(reviews, list) and reviews:
@@ -390,13 +370,9 @@ def build_fix_prompt(context: Mapping[str, Any]) -> str:
             if not isinstance(review, Mapping):
                 continue
             author = _untrusted(review.get("author")) or "unknown"
-            lines.append(
-                f"- {author}: {_untrusted(review.get('body')) or '(no review body)'}"
-            )
+            lines.append(f"- {author}: {_untrusted(review.get('body')) or '(no review body)'}")
     else:
-        lines.append(
-            "- None found." if context.get("reviewsAvailable") else "- Unavailable."
-        )
+        lines.append("- None found." if context.get("reviewsAvailable") else "- Unavailable.")
     lines.extend(["", "Unresolved review threads:"])
     threads = context.get("unresolvedReviewThreads")
     if isinstance(threads, list) and threads:
@@ -419,13 +395,9 @@ def build_fix_prompt(context: Mapping[str, Any]) -> str:
                         f"  {author}: {_untrusted(comment.get('body')) or '(empty comment)'}"
                     )
             if thread.get("commentsTruncated") is True:
-                lines.append(
-                    "  Additional replies were truncated; inspect the linked PR."
-                )
+                lines.append("  Additional replies were truncated; inspect the linked PR.")
     else:
-        lines.append(
-            "- None found." if context.get("reviewsAvailable") else "- Unavailable."
-        )
+        lines.append("- None found." if context.get("reviewsAvailable") else "- Unavailable.")
     if context.get("truncated") is True:
         lines.extend(
             [
@@ -465,15 +437,10 @@ async def get_pull_request_context(record: object, token: str) -> dict[str, Any]
         "checksAvailable": checks is not None,
         "checks": checks.get("checks", []) if checks else [],
         "reviewsAvailable": reviews is not None,
-        "changesRequestedReviews": (
-            reviews.get("changesRequestedReviews", []) if reviews else []
-        ),
-        "unresolvedReviewThreads": (
-            reviews.get("unresolvedReviewThreads", []) if reviews else []
-        ),
+        "changesRequestedReviews": (reviews.get("changesRequestedReviews", []) if reviews else []),
+        "unresolvedReviewThreads": (reviews.get("unresolvedReviewThreads", []) if reviews else []),
         "truncated": bool(
-            (checks and checks.get("truncated"))
-            or (reviews and reviews.get("truncated"))
+            (checks and checks.get("truncated")) or (reviews and reviews.get("truncated"))
         ),
     }
     return {"context": context, "prompt": build_fix_prompt(context)}

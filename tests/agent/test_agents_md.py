@@ -70,9 +70,7 @@ async def test_fetch_agents_md_skips_oversized_file() -> None:
 
 
 @pytest.mark.asyncio
-async def test_fetch_agents_md_oversized_agents_md_does_not_fall_back_to_claude_md() -> (
-    None
-):
+async def test_fetch_agents_md_oversized_agents_md_does_not_fall_back_to_claude_md() -> None:
     big = "x" * (agents_md._MAX_AGENTS_MD_BYTES + 1)
     with patch("httpx.AsyncClient") as mock_client_cls:
         client = MagicMock()

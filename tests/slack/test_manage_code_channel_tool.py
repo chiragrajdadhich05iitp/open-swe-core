@@ -36,9 +36,7 @@ async def test_code_channel_title_prefers_thread_title(
         threads=SimpleNamespace(get=AsyncMock(return_value={"metadata": metadata}))
     )
 
-    assert (
-        await manage_tool._code_channel_title(client, "thread-1", fallback) == expected
-    )
+    assert await manage_tool._code_channel_title(client, "thread-1", fallback) == expected
 
 
 async def test_sandbox_content_reader_enforces_source_and_size(
@@ -53,9 +51,7 @@ async def test_sandbox_content_reader_enforces_source_and_size(
     )
 
     content, error = await manage_tool._resolve_content("", "plan.md")
-    conflict_content, conflict_error = await manage_tool._resolve_content(
-        "inline", "plan.md"
-    )
+    conflict_content, conflict_error = await manage_tool._resolve_content("inline", "plan.md")
 
     assert (content, error) == ("# Plan", None)
     assert conflict_content == ""
@@ -107,6 +103,4 @@ async def test_promotion_initializes_status_context_and_runtime_commands(
     assert result["success"] is True
     status.assert_awaited_once_with("C-code", "processing")
     context.assert_awaited_once()
-    commands.assert_awaited_once_with(
-        "C-code", manage_tool.DEFAULT_CODE_CHANNEL_COMMANDS
-    )
+    commands.assert_awaited_once_with("C-code", manage_tool.DEFAULT_CODE_CHANNEL_COMMANDS)

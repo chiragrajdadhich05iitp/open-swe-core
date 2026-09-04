@@ -76,9 +76,7 @@ async def test_openai_sdk_uses_gateway_responses_path() -> None:
                         "type": "message",
                         "role": "assistant",
                         "status": "completed",
-                        "content": [
-                            {"type": "output_text", "text": "ok", "annotations": []}
-                        ],
+                        "content": [{"type": "output_text", "text": "ok", "annotations": []}],
                     }
                 ],
                 "usage": {"input_tokens": 1, "output_tokens": 1, "total_tokens": 2},
@@ -238,12 +236,8 @@ async def test_fireworks_gateway_strips_legacy_function_call() -> None:
 
         ai_message = AIMessage(
             content="",
-            tool_calls=[
-                {"name": "read_file", "args": {"file_path": "/x"}, "id": "tc1"}
-            ],
-            additional_kwargs={
-                "function_call": {"name": "read_file", "arguments": "{}"}
-            },
+            tool_calls=[{"name": "read_file", "args": {"file_path": "/x"}, "id": "tc1"}],
+            additional_kwargs={"function_call": {"name": "read_file", "arguments": "{}"}},
         )
         messages = [HumanMessage(content="hi"), ai_message]
 
@@ -368,9 +362,7 @@ def test_make_model_direct_openai_uses_responses_websocket() -> None:
 def test_make_model_openai_honors_configured_base_url(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv(
-        "OPENAI_BASE_URL", "https://gateway.smith.langchain.com/openai/v1"
-    )
+    monkeypatch.setenv("OPENAI_BASE_URL", "https://gateway.smith.langchain.com/openai/v1")
     captured, fake = _capture_init_chat_model()
     with patch.object(model, "init_chat_model", fake):
         model.make_model("openai:gpt-5.6-sol", use_gateway=False)
@@ -493,9 +485,7 @@ def test_make_model_gateway_baseten(monkeypatch: pytest.MonkeyPatch) -> None:
         model.make_model(
             "baseten:zai-org/GLM-5.3-Flash",
             use_gateway=True,
-            **model.provider_model_kwargs(
-                "baseten:zai-org/GLM-5.3-Flash", "high", max_tokens=1024
-            ),
+            **model.provider_model_kwargs("baseten:zai-org/GLM-5.3-Flash", "high", max_tokens=1024),
         )
     assert captured["model"] == "zai-org/GLM-5.3-Flash"
     assert captured["model_provider"] == "openai"

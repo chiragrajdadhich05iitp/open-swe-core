@@ -42,9 +42,7 @@ from langchain_core.outputs import ChatGeneration, ChatResult
 
 
 def _slack_thread_ts(messages: list[BaseMessage]) -> str:
-    matches = re.findall(
-        r"Thread TS: ([0-9.]+)", "\n".join(_text(m.content) for m in messages)
-    )
+    matches = re.findall(r"Thread TS: ([0-9.]+)", "\n".join(_text(m.content) for m in messages))
     return matches[-1] if matches else ""
 
 
@@ -250,8 +248,7 @@ def _text(content: Any) -> str:
         return content
     if isinstance(content, list):
         return " ".join(
-            part.get("text", "") if isinstance(part, dict) else str(part)
-            for part in content
+            part.get("text", "") if isinstance(part, dict) else str(part) for part in content
         )
     return str(content)
 
@@ -540,14 +537,12 @@ def _plan_complete_step(messages: list[BaseMessage]) -> AIMessage:
 
 
 ENVIRONMENT_NAME = "default"
-ENVIRONMENT_PROMPT = "Checkouts live in /workspace/repos. Build with `make build`, test with `make test`."
-ENVIRONMENT_PROVISION_SCRIPT = (
-    "mkdir -p repos && echo provisioned > repos/.provisioned && ls repos"
+ENVIRONMENT_PROMPT = (
+    "Checkouts live in /workspace/repos. Build with `make build`, test with `make test`."
 )
+ENVIRONMENT_PROVISION_SCRIPT = "mkdir -p repos && echo provisioned > repos/.provisioned && ls repos"
 
-FOLLOW_UP_REPLY = (
-    "Thanks! The PR is ready for review — anything else you'd like changed?"
-)
+FOLLOW_UP_REPLY = "Thanks! The PR is ready for review — anything else you'd like changed?"
 
 
 def _latest_attribution(messages: list[BaseMessage]) -> str | None:
@@ -561,8 +556,7 @@ def _latest_attribution(messages: list[BaseMessage]) -> str | None:
 
 def _followup_step(messages: list[BaseMessage]) -> AIMessage:
     if any(
-        isinstance(msg, HumanMessage)
-        and "Please queue this follow-up" in _text(msg.content)
+        isinstance(msg, HumanMessage) and "Please queue this follow-up" in _text(msg.content)
         for msg in messages
     ):
         time.sleep(0.5)
@@ -576,9 +570,7 @@ def _tool_payload(messages: list[BaseMessage], tool_name: str) -> dict[str, Any]
         if not isinstance(message, ToolMessage) or message.name != tool_name:
             continue
         payload = (
-            json.loads(message.content)
-            if isinstance(message.content, str)
-            else message.content
+            json.loads(message.content) if isinstance(message.content, str) else message.content
         )
         if isinstance(payload, dict):
             return payload
@@ -1030,25 +1022,20 @@ SCRIPT_RULES: tuple[ScriptRule, ...] = (
     ScriptRule("move", lambda ctx: _is_move_request(ctx.first_text)),
     ScriptRule("implement", lambda ctx: _is_approval(ctx.last_text)),
     ScriptRule("plan", lambda ctx: _is_revision(ctx.last_text)),
-    ScriptRule(
-        "plan", lambda ctx: ctx.human_count <= 1 and _is_plan_request(ctx.first_text)
-    ),
+    ScriptRule("plan", lambda ctx: ctx.human_count <= 1 and _is_plan_request(ctx.first_text)),
     ScriptRule(
         "breakout",
         lambda ctx: ctx.human_count <= 1 and _is_breakout_request(ctx.first_text),
     ),
     ScriptRule(
         "multi_pr",
-        lambda ctx: ctx.human_count <= 1
-        and "E2E_MULTI_PR" in f"{ctx.first_text}\n{ctx.last_text}",
+        lambda ctx: ctx.human_count <= 1 and "E2E_MULTI_PR" in f"{ctx.first_text}\n{ctx.last_text}",
     ),
     ScriptRule(
         "many_files",
         lambda ctx: ctx.human_count <= 1 and "E2E_MANY_FILES" in ctx.first_text,
     ),
-    ScriptRule(
-        "move", lambda ctx: ctx.human_count <= 1 and _is_move_request(ctx.first_text)
-    ),
+    ScriptRule("move", lambda ctx: ctx.human_count <= 1 and _is_move_request(ctx.first_text)),
     ScriptRule("implement", lambda ctx: ctx.human_count <= 1),
     ScriptRule("followup", lambda _ctx: True),
 )
@@ -1079,9 +1066,7 @@ class FakeScriptedChatModel(BaseChatModel):
     def _llm_type(self) -> str:
         return "fake-scripted"
 
-    def bind_tools(
-        self, tools: Any, **kwargs: Any
-    ) -> "FakeScriptedChatModel":  # noqa: ARG002
+    def bind_tools(self, tools: Any, **kwargs: Any) -> "FakeScriptedChatModel":  # noqa: ARG002
         return self
 
     def _generate(
@@ -1107,9 +1092,7 @@ class FakeScriptedChatModel(BaseChatModel):
             (i for i, m in enumerate(messages) if isinstance(m, HumanMessage)),
             default=-1,
         )
-        step_index = sum(
-            1 for m in messages[last_human + 1 :] if isinstance(m, AIMessage)
-        )
+        step_index = sum(1 for m in messages[last_human + 1 :] if isinstance(m, AIMessage))
 
         # Keep a run busy on demand so E2E can land follow-ups mid-run (exercising
         # the interrupt-debounce path). Only the triggering message carries the
@@ -1120,14 +1103,6 @@ class FakeScriptedChatModel(BaseChatModel):
         # specs that follow it.
         hold = _BUSY_HOLD_RE.search(context.last_text) if step_index == 1 else None
         if hold:
-            time.sleep(
-                float(hold.group(1) or os.environ.get("E2E_BUSY_HOLD_SECONDS", "10"))
-            )
-        step = (
-            script[step_index]
-            if step_index < len(script)
-            else SCRIPT_LIBRARY["followup"][0]
-        )
-        return ChatResult(
-            generations=[ChatGeneration(message=_render_step(step, messages))]
-        )
+            time.sleep(float(hold.group(1) or os.environ.get("E2E_BUSY_HOLD_SECONDS", "10")))
+        step = script[step_index] if step_index < len(script) else SCRIPT_LIBRARY["followup"][0]
+        return ChatResult(generations=[ChatGeneration(message=_render_step(step, messages))])

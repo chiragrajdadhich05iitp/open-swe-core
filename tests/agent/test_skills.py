@@ -53,9 +53,7 @@ async def test_organization_skill_uses_singleton_namespace() -> None:
 
     with patch("agent.store.store_client", return_value=client):
         await create_organization_skill(
-            SkillCreate(
-                name="security-review", description="Apply organization security rules"
-            )
+            SkillCreate(name="security-review", description="Apply organization security rules")
         )
 
     client.store.put_item.assert_awaited_once()
@@ -76,9 +74,7 @@ async def test_organization_skill_listing_uses_opaque_cursor() -> None:
 
     with patch("agent.store.store_client", return_value=client):
         first_page = await list_organization_skills(limit=1, cursor=None)
-        second_page = await list_organization_skills(
-            limit=1, cursor=first_page["next_cursor"]
-        )
+        second_page = await list_organization_skills(limit=1, cursor=first_page["next_cursor"])
         for cursor in (
             "",
             "invalid",

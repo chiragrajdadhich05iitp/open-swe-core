@@ -7,9 +7,7 @@ from unittest.mock import AsyncMock, patch
 from agent.webhooks import linear as linear_webhook
 
 
-def _full_issue(
-    *, user_email: str | None = "zhen@example.com", user_name: str = "Zhen"
-) -> dict:
+def _full_issue(*, user_email: str | None = "zhen@example.com", user_name: str = "Zhen") -> dict:
     return {
         "id": "issue-1",
         "title": "Link Linear PRs to author",
@@ -68,38 +66,28 @@ def _run_process(
         return "zhen" if email == "zhen@example.com" else None
 
     with (
-        patch.object(
-            linear_webhook.common, "react_to_linear_comment", new_callable=AsyncMock
-        ),
+        patch.object(linear_webhook.common, "react_to_linear_comment", new_callable=AsyncMock),
         patch.object(linear_webhook, "linear_issue_thread_id", return_value="thread-1"),
         patch.object(
             linear_webhook.common,
             "fetch_linear_issue_details",
             new_callable=AsyncMock,
             return_value=full_issue
-            or _full_issue(
-                user_email=issue_data.get("comment_author", {}).get("email")
-            ),
+            or _full_issue(user_email=issue_data.get("comment_author", {}).get("email")),
         ),
         patch.object(
             linear_webhook.common,
             "resolve_login_from_email_async",
             side_effect=fake_resolve_login,
         ),
-        patch.object(
-            linear_webhook.common, "dispatch_agent_run", side_effect=fake_dispatch
-        ),
+        patch.object(linear_webhook.common, "dispatch_agent_run", side_effect=fake_dispatch),
         patch.object(
             linear_webhook.common,
             "upsert_agent_thread_metadata",
             side_effect=fake_upsert,
         ),
-        patch.object(
-            linear_webhook.common, "post_linear_trace_comment", new_callable=AsyncMock
-        ),
-        patch.object(
-            linear_webhook.common, "resolve_agent_model_id", new_callable=AsyncMock
-        ),
+        patch.object(linear_webhook.common, "post_linear_trace_comment", new_callable=AsyncMock),
+        patch.object(linear_webhook.common, "resolve_agent_model_id", new_callable=AsyncMock),
         patch.object(linear_webhook.common, "model_supports_images", return_value=True),
         patch.object(
             linear_webhook.common,
@@ -165,9 +153,7 @@ def test_linear_description_images_stay_with_issue_without_comments() -> None:
 
     assert isinstance(content, dict)
     messages = content["messages"]
-    assert (
-        messages[1]["content"][1]["image_url"]["url"] == "https://example.com/issue.png"
-    )
+    assert messages[1]["content"][1]["image_url"]["url"] == "https://example.com/issue.png"
 
 
 def test_linear_comment_images_stay_with_their_comments() -> None:
@@ -194,9 +180,7 @@ def test_linear_comment_images_stay_with_their_comments() -> None:
 
     assert isinstance(content, dict)
     human_messages = [
-        message
-        for message in content["messages"]
-        if isinstance(message["content"], list)
+        message for message in content["messages"] if isinstance(message["content"], list)
     ]
     assert human_messages[0]["content"][1]["image_url"]["url"].endswith("one.png")
     assert human_messages[1]["content"][1]["image_url"]["url"].endswith("two.png")

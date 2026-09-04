@@ -73,17 +73,12 @@ class ProfileUpdate(BaseModel):
             raise ValueError(
                 f"effort {self.reasoning_effort!r} not supported by {self.default_model!r}"
             )
-        if (
-            self.default_subagent_model is None
-            and self.subagent_reasoning_effort is None
-        ):
+        if self.default_subagent_model is None and self.subagent_reasoning_effort is None:
             return
         if self.default_subagent_model is None:
             raise ValueError("subagent reasoning effort set without a model")
         if self.default_subagent_model not in SUPPORTED_MODEL_IDS:
-            raise ValueError(
-                f"unsupported subagent model: {self.default_subagent_model}"
-            )
+            raise ValueError(f"unsupported subagent model: {self.default_subagent_model}")
         if self.subagent_reasoning_effort is None or not model_supports_effort(
             self.default_subagent_model,
             self.subagent_reasoning_effort,
@@ -94,9 +89,7 @@ class ProfileUpdate(BaseModel):
             )
 
 
-def _normalize_stale_model_pair(
-    model: str, effort: str | None
-) -> tuple[str, str | None]:
+def _normalize_stale_model_pair(model: str, effort: str | None) -> tuple[str, str | None]:
     if model in SUPPORTED_MODEL_IDS or effort is None:
         return model, effort
     fallback = provider_fallback_pair(model, effort)
@@ -133,9 +126,7 @@ async def get_oauth_token_record(login: str) -> dict[str, Any] | None:
     return await get_value(OAUTH_TOKENS_NAMESPACE, login)
 
 
-async def upsert_profile(
-    login: str, email: str, update: ProfileUpdate
-) -> dict[str, Any]:
+async def upsert_profile(login: str, email: str, update: ProfileUpdate) -> dict[str, Any]:
     """Write the user's editable settings.
 
     Only touches ``["profiles"]`` — the OAuth token in ``["oauth_tokens"]``
@@ -156,9 +147,7 @@ async def upsert_profile(
         "branch_prefix": update.branch_prefix,
         "auto_fix_ci": update.auto_fix_ci,
         "draft_prs": (
-            update.draft_prs
-            if update.draft_prs is not None
-            else existing.get("draft_prs", True)
+            update.draft_prs if update.draft_prs is not None else existing.get("draft_prs", True)
         ),
         "review_draft_prs": update.review_draft_prs,
         "updated_at": now_iso(),
@@ -276,9 +265,7 @@ def _decrypt_refresh_token(record: dict[str, Any]) -> str | None:
     return decrypt_token(encrypted) or None
 
 
-async def _refresh_stored_token(
-    login: str, record: dict[str, Any]
-) -> tuple[str | None, bool]:
+async def _refresh_stored_token(login: str, record: dict[str, Any]) -> tuple[str | None, bool]:
     """Refresh the stored token, returning ``(access_token, refresh_token_dead)``.
 
     ``refresh_token_dead`` is True when GitHub says the refresh token can never
@@ -300,9 +287,7 @@ async def _refresh_stored_token(
     return (access_token if isinstance(access_token, str) else None), False
 
 
-async def get_valid_access_token(
-    login: str, *, force_refresh: bool = False
-) -> str | None:
+async def get_valid_access_token(login: str, *, force_refresh: bool = False) -> str | None:
     """Return a GitHub access token, refreshing proactively when near expiry."""
     record = await get_value(OAUTH_TOKENS_NAMESPACE, login)
     if not record:
@@ -342,9 +327,7 @@ async def get_valid_access_token(
                 "encrypted_gh_refresh_token"
             ):
                 return _decrypt_access_token(latest)
-            logger.info(
-                "Dropping dead GitHub authorization for %s; re-login required", login
-            )
+            logger.info("Dropping dead GitHub authorization for %s; re-login required", login)
             await delete_access_token(login)
             return None
         return access_token

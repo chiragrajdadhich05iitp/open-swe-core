@@ -14,9 +14,7 @@ _WORK_DIR_CACHE_ATTR = "_open_swe_resolved_work_dir"
 _PROVIDER_ATTR_NAMES = ("sandbox", "_sandbox")
 
 
-async def resolve_repo_dir(
-    sandbox_backend: SandboxBackendProtocol, repo_name: str
-) -> str:
+async def resolve_repo_dir(sandbox_backend: SandboxBackendProtocol, repo_name: str) -> str:
     """Resolve the repository directory for a sandbox backend."""
     if not repo_name:
         raise ValueError("repo_name must be a non-empty string")
@@ -137,9 +135,7 @@ async def _is_writable_directory(
     directory: str,
 ) -> bool:
     safe_directory = shlex.quote(directory)
-    result = await sandbox_backend.aexecute(
-        f"test -d {safe_directory} && test -w {safe_directory}"
-    )
+    result = await sandbox_backend.aexecute(f"test -d {safe_directory} && test -w {safe_directory}")
     return result.exit_code == 0
 
 
@@ -147,6 +143,4 @@ def _cache_work_dir(sandbox_backend: SandboxBackendProtocol, work_dir: str) -> N
     try:
         setattr(sandbox_backend, _WORK_DIR_CACHE_ATTR, work_dir)
     except Exception:
-        logger.debug(
-            "Failed to cache sandbox work dir on %s", type(sandbox_backend).__name__
-        )
+        logger.debug("Failed to cache sandbox work dir on %s", type(sandbox_backend).__name__)

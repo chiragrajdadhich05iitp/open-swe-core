@@ -38,15 +38,11 @@ DEFAULT_SANDBOX_IDLE_TTL_SECONDS = 2 * 60 * 60  # 2 hours
 DEFAULT_SANDBOX_DELETE_AFTER_STOP_SECONDS = 30 * 24 * 60 * 60  # 30 days
 SANDBOX_CREATE_MAX_ATTEMPTS = 3
 SANDBOX_CREATE_RETRY_DELAYS_SECONDS = (1.0, 3.0)
-SANDBOX_CREATE_RETRYABLE_STATUS_CODES = frozenset(
-    {408, 409, 425, 429, 500, 502, 503, 504, 529}
-)
+SANDBOX_CREATE_RETRYABLE_STATUS_CODES = frozenset({408, 409, 425, 429, 500, 502, 503, 504, 529})
 PROXY_CONFIG_MAX_ATTEMPTS = 3
 PROXY_CONFIG_TIMEOUT_SECONDS = 10.0
 PROXY_CONFIG_RETRY_DELAYS_SECONDS = (0.5, 1.0)
-PROXY_CONFIG_RETRYABLE_STATUS_CODES = frozenset(
-    {408, 409, 425, 429, 500, 502, 503, 504, 529}
-)
+PROXY_CONFIG_RETRYABLE_STATUS_CODES = frozenset({408, 409, 425, 429, 500, 502, 503, 504, 529})
 PROXY_CONFIG_NOT_READY_STATUS = 400
 PROXY_CONFIG_ERROR_BODY_CHARS = 500
 SANDBOX_START_TIMEOUT_SECONDS = 120
@@ -60,9 +56,7 @@ def _get_langsmith_api_key() -> str | None:
     Checks LANGSMITH_API_KEY first, then falls back to LANGSMITH_API_KEY_PROD
     for LangGraph Cloud deployments where LANGSMITH_API_KEY is reserved.
     """
-    return os.environ.get("LANGSMITH_API_KEY") or os.environ.get(
-        "LANGSMITH_API_KEY_PROD"
-    )
+    return os.environ.get("LANGSMITH_API_KEY") or os.environ.get("LANGSMITH_API_KEY_PROD")
 
 
 def _get_sandbox_api_key() -> str | None:
@@ -126,9 +120,7 @@ def _get_sandbox_snapshot_config() -> tuple[str | None, int, int, int, int, int]
         "DEFAULT_SANDBOX_SNAPSHOT_FS_CAPACITY_BYTES", DEFAULT_SNAPSHOT_FS_CAPACITY_BYTES
     )
     vcpus = _parse_optional_int("DEFAULT_SANDBOX_VCPUS", DEFAULT_SANDBOX_VCPUS)
-    mem_bytes = _parse_optional_int(
-        "DEFAULT_SANDBOX_MEM_BYTES", DEFAULT_SANDBOX_MEM_BYTES
-    )
+    mem_bytes = _parse_optional_int("DEFAULT_SANDBOX_MEM_BYTES", DEFAULT_SANDBOX_MEM_BYTES)
     idle_ttl_seconds = _parse_optional_int(
         "DEFAULT_SANDBOX_IDLE_TTL_SECONDS", DEFAULT_SANDBOX_IDLE_TTL_SECONDS
     )
@@ -176,9 +168,7 @@ def _get_sandbox_proxy_config(
     return dict(proxy_config) if isinstance(proxy_config, dict) else None
 
 
-def _install_create_extra_fields(
-    client: AsyncSandboxClient, extra: dict[str, Any]
-) -> None:
+def _install_create_extra_fields(client: AsyncSandboxClient, extra: dict[str, Any]) -> None:
     """Merge ``extra`` into the JSON body of the sandbox-create request.
 
     The SDK's ``create_sandbox`` builds a fixed payload with no passthrough, so
@@ -276,9 +266,7 @@ def _is_retryable_proxy_config_error(exc: BaseException) -> bool:
 
 def _is_retryable_sandbox_create_error(exc: BaseException) -> bool:
     response = getattr(exc, "response", None)
-    status_code = getattr(response, "status_code", None) or getattr(
-        exc, "status_code", None
-    )
+    status_code = getattr(response, "status_code", None) or getattr(exc, "status_code", None)
     if isinstance(status_code, int):
         return status_code in SANDBOX_CREATE_RETRYABLE_STATUS_CODES
     return exc.__class__.__name__ in {
@@ -323,9 +311,8 @@ async def _create_sandbox_with_retry(
                 timeout=timeout,
             )
         except Exception as exc:
-            if (
-                attempt == SANDBOX_CREATE_MAX_ATTEMPTS - 1
-                or not _is_retryable_sandbox_create_error(exc)
+            if attempt == SANDBOX_CREATE_MAX_ATTEMPTS - 1 or not _is_retryable_sandbox_create_error(
+                exc
             ):
                 raise
             delay = SANDBOX_CREATE_RETRY_DELAYS_SECONDS[
@@ -375,9 +362,8 @@ async def _patch_proxy_config(
             response.raise_for_status()
             return
         except Exception as exc:
-            if (
-                attempt == PROXY_CONFIG_MAX_ATTEMPTS - 1
-                or not _is_retryable_proxy_config_error(exc)
+            if attempt == PROXY_CONFIG_MAX_ATTEMPTS - 1 or not _is_retryable_proxy_config_error(
+                exc
             ):
                 enriched = _with_response_body(exc)
                 if enriched is not None:
@@ -414,9 +400,7 @@ async def _start_sandbox_best_effort(sandbox_name: str) -> None:
     client = get_async_sandbox_client()
     try:
         await client.start_sandbox(sandbox_name, timeout=SANDBOX_START_TIMEOUT_SECONDS)
-        logger.info(
-            "Started sandbox %s before retrying GitHub proxy config", sandbox_name
-        )
+        logger.info("Started sandbox %s before retrying GitHub proxy config", sandbox_name)
     except Exception:
         logger.warning("Failed to start sandbox %s", sandbox_name, exc_info=True)
     finally:
@@ -442,9 +426,7 @@ async def _configure_github_proxy(
     """
     api_key = _get_sandbox_api_key()
     if not api_key:
-        logger.warning(
-            "No LangSmith API key found, skipping GitHub proxy configuration"
-        )
+        logger.warning("No LangSmith API key found, skipping GitHub proxy configuration")
         return
     langsmith_endpoint = _get_sandbox_endpoint()
     url = f"{langsmith_endpoint}/v2/sandboxes/boxes/{sandbox_name}"
@@ -580,9 +562,7 @@ async def create_langsmith_sandbox(
         sandbox_id=sandbox_id,
         snapshot_id=effective_snapshot_id,
         fs_capacity_bytes=(
-            fs_capacity_bytes
-            if fs_capacity_bytes is not None
-            else default_fs_capacity_bytes
+            fs_capacity_bytes if fs_capacity_bytes is not None else default_fs_capacity_bytes
         ),
         vcpus=effective_vcpus,
         mem_bytes=effective_mem_bytes,
@@ -640,9 +620,7 @@ class TimeoutLangSmithSandbox(LangSmithSandbox):
         output = result.stdout or ""
         if result.stderr:
             output += "\n" + result.stderr if output else result.stderr
-        return ExecuteResponse(
-            output=output, exit_code=result.exit_code, truncated=False
-        )
+        return ExecuteResponse(output=output, exit_code=result.exit_code, truncated=False)
 
     @staticmethod
     def _timeout_response(seconds: int, *, server_side: bool) -> ExecuteResponse:
@@ -660,23 +638,17 @@ class TimeoutLangSmithSandbox(LangSmithSandbox):
         except Exception:  # noqa: BLE001 - best-effort cleanup of a wedged command
             logger.warning("Failed to kill timed-out sandbox command", exc_info=True)
 
-    async def _abase_execute(
-        self, command: str, timeout: int | None
-    ) -> ExecuteResponse:
+    async def _abase_execute(self, command: str, timeout: int | None) -> ExecuteResponse:
         return await LangSmithSandbox.aexecute(self, command, timeout=timeout)
 
     def execute(self, command: str, *, timeout: int | None = None) -> ExecuteResponse:
-        raise NotImplementedError(
-            "TimeoutLangSmithSandbox is async-only; use aexecute."
-        )
+        raise NotImplementedError("TimeoutLangSmithSandbox is async-only; use aexecute.")
 
     async def aexecute(
         self,
         command: str,
         *,
-        timeout: (
-            int | None
-        ) = None,  # noqa: ASYNC109 - forwarded semantic timeout, not an asyncio contract
+        timeout: (int | None) = None,  # noqa: ASYNC109 - forwarded semantic timeout, not an asyncio contract
     ) -> ExecuteResponse:
         return await retry_transient_sandbox_errors(
             lambda: self._aexecute_once(command, timeout=timeout),
@@ -687,9 +659,7 @@ class TimeoutLangSmithSandbox(LangSmithSandbox):
         self,
         command: str,
         *,
-        timeout: (
-            int | None
-        ) = None,  # noqa: ASYNC109 - forwarded semantic timeout, not an asyncio contract
+        timeout: (int | None) = None,  # noqa: ASYNC109 - forwarded semantic timeout, not an asyncio contract
     ) -> ExecuteResponse:
         effective = timeout if timeout is not None else self._default_timeout
         if not effective:
@@ -697,9 +667,7 @@ class TimeoutLangSmithSandbox(LangSmithSandbox):
         # run(wait=False) opens the WS and reads the "started" frame, so
         # connect/setup failures raise here — fall back to the base path.
         try:
-            handle = await self._aget_sandbox().run(
-                command, timeout=effective, wait=False
-            )
+            handle = await self._aget_sandbox().run(command, timeout=effective, wait=False)
         except (*self._WS_FALLBACK_ERRORS, *SANDBOX_NOT_READY_ERRORS, TimeoutError):
             return await self._abase_execute(command, timeout)
         deadline = self._deadline(effective)

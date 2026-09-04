@@ -103,9 +103,7 @@ async def test_load_corridor_tools_returns_tools(
 
 @pytest.mark.asyncio
 async def test_server_load_corridor_mcp_tools() -> None:
-    with patch.object(
-        server, "load_corridor_tools", AsyncMock(return_value=["corridor"])
-    ):
+    with patch.object(server, "load_corridor_tools", AsyncMock(return_value=["corridor"])):
         assert await server._load_corridor_mcp_tools() == ["corridor"]
 
 
@@ -191,12 +189,8 @@ async def test_get_agent_passes_corridor_prompt_state() -> None:
                 new_callable=AsyncMock,
                 return_value=[_FakeTool("analyzePlan")],
             ) as load_corridor,
-            patch.object(
-                server, "construct_system_prompt", return_value="prompt"
-            ) as prompt,
-            patch.object(
-                server, "create_deep_agent", side_effect=fake_create_deep_agent
-            ),
+            patch.object(server, "construct_system_prompt", return_value="prompt") as prompt,
+            patch.object(server, "create_deep_agent", side_effect=fake_create_deep_agent),
         ):
             await server.get_agent(cast(RunnableConfig, config))
             middleware = cast(list[object], captured["middleware"])
@@ -217,13 +211,10 @@ async def test_get_agent_passes_corridor_prompt_state() -> None:
             load_corridor.assert_not_awaited()
             if configured:
                 names = {
-                    getattr(tool, "name", None)
-                    for tool in cast(list[object], captured["tools"])
+                    getattr(tool, "name", None) for tool in cast(list[object], captured["tools"])
                 }
                 assert "analyzePlan" not in names
-                assert "DynamicToolMiddleware" in {
-                    type(item).__name__ for item in middleware
-                }
+                assert "DynamicToolMiddleware" in {type(item).__name__ for item in middleware}
         return bool(prompt.call_args.kwargs["corridor_enabled"])
 
     assert await run_with_corridor(False) is False

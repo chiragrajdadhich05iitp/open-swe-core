@@ -100,13 +100,9 @@ class StoreReporter:
 
     async def _put(self, record: dict[str, Any]) -> None:
         try:
-            await self._client.store.put_item(
-                EVALS_NAMESPACE, REVIEWER_EVAL_KEY, record
-            )
+            await self._client.store.put_item(EVALS_NAMESPACE, REVIEWER_EVAL_KEY, record)
         except Exception:
-            logger.warning(
-                "Failed to publish reviewer eval status to store", exc_info=True
-            )
+            logger.warning("Failed to publish reviewer eval status to store", exc_info=True)
 
     async def start(self) -> None:
         await self._put(self._record(status="running"))
@@ -120,6 +116,4 @@ class StoreReporter:
         return asyncio.create_task(self._heartbeat_loop())
 
     async def finish(self, *, status: str, error: str | None = None) -> None:
-        await self._put(
-            self._record(status=status, finished_at=_now_iso(), error=error)
-        )
+        await self._put(self._record(status=status, finished_at=_now_iso(), error=error))

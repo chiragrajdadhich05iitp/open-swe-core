@@ -24,14 +24,10 @@ _GITHUB_API_BASE = GITHUB_API_BASE
 # Check-run conclusions that mean "this CI step did not pass" and are worth an
 # auto-fix attempt. ``cancelled`` / ``stale`` / ``skipped`` are intentionally
 # excluded: they're rarely a code problem the agent can fix.
-FAILING_CONCLUSIONS: frozenset[str] = frozenset(
-    ["failure", "timed_out", "action_required"]
-)
+FAILING_CONCLUSIONS: frozenset[str] = frozenset(["failure", "timed_out", "action_required"])
 
 # Check runs Open SWE itself produces; never treat them as fixable CI.
-_OPEN_SWE_CHECK_NAMES: frozenset[str] = frozenset(
-    [REVIEW_CHECK_RUN_NAME, "Open SWE Auto-fix"]
-)
+_OPEN_SWE_CHECK_NAMES: frozenset[str] = frozenset([REVIEW_CHECK_RUN_NAME, "Open SWE Auto-fix"])
 
 
 class FailingCheck(dict):
@@ -96,9 +92,7 @@ async def list_commit_statuses(
                 statuses = data.get("statuses") if isinstance(data, dict) else None
                 if not isinstance(statuses, list):
                     break
-                page_statuses = [
-                    status for status in statuses if isinstance(status, dict)
-                ]
+                page_statuses = [status for status in statuses if isinstance(status, dict)]
                 collected.extend(page_statuses)
                 if len(statuses) < 100:
                     break
@@ -132,8 +126,7 @@ async def list_failing_check_runs(
             "details_url": run.get("details_url") or run.get("html_url") or "",
         }
         for run in runs
-        if run.get("status") == "completed"
-        and run.get("conclusion") in FAILING_CONCLUSIONS
+        if run.get("status") == "completed" and run.get("conclusion") in FAILING_CONCLUSIONS
     ]
 
 
@@ -159,9 +152,7 @@ def _failing_names(checks: list[dict[str, Any]] | None) -> set[str]:
     return {c.get("name", "") for c in (checks or []) if c.get("name")}
 
 
-async def names_failing_on_base(
-    *, owner: str, repo: str, base_sha: str, token: str
-) -> set[str]:
+async def names_failing_on_base(*, owner: str, repo: str, base_sha: str, token: str) -> set[str]:
     """Return the set of check/status names already failing on ``base_sha``.
 
     Used to skip auto-fix for failures inherited from the base branch (the
@@ -169,12 +160,8 @@ async def names_failing_on_base(
     """
     if not base_sha:
         return set()
-    checks = await list_failing_check_runs(
-        owner=owner, repo=repo, ref=base_sha, token=token
-    )
-    statuses = await list_failing_statuses(
-        owner=owner, repo=repo, ref=base_sha, token=token
-    )
+    checks = await list_failing_check_runs(owner=owner, repo=repo, ref=base_sha, token=token)
+    statuses = await list_failing_statuses(owner=owner, repo=repo, ref=base_sha, token=token)
     return _failing_names(checks) | _failing_names(statuses)
 
 
@@ -197,9 +184,7 @@ async def fetch_open_pr_for_branch(
     return None
 
 
-async def fetch_pr(
-    *, owner: str, repo: str, pr_number: int, token: str
-) -> dict[str, Any] | None:
+async def fetch_pr(*, owner: str, repo: str, pr_number: int, token: str) -> dict[str, Any] | None:
     """Fetch full PR metadata (includes ``mergeable_state``)."""
     url = f"{_GITHUB_API_BASE}/repos/{owner}/{repo}/pulls/{pr_number}"
     try:
@@ -213,9 +198,7 @@ async def fetch_pr(
     return data if isinstance(data, dict) else None
 
 
-async def head_commit_author_login(
-    *, owner: str, repo: str, sha: str, token: str
-) -> str | None:
+async def head_commit_author_login(*, owner: str, repo: str, sha: str, token: str) -> str | None:
     """Return the GitHub login that authored commit ``sha`` (or ``None``)."""
     url = f"{_GITHUB_API_BASE}/repos/{owner}/{repo}/commits/{sha}"
     try:
@@ -223,9 +206,7 @@ async def head_commit_author_login(
             response = await github_request(client, "GET", url)
             response.raise_for_status()
     except httpx.HTTPError:
-        logger.debug(
-            "Failed to fetch commit %s/%s@%s for author check", owner, repo, sha
-        )
+        logger.debug("Failed to fetch commit %s/%s@%s for author check", owner, repo, sha)
         return None
     data = response.json()
     author = data.get("author") if isinstance(data, dict) else None
@@ -233,9 +214,7 @@ async def head_commit_author_login(
     return login if isinstance(login, str) and login else None
 
 
-async def has_repo_write_permission(
-    *, owner: str, repo: str, username: str, token: str
-) -> bool:
+async def has_repo_write_permission(*, owner: str, repo: str, username: str, token: str) -> bool:
     """Return whether ``username`` has write/maintain/admin on ``owner/repo``.
 
     Used to gate the no-mention auto-fix-on-review path so a triage/read-only
@@ -249,9 +228,7 @@ async def has_repo_write_permission(
             response = await github_request(client, "GET", url)
             response.raise_for_status()
     except httpx.HTTPError:
-        logger.info(
-            "Could not verify %s's permission on %s/%s; denying", username, owner, repo
-        )
+        logger.info("Could not verify %s's permission on %s/%s; denying", username, owner, repo)
         return False
     data = response.json()
     permission = data.get("permission") if isinstance(data, dict) else None

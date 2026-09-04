@@ -58,9 +58,7 @@ async def test_timeout_wrapup_preserves_structured_system_content(
         model=cast(BaseChatModel, object()),
         messages=[],
         system_message=SystemMessage(
-            content=[
-                {"type": "text", "text": "base", "cache_control": {"type": "ephemeral"}}
-            ]
+            content=[{"type": "text", "text": "base", "cache_control": {"type": "ephemeral"}}]
         ),
     )
 

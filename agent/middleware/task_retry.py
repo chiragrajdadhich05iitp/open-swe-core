@@ -61,14 +61,9 @@ def _is_httpx_transport_error(exc: Exception) -> bool:
 
 def task_retry_on(exc: Exception) -> bool:
     status = _status_code(exc)
-    if isinstance(status, int) and (
-        status in _RETRY_HTTP_STATUS_CODES or status >= 500
-    ):
+    if isinstance(status, int) and (status in _RETRY_HTTP_STATUS_CODES or status >= 500):
         return True
-    return (
-        exc.__class__.__name__ in _TRANSIENT_ERROR_NAMES
-        or _is_httpx_transport_error(exc)
-    )
+    return exc.__class__.__name__ in _TRANSIENT_ERROR_NAMES or _is_httpx_transport_error(exc)
 
 
 def task_on_failure(exc: Exception) -> str:

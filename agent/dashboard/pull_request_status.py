@@ -20,9 +20,7 @@ _SHA_PATTERN = re.compile(r"[0-9a-fA-F]{40,64}")
 _FAILING_CHECK_CONCLUSIONS = frozenset(
     {"failure", "timed_out", "action_required", "startup_failure"}
 )
-_INCONCLUSIVE_CHECK_CONCLUSIONS = frozenset(
-    {"cancelled", "stale", "skipped", "neutral"}
-)
+_INCONCLUSIVE_CHECK_CONCLUSIONS = frozenset({"cancelled", "stale", "skipped", "neutral"})
 _REVIEW_THREADS_QUERY = """
 query PullRequestReviewThreads($owner: String!, $repo: String!, $number: Int!, $cursor: String) {
   repository(owner: $owner, name: $repo) {
@@ -73,9 +71,7 @@ def _unavailable_pull_request(record: object) -> dict[str, Any]:
     number = record.get("number") if isinstance(record, Mapping) else None
     return {
         "repoFullName": full_name if isinstance(full_name, str) else None,
-        "number": (
-            number if isinstance(number, int) and not isinstance(number, bool) else None
-        ),
+        "number": (number if isinstance(number, int) and not isinstance(number, bool) else None),
         "url": None,
         "statusAvailable": False,
         "state": None,
@@ -164,14 +160,10 @@ async def _fetch_commit_statuses(
             )
             response.raise_for_status()
             payload = response.json()
-            raw_statuses = (
-                payload.get("statuses") if isinstance(payload, dict) else None
-            )
+            raw_statuses = payload.get("statuses") if isinstance(payload, dict) else None
             if not isinstance(raw_statuses, list):
                 return None
-            statuses.extend(
-                status for status in raw_statuses if isinstance(status, dict)
-            )
+            statuses.extend(status for status in raw_statuses if isinstance(status, dict))
             if len(raw_statuses) < 100:
                 break
             page += 1
@@ -207,11 +199,7 @@ def _normalize_checks(
                     "url": (
                         run.get("details_url")
                         if isinstance(run.get("details_url"), str)
-                        else (
-                            run.get("html_url")
-                            if isinstance(run.get("html_url"), str)
-                            else None
-                        )
+                        else (run.get("html_url") if isinstance(run.get("html_url"), str) else None)
                     ),
                 }
             )
@@ -225,9 +213,7 @@ def _normalize_checks(
             failing.append(
                 {
                     "name": (
-                        status.get("context")
-                        if isinstance(status.get("context"), str)
-                        else ""
+                        status.get("context") if isinstance(status.get("context"), str) else ""
                     ),
                     "conclusion": state,
                     "url": (
@@ -268,13 +254,9 @@ async def _fetch_unresolved_review_threads(
                 return None
             data = payload.get("data")
             repository = data.get("repository") if isinstance(data, dict) else None
-            pull = (
-                repository.get("pullRequest") if isinstance(repository, dict) else None
-            )
+            pull = repository.get("pullRequest") if isinstance(repository, dict) else None
             threads = pull.get("reviewThreads") if isinstance(pull, dict) else None
-            if not isinstance(threads, dict) or not isinstance(
-                threads.get("nodes"), list
-            ):
+            if not isinstance(threads, dict) or not isinstance(threads.get("nodes"), list):
                 return None
             for thread in threads["nodes"]:
                 if not isinstance(thread, dict) or thread.get("isResolved") is True:
@@ -294,44 +276,26 @@ async def _fetch_unresolved_review_threads(
                     {
                         "author": (
                             author.get("login")
-                            if isinstance(author, dict)
-                            and isinstance(author.get("login"), str)
+                            if isinstance(author, dict) and isinstance(author.get("login"), str)
                             else None
                         ),
                         "body": (
-                            comment.get("body")
-                            if isinstance(comment.get("body"), str)
-                            else ""
+                            comment.get("body") if isinstance(comment.get("body"), str) else ""
                         ),
-                        "path": (
-                            thread.get("path")
-                            if isinstance(thread.get("path"), str)
-                            else ""
-                        ),
+                        "path": (thread.get("path") if isinstance(thread.get("path"), str) else ""),
                         "line": (
-                            line
-                            if isinstance(line, int) and not isinstance(line, bool)
-                            else None
+                            line if isinstance(line, int) and not isinstance(line, bool) else None
                         ),
                         "url": (
-                            comment.get("url")
-                            if isinstance(comment.get("url"), str)
-                            else None
+                            comment.get("url") if isinstance(comment.get("url"), str) else None
                         ),
                     }
                 )
             page_info = threads.get("pageInfo")
-            if (
-                not isinstance(page_info, dict)
-                or page_info.get("hasNextPage") is not True
-            ):
+            if not isinstance(page_info, dict) or page_info.get("hasNextPage") is not True:
                 return unresolved
             next_cursor = page_info.get("endCursor")
-            if (
-                not isinstance(next_cursor, str)
-                or not next_cursor
-                or next_cursor in seen_cursors
-            ):
+            if not isinstance(next_cursor, str) or not next_cursor or next_cursor in seen_cursors:
                 return None
             seen_cursors.add(next_cursor)
             cursor = next_cursor
@@ -339,9 +303,7 @@ async def _fetch_unresolved_review_threads(
         return None
 
 
-async def _pull_request_status(
-    client: httpx.AsyncClient, record: object
-) -> dict[str, Any]:
+async def _pull_request_status(client: httpx.AsyncClient, record: object) -> dict[str, Any]:
     identity = _pull_request_identity(record)
     if identity is None:
         return _unavailable_pull_request(record)
@@ -399,9 +361,7 @@ async def _pull_request_status(
     return result
 
 
-async def get_pull_request_statuses(
-    records: Sequence[object], token: str
-) -> list[dict[str, Any]]:
+async def get_pull_request_statuses(records: Sequence[object], token: str) -> list[dict[str, Any]]:
     """Return live status for every tracked pull request record."""
     async with github_client(token=token) as client:
         return [await _pull_request_status(client, record) for record in records]

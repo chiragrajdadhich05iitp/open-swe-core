@@ -33,10 +33,7 @@ class AssistantTextEventDetector:
             if frame is None:
                 return observations
             payload = self._payload(frame)
-            if (
-                payload is not None
-                and (observation := self._observe(payload)) is not None
-            ):
+            if payload is not None and (observation := self._observe(payload)) is not None:
                 observations.append(observation)
 
     def _pop_frame(self) -> bytes | None:
@@ -139,9 +136,7 @@ def _record_ttft_histogram(duration_seconds: float) -> None:
 
     global _DASHBOARD_THREAD_TTFT
     if _DASHBOARD_THREAD_TTFT is None:
-        _DASHBOARD_THREAD_TTFT = def_latency(
-            "open_swe_dashboard_thread_ttft", METRIC_TIER_INFO
-        )
+        _DASHBOARD_THREAD_TTFT = def_latency("open_swe_dashboard_thread_ttft", METRIC_TIER_INFO)
     get_datadog_metrics_reporter().record_latency(
         _DASHBOARD_THREAD_TTFT,
         duration_seconds,
@@ -161,9 +156,7 @@ async def record_dashboard_thread_ttft(
         duration_seconds = (observation.event_timestamp_ms - started_at_ms) / 1000
         _record_ttft_histogram(duration_seconds)
     except Exception:
-        logger.warning(
-            "Failed to record dashboard thread TTFT histogram", exc_info=True
-        )
+        logger.warning("Failed to record dashboard thread TTFT histogram", exc_info=True)
         return
     logger.info(
         "Dashboard thread TTFT %.1f ms (thread=%s, run=%s)",

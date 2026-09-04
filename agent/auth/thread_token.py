@@ -20,9 +20,7 @@ _BOT_PRINCIPAL = "bot"
 _GITHUB_TOKEN_CACHE: dict[tuple[str, str], tuple[str, str | None, datetime]] = {}
 
 
-def github_token_principal(
-    *, login: str | None = None, email: str | None = None
-) -> str | None:
+def github_token_principal(*, login: str | None = None, email: str | None = None) -> str | None:
     """Return the normalized principal used to isolate cached user tokens."""
     if isinstance(login, str) and login.strip():
         return f"login:{login.strip().casefold()}"
@@ -48,9 +46,7 @@ def cache_github_token_for_thread(
         return
     cache_principal = _BOT_PRINCIPAL if is_bot_token else principal
     if not cache_principal:
-        logger.warning(
-            "Refusing to cache an unbound user GitHub token for thread %s", thread_id
-        )
+        logger.warning("Refusing to cache an unbound user GitHub token for thread %s", thread_id)
         return
     now = datetime.now(UTC)
     _GITHUB_TOKEN_CACHE[(thread_id, cache_principal)] = (token, expires_at, now)
@@ -88,9 +84,7 @@ def _is_expired(expires_at: Any, *, now: datetime | None = None) -> bool:
     return (parsed - current).total_seconds() <= _GITHUB_TOKEN_EXPIRY_SKEW_SECONDS
 
 
-def _entry_expired(
-    expires_at: str | None, cached_at: datetime, *, now: datetime
-) -> bool:
+def _entry_expired(expires_at: str | None, cached_at: datetime, *, now: datetime) -> bool:
     """Expired when past the token's own expiry or the 24h cache cap."""
     if now - cached_at >= _GITHUB_TOKEN_MAX_TTL:
         return True
@@ -124,9 +118,7 @@ def _cached_token_if_fresh(
         token, expires_at, cached_at = cached
         if _entry_expired(expires_at, cached_at, now=datetime.now(UTC)):
             _GITHUB_TOKEN_CACHE.pop(key, None)
-            logger.info(
-                "Cached GitHub token for thread %s has expired; re-resolving", thread_id
-            )
+            logger.info("Cached GitHub token for thread %s has expired; re-resolving", thread_id)
             continue
         return token, expires_at
     return None, None

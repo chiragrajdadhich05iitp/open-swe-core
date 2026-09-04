@@ -43,9 +43,7 @@ async def _flush_in_traced_node(thread_id: str) -> _FakeClient:
     graph.add_edge("node", END)
     client = _FakeClient()
     tracer = LangChainTracer(client=cast(Any, client), project_name="test")
-    await graph.compile().ainvoke(
-        {"done": False}, config=cast(Any, {"callbacks": [tracer]})
-    )
+    await graph.compile().ainvoke({"done": False}, config=cast(Any, {"callbacks": [tracer]}))
     return client
 
 

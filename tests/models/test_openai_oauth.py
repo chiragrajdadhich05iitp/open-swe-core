@@ -38,9 +38,7 @@ def _clean_oauth_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def _configure(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv(
-        "OPEN_SWE_OPENAI_OAUTH_BROKER_URL", "http://127.0.0.1:3210/token"
-    )
+    monkeypatch.setenv("OPEN_SWE_OPENAI_OAUTH_BROKER_URL", "http://127.0.0.1:3210/token")
     monkeypatch.setenv("OPEN_SWE_OPENAI_OAUTH_BROKER_TOKEN", "broker-secret")
 
 
@@ -59,9 +57,7 @@ def test_oauth_model_uses_dedicated_account_transport(
         patch.object(model, "build_desktop_openai_oauth_model", fake_model),
         detect_blocking_calls(),
     ):
-        result = model.make_model(
-            "openai:gpt-5.6-sol", use_gateway=False, max_tokens=123
-        )
+        result = model.make_model("openai:gpt-5.6-sol", use_gateway=False, max_tokens=123)
 
     assert result == "MODEL"
     assert captured["model_name"] == "gpt-5.6-sol"

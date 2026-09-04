@@ -15,9 +15,7 @@ from . import slack as service
 router = APIRouter()
 
 _MESSAGE_UPDATE_RETRY_DELAYS = (0.1, 0.2, 0.5, 1, 2, 4, 8, 14)
-_EXTERNAL_CHANNEL_REFUSAL = (
-    "Open SWE does not operate in channels with external participants."
-)
+_EXTERNAL_CHANNEL_REFUSAL = "Open SWE does not operate in channels with external participants."
 
 
 def _event_channel_id(event: dict[str, Any]) -> str:
@@ -111,9 +109,7 @@ async def _lookup_delivered_message_update(
 ) -> tuple[str | None, dict[str, Any] | None]:
     for delay in (*_MESSAGE_UPDATE_RETRY_DELAYS, None):
         try:
-            thread_id = await common.lookup_slack_thread_id(
-                langgraph_client, channel_id, thread_ts
-            )
+            thread_id = await common.lookup_slack_thread_id(langgraph_client, channel_id, thread_ts)
         except common.SlackThreadMappingError:
             return None, None
         delivered_message = await common.lookup_slack_run_mapping(
@@ -156,13 +152,9 @@ async def _process_slack_message_update(
             message_ts,
         )
         return
-    channel_context = await common._get_slack_channel_context(
-        channel_id, use_cache=False
-    )
+    channel_context = await common._get_slack_channel_context(channel_id, use_cache=False)
     if not common.slack_channel_allows_operations(channel_context):
-        common.logger.warning(
-            "Blocked Slack message update in ineligible channel=%s", channel_id
-        )
+        common.logger.warning("Blocked Slack message update in ineligible channel=%s", channel_id)
         return
     event_data["thread_id"] = thread_id
     event_data["channel_context"] = channel_context
@@ -216,9 +208,7 @@ async def slack_webhook(
     channel_id = _event_channel_id(event)
     channel_context: dict[str, Any] | None = None
     if channel_id:
-        channel_context = await common._get_slack_channel_context(
-            channel_id, use_cache=False
-        )
+        channel_context = await common._get_slack_channel_context(channel_id, use_cache=False)
         if not common.slack_channel_allows_operations(channel_context):
             is_external = channel_context.get("is_ext_shared") is True
             event_ts = str(event.get("event_ts") or event.get("ts") or "")
@@ -251,9 +241,7 @@ async def slack_webhook(
         item: dict[str, Any] = item_value if isinstance(item_value, dict) else {}
         user = event.get("user")
         user_id = str(
-            user.get("id")
-            if isinstance(user, dict)
-            else user or event.get("user_id") or ""
+            user.get("id") if isinstance(user, dict) else user or event.get("user_id") or ""
         )
         channel = event.get("channel")
         action_channel_id = str(
@@ -261,9 +249,7 @@ async def slack_webhook(
             if isinstance(channel, dict)
             else channel or event.get("channel_id") or ""
         )
-        event_ts = str(
-            event.get("event_ts") or event.get("action_ts") or _synthetic_slack_ts()
-        )
+        event_ts = str(event.get("event_ts") or event.get("action_ts") or _synthetic_slack_ts())
         action_payload = {
             "key": event.get("key") or action.get("key") or item.get("key"),
             "label": event.get("label") or action.get("label") or item.get("label"),
@@ -336,9 +322,7 @@ async def slack_webhook(
             if isinstance(first_user, str):
                 bot_user_id = first_user
 
-    is_message_update = (
-        event.get("type") == "message" and event.get("subtype") == "message_changed"
-    )
+    is_message_update = event.get("type") == "message" and event.get("subtype") == "message_changed"
     updated_message = event.get("message") if is_message_update else event
     if not isinstance(updated_message, dict):
         return {"status": "ignored", "reason": "Invalid updated message"}
@@ -395,11 +379,7 @@ async def slack_webhook(
         not is_message_update and event.get("channel_type") == "im" and bool(user_id)
     )
     is_untagged_two_party_reply = False
-    if (
-        event.get("type") != "app_mention"
-        and not is_message_update
-        and not in_code_channel
-    ):
+    if event.get("type") != "app_mention" and not is_message_update and not in_code_channel:
         has_username_mention = bool(
             common.SLACK_BOT_USERNAME and f"@{common.SLACK_BOT_USERNAME}" in text
         )
@@ -499,9 +479,7 @@ async def slack_webhook(
                     langgraph_client, channel_id, thread_ts
                 )
             except common.SlackThreadMappingError:
-                common.logger.exception(
-                    "Could not resolve explicit Slack thread mapping"
-                )
+                common.logger.exception("Could not resolve explicit Slack thread mapping")
                 await common.post_slack_thread_reply(
                     channel_id,
                     thread_ts,
@@ -528,8 +506,7 @@ async def slack_webhook(
             "code_channel": in_code_channel,
             "reply_thread_ts": reply_thread_ts if in_code_channel else "",
             "team_id": team_id,
-            "app_context": updated_message.get("app_context")
-            or event.get("app_context"),
+            "app_context": updated_message.get("app_context") or event.get("app_context"),
         }
         repo_config = await common.get_slack_repo_config(
             channel_id,
@@ -539,9 +516,7 @@ async def slack_webhook(
             thread_id=thread_id,
         )
         if await common.claim_slack_event(event_id, channel_id, event_ts):
-            background_tasks.add_task(
-                service.process_slack_mention, event_data, repo_config
-            )
+            background_tasks.add_task(service.process_slack_mention, event_data, repo_config)
             return {"status": "accepted", "message": "Slack mention queued"}
 
     common.logger.info("Ignoring duplicate delivery of Slack event %s", event_id)
@@ -573,9 +548,7 @@ async def slack_code_channel_command(
     command_text = value("text")
     trigger_id = value("trigger_id")
     team_id = value("team_id")
-    if not (
-        channel_id and user_id and 1 <= len(command) <= 31 and len(command_text) <= 4000
-    ):
+    if not (channel_id and user_id and 1 <= len(command) <= 31 and len(command_text) <= 4000):
         return {
             "response_type": "ephemeral",
             "text": "That code-channel command was invalid.",
@@ -627,13 +600,8 @@ async def slack_interactivity(
         common.logger.exception("Failed to parse Slack interactivity payload")
         return {"status": "error", "message": "Invalid payload"}
 
-    container = (
-        payload.get("container") if isinstance(payload.get("container"), dict) else {}
-    )
-    if (
-        payload.get("type") == "block_suggestion"
-        and container.get("type") == "code_channel_view"
-    ):
+    container = payload.get("container") if isinstance(payload.get("container"), dict) else {}
+    if payload.get("type") == "block_suggestion" and container.get("type") == "code_channel_view":
         channel_id = str(container.get("channel_id") or "")
         view_id = str(container.get("view_id") or "")
         action_id = str(payload.get("action_id") or "")
@@ -647,13 +615,8 @@ async def slack_interactivity(
             str(payload.get("value") or "")[:200],
         )
         return {"options": options}
-    if (
-        payload.get("type") == "block_actions"
-        and container.get("type") == "code_channel_view"
-    ):
-        actions = (
-            payload.get("actions") if isinstance(payload.get("actions"), list) else []
-        )
+    if payload.get("type") == "block_actions" and container.get("type") == "code_channel_view":
+        actions = payload.get("actions") if isinstance(payload.get("actions"), list) else []
         user = payload.get("user") if isinstance(payload.get("user"), dict) else {}
         first_action = actions[0] if actions and isinstance(actions[0], dict) else {}
         event_ts = str(first_action.get("action_ts") or _synthetic_slack_ts())
@@ -703,19 +666,13 @@ async def slack_interactivity(
         return {"status": "ignored", "reason": "No Open SWE action"}
 
     channel = payload.get("channel") if isinstance(payload.get("channel"), dict) else {}
-    container = (
-        payload.get("container") if isinstance(payload.get("container"), dict) else {}
-    )
+    container = payload.get("container") if isinstance(payload.get("container"), dict) else {}
     channel_id = str(channel.get("id") or container.get("channel_id") or "")
     if not channel_id:
         return {"status": "ignored", "reason": "Slack channel is not eligible"}
-    channel_context = await common._get_slack_channel_context(
-        channel_id, use_cache=False
-    )
+    channel_context = await common._get_slack_channel_context(channel_id, use_cache=False)
     if not common.slack_channel_allows_operations(channel_context):
-        common.logger.warning(
-            "Blocked Slack interaction in ineligible channel=%s", channel_id
-        )
+        common.logger.warning("Blocked Slack interaction in ineligible channel=%s", channel_id)
         return {"status": "ignored", "reason": "Slack channel is not eligible"}
 
     try:
@@ -725,24 +682,13 @@ async def slack_interactivity(
     if action_value.get("type") == "workflow_push_approval":
         workflow_action = str(action_value.get("action") or "").strip()
         fingerprint = str(action_value.get("fingerprint") or "").strip()
-        channel = (
-            payload.get("channel") if isinstance(payload.get("channel"), dict) else {}
-        )
-        message = (
-            payload.get("message") if isinstance(payload.get("message"), dict) else {}
-        )
-        container = (
-            payload.get("container")
-            if isinstance(payload.get("container"), dict)
-            else {}
-        )
+        channel = payload.get("channel") if isinstance(payload.get("channel"), dict) else {}
+        message = payload.get("message") if isinstance(payload.get("message"), dict) else {}
+        container = payload.get("container") if isinstance(payload.get("container"), dict) else {}
         user = payload.get("user") if isinstance(payload.get("user"), dict) else {}
         channel_id = str(channel.get("id") or container.get("channel_id") or "")
         thread_ts = str(
-            message.get("thread_ts")
-            or message.get("ts")
-            or container.get("thread_ts")
-            or ""
+            message.get("thread_ts") or message.get("ts") or container.get("thread_ts") or ""
         )
         user_id = str(user.get("id") or "")
         if not channel_id or not thread_ts or not fingerprint:
@@ -817,24 +763,13 @@ async def slack_interactivity(
 
     if action_value.get("type") == "plan_approval":
         plan_action = str(action_value.get("action") or "").strip()
-        channel = (
-            payload.get("channel") if isinstance(payload.get("channel"), dict) else {}
-        )
-        message = (
-            payload.get("message") if isinstance(payload.get("message"), dict) else {}
-        )
-        container = (
-            payload.get("container")
-            if isinstance(payload.get("container"), dict)
-            else {}
-        )
+        channel = payload.get("channel") if isinstance(payload.get("channel"), dict) else {}
+        message = payload.get("message") if isinstance(payload.get("message"), dict) else {}
+        container = payload.get("container") if isinstance(payload.get("container"), dict) else {}
         user = payload.get("user") if isinstance(payload.get("user"), dict) else {}
         channel_id = str(channel.get("id") or container.get("channel_id") or "")
         thread_ts = str(
-            message.get("thread_ts")
-            or message.get("ts")
-            or container.get("thread_ts")
-            or ""
+            message.get("thread_ts") or message.get("ts") or container.get("thread_ts") or ""
         )
         user_id = str(user.get("id") or "")
         if not channel_id or not thread_ts:
@@ -901,30 +836,20 @@ async def slack_interactivity(
 
     channel = payload.get("channel") if isinstance(payload.get("channel"), dict) else {}
     message = payload.get("message") if isinstance(payload.get("message"), dict) else {}
-    container = (
-        payload.get("container") if isinstance(payload.get("container"), dict) else {}
-    )
+    container = payload.get("container") if isinstance(payload.get("container"), dict) else {}
     user = payload.get("user") if isinstance(payload.get("user"), dict) else {}
     channel_id = str(channel.get("id") or container.get("channel_id") or "")
     event_ts = str(
-        action.get("action_ts")
-        or message.get("ts")
-        or container.get("message_ts")
-        or ""
+        action.get("action_ts") or message.get("ts") or container.get("message_ts") or ""
     )
     thread_ts = str(
-        message.get("thread_ts")
-        or message.get("ts")
-        or container.get("thread_ts")
-        or event_ts
+        message.get("thread_ts") or message.get("ts") or container.get("thread_ts") or event_ts
     )
     user_id = str(user.get("id") or "")
     if not channel_id or not thread_ts or not event_ts or not user_id:
         return {"status": "ignored", "reason": "Missing Slack action context"}
 
-    thread_id = await common.lookup_slack_thread_id(
-        get_langgraph_client(), channel_id, thread_ts
-    )
+    thread_id = await common.lookup_slack_thread_id(get_langgraph_client(), channel_id, thread_ts)
     if not thread_id:
         return {"status": "ignored", "reason": "Slack thread is not associated"}
     channel_context = await common._get_slack_channel_context(channel_id)
@@ -935,9 +860,7 @@ async def slack_interactivity(
         channel_context=channel_context,
         thread_id=thread_id,
     )
-    background_tasks.add_task(
-        _update_selected_option_message, payload, action, response
-    )
+    background_tasks.add_task(_update_selected_option_message, payload, action, response)
     background_tasks.add_task(
         service.process_slack_mention,
         {
@@ -1016,10 +939,7 @@ def _selected_option_blocks(
         if not isinstance(block, dict):
             continue
         elements = block.get("elements")
-        if (
-            block.get("type") != "actions"
-            or _first_open_swe_option_action(elements) is None
-        ):
+        if block.get("type") != "actions" or _first_open_swe_option_action(elements) is None:
             updated_blocks.append(block)
             continue
         if not replaced:
@@ -1027,9 +947,7 @@ def _selected_option_blocks(
             replaced = True
         if isinstance(elements, list):
             remaining = [
-                element
-                for element in elements
-                if _first_open_swe_option_action([element]) is None
+                element for element in elements if _first_open_swe_option_action([element]) is None
             ]
             if remaining:
                 updated_blocks.append({**block, "elements": remaining})
@@ -1043,8 +961,7 @@ def _first_open_swe_option_action(actions: common.Any) -> dict[str, common.Any] 
     for action in actions:
         action_id = action.get("action_id") if isinstance(action, dict) else None
         if isinstance(action_id, str) and (
-            action_id == "open_swe_option_select"
-            or action_id.startswith("open_swe_option_select_")
+            action_id == "open_swe_option_select" or action_id.startswith("open_swe_option_select_")
         ):
             return action
     return None

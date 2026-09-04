@@ -40,9 +40,9 @@ async def test_create_agent_instructions_puts_new_record(fake_store: FakeStore) 
     assert record.owner == "acme"
     assert record.instructions == ""
     assert record.created_by == "octo"
-    assert fake_store.values(AGENT_INSTRUCTIONS_NAMESPACE)[
-        "acme/repo"
-    ] == record.model_dump(mode="json")
+    assert fake_store.values(AGENT_INSTRUCTIONS_NAMESPACE)["acme/repo"] == record.model_dump(
+        mode="json"
+    )
 
 
 @pytest.mark.asyncio
@@ -123,15 +123,11 @@ async def test_list_agent_instructions_filters_inaccessible_repos(monkeypatch) -
             raise HTTPException(403, "no access")
         return "token"
 
-    monkeypatch.setattr(
-        routes, "require_repo_access_for_user", fake_require_repo_access_for_user
-    )
+    monkeypatch.setattr(routes, "require_repo_access_for_user", fake_require_repo_access_for_user)
 
     result = await routes.api_list_agent_instructions(session={"sub": "octocat"})
 
-    assert result == [
-        AgentInstructions(full_name="acme/visible", instructions="visible")
-    ]
+    assert result == [AgentInstructions(full_name="acme/visible", instructions="visible")]
 
 
 @pytest.mark.asyncio
@@ -140,9 +136,7 @@ async def test_get_agent_instructions_requires_repo_access(monkeypatch) -> None:
     monkeypatch.setattr(
         routes.AGENT_INSTRUCTIONS,
         "get",
-        AsyncMock(
-            return_value=AgentInstructions(full_name="acme/repo", instructions="rules")
-        ),
+        AsyncMock(return_value=AgentInstructions(full_name="acme/repo", instructions="rules")),
     )
     monkeypatch.setattr(routes, "require_repo_access_for_user", require_access)
 
@@ -171,9 +165,7 @@ async def test_delete_agent_instructions_requires_repo_access_before_delete(
     monkeypatch.setattr(routes.AGENT_INSTRUCTIONS, "delete", delete_instructions)
 
     with pytest.raises(HTTPException) as exc:
-        await routes.api_delete_agent_instructions(
-            "acme/repo", session={"sub": "octocat"}
-        )
+        await routes.api_delete_agent_instructions("acme/repo", session={"sub": "octocat"})
 
     assert exc.value.status_code == 403
     get_instructions.assert_not_awaited()

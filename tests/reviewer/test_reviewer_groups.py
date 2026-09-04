@@ -92,10 +92,7 @@ async def test_generate_diff_groups_dedupes_and_drops_unknown() -> None:
 @pytest.mark.asyncio
 async def test_generate_diff_groups_empty_diff_returns_empty() -> None:
     assert (
-        await generate_diff_groups(
-            diff_text="", model=cast(BaseChatModel, _FakeModel(None))
-        )
-        == []
+        await generate_diff_groups(diff_text="", model=cast(BaseChatModel, _FakeModel(None))) == []
     )
 
 
@@ -138,9 +135,7 @@ async def test_maybe_generate_skips_when_signature_unchanged() -> None:
             new_callable=AsyncMock,
             return_value=existing,
         ),
-        patch(
-            "agent.review.groups.generate_diff_groups", new_callable=AsyncMock
-        ) as gen,
+        patch("agent.review.groups.generate_diff_groups", new_callable=AsyncMock) as gen,
         patch(
             "agent.review.groups.set_reviewer_thread_metadata",
             new_callable=AsyncMock,

@@ -23,18 +23,12 @@ async def test_slack_add_reaction_defaults_to_triggering_event(
 ) -> None:
     captured: dict[str, str] = {}
 
-    async def fake_add_slack_reaction(
-        channel_id: str, message_ts: str, emoji: str
-    ) -> bool:
-        captured.update(
-            {"channel_id": channel_id, "message_ts": message_ts, "emoji": emoji}
-        )
+    async def fake_add_slack_reaction(channel_id: str, message_ts: str, emoji: str) -> bool:
+        captured.update({"channel_id": channel_id, "message_ts": message_ts, "emoji": emoji})
         return True
 
     monkeypatch.setattr(slack_reaction_tool, "get_config", _config)
-    monkeypatch.setattr(
-        slack_reaction_tool, "add_slack_reaction", fake_add_slack_reaction
-    )
+    monkeypatch.setattr(slack_reaction_tool, "add_slack_reaction", fake_add_slack_reaction)
 
     result = await slack_reaction_tool.slack_add_reaction(emoji="saluting_face")
 
@@ -51,22 +45,14 @@ async def test_slack_add_reaction_accepts_explicit_message_and_normalizes_emoji(
 ) -> None:
     captured: dict[str, str] = {}
 
-    async def fake_add_slack_reaction(
-        channel_id: str, message_ts: str, emoji: str
-    ) -> bool:
-        captured.update(
-            {"channel_id": channel_id, "message_ts": message_ts, "emoji": emoji}
-        )
+    async def fake_add_slack_reaction(channel_id: str, message_ts: str, emoji: str) -> bool:
+        captured.update({"channel_id": channel_id, "message_ts": message_ts, "emoji": emoji})
         return True
 
     monkeypatch.setattr(slack_reaction_tool, "get_config", _config)
-    monkeypatch.setattr(
-        slack_reaction_tool, "add_slack_reaction", fake_add_slack_reaction
-    )
+    monkeypatch.setattr(slack_reaction_tool, "add_slack_reaction", fake_add_slack_reaction)
 
-    result = await slack_reaction_tool.slack_add_reaction(
-        emoji=":eyes:", message_ts="1.2"
-    )
+    result = await slack_reaction_tool.slack_add_reaction(emoji=":eyes:", message_ts="1.2")
 
     assert result == {"success": True}
     assert captured == {"channel_id": "C1", "message_ts": "1.2", "emoji": "eyes"}

@@ -102,11 +102,7 @@ def _part_value(part: Any, key: str) -> Any:
 def _event_data(part: Any) -> tuple[tuple[str, ...], dict[str, Any]] | None:
     event = _part_value(part, "event")
     raw = _part_value(part, "data")
-    if (
-        not isinstance(event, str)
-        or not event.startswith("tools")
-        or not isinstance(raw, dict)
-    ):
+    if not isinstance(event, str) or not event.startswith("tools") or not isinstance(raw, dict):
         return None
     namespace = tuple(segment for segment in event.split("|")[1:] if segment)
     params = raw.get("params")
@@ -163,9 +159,7 @@ class SlackThinkingStream:
                 recipient_team_id=self.recipient_team_id,
             )
         except SlackStreamError as exc:
-            logger.info(
-                "Slack Thinking Steps unavailable for run %s: %s", self.run_id, exc.code
-            )
+            logger.info("Slack Thinking Steps unavailable for run %s: %s", self.run_id, exc.code)
             return False
         self.steps[((), "startup")] = initial
         await store_slack_run_mapping(
@@ -210,9 +204,7 @@ class SlackThinkingStream:
         elif event in {"tool-finished", "tool-error"}:
             step = self.steps.get(key)
             if step is None:
-                step = Step(
-                    _step_id(self.run_id, namespace, call_id), "Agent step", "complete"
-                )
+                step = Step(_step_id(self.run_id, namespace, call_id), "Agent step", "complete")
                 self.steps[key] = step
             step.status = "error" if event == "tool-error" else "complete"
             step.output = "Failed" if event == "tool-error" else "Completed"
@@ -222,20 +214,14 @@ class SlackThinkingStream:
         if self.disabled or not self.message_ts or not self.pending:
             return
         now = monotonic()
-        if now < self.retry_at or (
-            not force and now - self.last_flush < _FLUSH_INTERVAL_SECONDS
-        ):
+        if now < self.retry_at or (not force and now - self.last_flush < _FLUSH_INTERVAL_SECONDS):
             return
         chunks = [step.chunk() for step in self.pending.values()]
         try:
             await append_slack_stream(self.channel_id, self.message_ts, chunks)
         except SlackStreamError as exc:
             if exc.code == "rate_limited":
-                delay = (
-                    exc.retry_after
-                    if exc.retry_after is not None
-                    else _DEFAULT_RETRY_SECONDS
-                )
+                delay = exc.retry_after if exc.retry_after is not None else _DEFAULT_RETRY_SECONDS
                 self.retry_at = monotonic() + min(max(delay, 1.0), _MAX_RETRY_SECONDS)
             else:
                 logger.warning(
@@ -307,13 +293,9 @@ async def stream_slack_thinking_steps(
         status = "interrupted"
         raise
     except Exception:
-        logger.warning(
-            "Slack Thinking Steps observer failed for run %s", run_id, exc_info=True
-        )
+        logger.warning("Slack Thinking Steps observer failed for run %s", run_id, exc_info=True)
     finally:
         try:
             await asyncio.shield(stream.stop(status))
         except Exception:
-            logger.warning(
-                "Slack Thinking Steps cleanup failed for run %s", run_id, exc_info=True
-            )
+            logger.warning("Slack Thinking Steps cleanup failed for run %s", run_id, exc_info=True)

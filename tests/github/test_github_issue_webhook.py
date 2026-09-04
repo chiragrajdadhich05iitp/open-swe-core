@@ -47,9 +47,7 @@ def _sign_body(body: bytes, secret: str = _TEST_WEBHOOK_SECRET) -> str:
     return f"sha256={sig}"
 
 
-def _post_github_webhook(
-    client: TestClient, event_type: str, payload: dict[object, object]
-):
+def _post_github_webhook(client: TestClient, event_type: str, payload: dict[object, object]):
     """Send a signed GitHub webhook POST request."""
     body = json.dumps(payload, separators=(",", ":")).encode()
     return client.post(
@@ -65,9 +63,7 @@ def _post_github_webhook(
 
 def _sign_slack_body(body: bytes, timestamp: str = "1700000000") -> str:
     base_string = f"v0:{timestamp}:{body.decode()}"
-    sig = hmac.new(
-        _TEST_SLACK_SECRET.encode(), base_string.encode(), hashlib.sha256
-    ).hexdigest()
+    sig = hmac.new(_TEST_SLACK_SECRET.encode(), base_string.encode(), hashlib.sha256).hexdigest()
     return f"v0={sig}"
 
 
@@ -125,9 +121,7 @@ def test_auto_review_enablement_uses_dashboard_opt_in(monkeypatch) -> None:
         seen["name"] = name
         return owner == "langchain-ai" and name == "open-swe-app"
 
-    monkeypatch.setattr(
-        webhook_common, "is_review_repo_enabled", fake_is_review_repo_enabled
-    )
+    monkeypatch.setattr(webhook_common, "is_review_repo_enabled", fake_is_review_repo_enabled)
 
     assert (
         asyncio.run(
@@ -158,12 +152,8 @@ def test_github_webhook_skips_automatic_review_when_disabled(monkeypatch) -> Non
         nonlocal called
         called = True
 
-    monkeypatch.setattr(
-        webhook_common, "_is_repo_auto_review_enabled", fake_auto_review_enabled
-    )
-    monkeypatch.setattr(
-        github_webhooks, "process_github_pr_ready", fake_process_github_pr_ready
-    )
+    monkeypatch.setattr(webhook_common, "_is_repo_auto_review_enabled", fake_auto_review_enabled)
+    monkeypatch.setattr(github_webhooks, "process_github_pr_ready", fake_process_github_pr_ready)
     monkeypatch.setattr(webhook_common, "GITHUB_WEBHOOK_SECRET", _TEST_WEBHOOK_SECRET)
 
     client = TestClient(app)
@@ -188,15 +178,11 @@ def test_github_webhook_skips_automatic_review_when_disabled(monkeypatch) -> Non
 def test_github_webhook_accepts_issue_events(monkeypatch) -> None:
     called: dict[str, object] = {}
 
-    async def fake_process_github_issue(
-        payload: dict[str, object], event_type: str
-    ) -> None:
+    async def fake_process_github_issue(payload: dict[str, object], event_type: str) -> None:
         called["payload"] = payload
         called["event_type"] = event_type
 
-    monkeypatch.setattr(
-        github_webhooks, "process_github_issue", fake_process_github_issue
-    )
+    monkeypatch.setattr(github_webhooks, "process_github_issue", fake_process_github_issue)
     monkeypatch.setattr(webhook_common, "GITHUB_WEBHOOK_SECRET", _TEST_WEBHOOK_SECRET)
 
     client = TestClient(app)
@@ -226,15 +212,11 @@ def test_github_webhook_ignores_issue_events_without_body_or_title_change(
 ) -> None:
     called = False
 
-    async def fake_process_github_issue(
-        payload: dict[str, object], event_type: str
-    ) -> None:
+    async def fake_process_github_issue(payload: dict[str, object], event_type: str) -> None:
         nonlocal called
         called = True
 
-    monkeypatch.setattr(
-        github_webhooks, "process_github_issue", fake_process_github_issue
-    )
+    monkeypatch.setattr(github_webhooks, "process_github_issue", fake_process_github_issue)
     monkeypatch.setattr(webhook_common, "GITHUB_WEBHOOK_SECRET", _TEST_WEBHOOK_SECRET)
 
     client = TestClient(app)
@@ -263,15 +245,11 @@ def test_github_webhook_ignores_issue_events_without_body_or_title_change(
 def test_github_webhook_accepts_issue_comment_events(monkeypatch) -> None:
     called: dict[str, object] = {}
 
-    async def fake_process_github_issue(
-        payload: dict[str, object], event_type: str
-    ) -> None:
+    async def fake_process_github_issue(payload: dict[str, object], event_type: str) -> None:
         called["payload"] = payload
         called["event_type"] = event_type
 
-    monkeypatch.setattr(
-        github_webhooks, "process_github_issue", fake_process_github_issue
-    )
+    monkeypatch.setattr(github_webhooks, "process_github_issue", fake_process_github_issue)
     monkeypatch.setattr(webhook_common, "GITHUB_WEBHOOK_SECRET", _TEST_WEBHOOK_SECRET)
 
     client = TestClient(app)
@@ -292,12 +270,8 @@ def test_github_webhook_accepts_issue_comment_events(monkeypatch) -> None:
     assert called["event_type"] == "issue_comment"
 
 
-def test_github_webhook_ignores_unmentioned_comment_without_info_log(
-    monkeypatch, caplog
-) -> None:
-    async def fake_process_github_pr_comment(
-        payload: dict[str, object], event_type: str
-    ) -> None:
+def test_github_webhook_ignores_unmentioned_comment_without_info_log(monkeypatch, caplog) -> None:
+    async def fake_process_github_pr_comment(payload: dict[str, object], event_type: str) -> None:
         raise AssertionError("process_github_pr_comment should not be called")
 
     monkeypatch.setattr(
@@ -337,9 +311,7 @@ def test_github_webhook_routes_review_comment_reply_without_tag(monkeypatch) -> 
     called: dict[str, object] = {}
     auto_review_checked = False
 
-    async def fake_process_github_review_finding_reply(
-        payload: dict[str, object]
-    ) -> None:
+    async def fake_process_github_review_finding_reply(payload: dict[str, object]) -> None:
         called["payload"] = payload
 
     async def fake_auto_review_enabled(_repo_config: dict[str, str]) -> bool:
@@ -352,9 +324,7 @@ def test_github_webhook_routes_review_comment_reply_without_tag(monkeypatch) -> 
         "process_github_review_finding_reply",
         fake_process_github_review_finding_reply,
     )
-    monkeypatch.setattr(
-        webhook_common, "_is_repo_auto_review_enabled", fake_auto_review_enabled
-    )
+    monkeypatch.setattr(webhook_common, "_is_repo_auto_review_enabled", fake_auto_review_enabled)
     monkeypatch.setattr(webhook_common, "GITHUB_WEBHOOK_SECRET", _TEST_WEBHOOK_SECRET)
 
     client = TestClient(app)
@@ -395,17 +365,13 @@ def test_process_github_review_finding_reply_uses_rereview_config(monkeypatch) -
     async def fake_get_token_with_expiry() -> tuple[str, str]:
         return "app-token", "2026-01-01T00:00:00Z"
 
-    def fake_cache_token(
-        thread_id: str, token: str, *, expires_at: str | None = None
-    ) -> None:
+    def fake_cache_token(thread_id: str, token: str, *, expires_at: str | None = None) -> None:
         captured["cache"] = (thread_id, token, expires_at)
 
     async def fake_fetch_threads(**_kwargs: object) -> list[dict[str, object]]:
         return []
 
-    async def fake_reconcile(
-        _thread_id: str, _threads: list[dict[str, object]]
-    ) -> None:
+    async def fake_reconcile(_thread_id: str, _threads: list[dict[str, object]]) -> None:
         return None
 
     async def fake_list_findings(_thread_id: str) -> list[dict[str, object]]:
@@ -430,31 +396,19 @@ def test_process_github_review_finding_reply_uses_rereview_config(monkeypatch) -
     class _FakeLangGraphClient:
         runs = _FakeRunsClient()
 
-    monkeypatch.setattr(
-        webhook_common, "_get_thread_metadata_safe", fake_get_thread_metadata_safe
-    )
+    monkeypatch.setattr(webhook_common, "_get_thread_metadata_safe", fake_get_thread_metadata_safe)
     monkeypatch.setattr(
         webhook_common,
         "get_github_app_installation_token_with_expiry",
         fake_get_token_with_expiry,
     )
-    monkeypatch.setattr(
-        webhook_common, "cache_github_token_for_thread", fake_cache_token
-    )
+    monkeypatch.setattr(webhook_common, "cache_github_token_for_thread", fake_cache_token)
     monkeypatch.setattr(webhook_common, "fetch_pr_review_threads", fake_fetch_threads)
-    monkeypatch.setattr(
-        webhook_common, "reconcile_findings_with_review_threads", fake_reconcile
-    )
+    monkeypatch.setattr(webhook_common, "reconcile_findings_with_review_threads", fake_reconcile)
     monkeypatch.setattr(webhook_common, "list_reviewer_findings", fake_list_findings)
-    monkeypatch.setattr(
-        webhook_common, "append_finding_interaction", fake_append_interaction
-    )
-    monkeypatch.setattr(
-        webhook_common, "_store_current_reviewer_run_id", fake_store_current_run_id
-    )
-    monkeypatch.setattr(
-        webhook_common, "get_client", lambda url: _FakeLangGraphClient()
-    )
+    monkeypatch.setattr(webhook_common, "append_finding_interaction", fake_append_interaction)
+    monkeypatch.setattr(webhook_common, "_store_current_reviewer_run_id", fake_store_current_run_id)
+    monkeypatch.setattr(webhook_common, "get_client", lambda url: _FakeLangGraphClient())
 
     asyncio.run(
         github_webhooks.process_github_review_finding_reply(
@@ -496,17 +450,13 @@ def test_process_github_review_finding_reply_dispatches_sanitized_reply_body(
     async def fake_get_token_with_expiry() -> tuple[str, str]:
         return "app-token", "2026-01-01T00:00:00Z"
 
-    def fake_cache_token(
-        _thread_id: str, _token: str, *, expires_at: str | None = None
-    ) -> None:
+    def fake_cache_token(_thread_id: str, _token: str, *, expires_at: str | None = None) -> None:
         captured["expires_at"] = expires_at
 
     async def fake_fetch_threads(**_kwargs: object) -> list[dict[str, object]]:
         return []
 
-    async def fake_reconcile(
-        _thread_id: str, _threads: list[dict[str, object]]
-    ) -> None:
+    async def fake_reconcile(_thread_id: str, _threads: list[dict[str, object]]) -> None:
         return None
 
     async def fake_list_findings(_thread_id: str) -> list[dict[str, object]]:
@@ -528,31 +478,19 @@ def test_process_github_review_finding_reply_dispatches_sanitized_reply_body(
     class _FakeLangGraphClient:
         runs = _FakeRunsClient()
 
-    monkeypatch.setattr(
-        webhook_common, "_get_thread_metadata_safe", fake_get_thread_metadata_safe
-    )
+    monkeypatch.setattr(webhook_common, "_get_thread_metadata_safe", fake_get_thread_metadata_safe)
     monkeypatch.setattr(
         webhook_common,
         "get_github_app_installation_token_with_expiry",
         fake_get_token_with_expiry,
     )
-    monkeypatch.setattr(
-        webhook_common, "cache_github_token_for_thread", fake_cache_token
-    )
+    monkeypatch.setattr(webhook_common, "cache_github_token_for_thread", fake_cache_token)
     monkeypatch.setattr(webhook_common, "fetch_pr_review_threads", fake_fetch_threads)
-    monkeypatch.setattr(
-        webhook_common, "reconcile_findings_with_review_threads", fake_reconcile
-    )
+    monkeypatch.setattr(webhook_common, "reconcile_findings_with_review_threads", fake_reconcile)
     monkeypatch.setattr(webhook_common, "list_reviewer_findings", fake_list_findings)
-    monkeypatch.setattr(
-        webhook_common, "append_finding_interaction", fake_append_interaction
-    )
-    monkeypatch.setattr(
-        webhook_common, "_store_current_reviewer_run_id", fake_store_current_run_id
-    )
-    monkeypatch.setattr(
-        webhook_common, "get_client", lambda url: _FakeLangGraphClient()
-    )
+    monkeypatch.setattr(webhook_common, "append_finding_interaction", fake_append_interaction)
+    monkeypatch.setattr(webhook_common, "_store_current_reviewer_run_id", fake_store_current_run_id)
+    monkeypatch.setattr(webhook_common, "get_client", lambda url: _FakeLangGraphClient())
 
     asyncio.run(
         github_webhooks.process_github_review_finding_reply(
@@ -589,9 +527,7 @@ def test_process_github_review_finding_reply_dispatches_sanitized_reply_body(
 
 
 def test_github_webhook_ignores_unsupported_comment_action(monkeypatch) -> None:
-    async def fake_process_github_pr_comment(
-        payload: dict[str, object], event_type: str
-    ) -> None:
+    async def fake_process_github_pr_comment(payload: dict[str, object], event_type: str) -> None:
         raise AssertionError("process_github_pr_comment should not be called")
 
     monkeypatch.setattr(
@@ -656,9 +592,7 @@ def test_is_docs_plz_slack_channel_matches_name(monkeypatch) -> None:
         assert channel_id == "C_DOCS"
         return {"name": "docs-plz"}
 
-    monkeypatch.setattr(
-        webhook_common, "get_slack_channel_info", fake_get_slack_channel_info
-    )
+    monkeypatch.setattr(webhook_common, "get_slack_channel_info", fake_get_slack_channel_info)
 
     assert asyncio.run(webhook_common._is_docs_plz_slack_channel("C_DOCS")) is True
 
@@ -668,9 +602,7 @@ def test_is_docs_plz_slack_channel_matches_normalized_name(monkeypatch) -> None:
         assert channel_id == "C_DOCS"
         return {"name": "Docs Plz", "name_normalized": "docs-plz"}
 
-    monkeypatch.setattr(
-        webhook_common, "get_slack_channel_info", fake_get_slack_channel_info
-    )
+    monkeypatch.setattr(webhook_common, "get_slack_channel_info", fake_get_slack_channel_info)
 
     assert asyncio.run(webhook_common._is_docs_plz_slack_channel("C_DOCS")) is True
 
@@ -693,9 +625,7 @@ def test_slack_webhook_gates_docs_plz_channel(monkeypatch) -> None:
             "is_pending_ext_shared": False,
         }
 
-    async def fake_post_slack_thread_reply(
-        channel_id: str, thread_ts: str, text: str
-    ) -> bool:
+    async def fake_post_slack_thread_reply(channel_id: str, thread_ts: str, text: str) -> bool:
         captured["reply"] = {
             "channel_id": channel_id,
             "thread_ts": thread_ts,
@@ -723,15 +653,9 @@ def test_slack_webhook_gates_docs_plz_channel(monkeypatch) -> None:
     monkeypatch.setattr(
         webhook_common, "_get_slack_channel_context", fake_get_slack_channel_context
     )
-    monkeypatch.setattr(
-        webhook_common, "post_slack_thread_reply", fake_post_slack_thread_reply
-    )
-    monkeypatch.setattr(
-        webhook_common, "get_slack_repo_config", fail_get_slack_repo_config
-    )
-    monkeypatch.setattr(
-        slack_webhooks, "process_slack_mention", fail_process_slack_mention
-    )
+    monkeypatch.setattr(webhook_common, "post_slack_thread_reply", fake_post_slack_thread_reply)
+    monkeypatch.setattr(webhook_common, "get_slack_repo_config", fail_get_slack_repo_config)
+    monkeypatch.setattr(slack_webhooks, "process_slack_mention", fail_process_slack_mention)
 
     client = TestClient(app)
     response = _post_slack_webhook(
@@ -809,12 +733,8 @@ def test_slack_webhook_routes_review_command_to_agent(monkeypatch) -> None:
     monkeypatch.setattr(
         webhook_common, "_get_slack_channel_context", fake_get_slack_channel_context
     )
-    monkeypatch.setattr(
-        webhook_common, "get_slack_repo_config", fake_get_slack_repo_config
-    )
-    monkeypatch.setattr(
-        slack_webhooks, "process_slack_mention", fake_process_slack_mention
-    )
+    monkeypatch.setattr(webhook_common, "get_slack_repo_config", fake_get_slack_repo_config)
+    monkeypatch.setattr(slack_webhooks, "process_slack_mention", fake_process_slack_mention)
 
     client = TestClient(app)
     response = _post_slack_webhook(
@@ -844,10 +764,7 @@ def test_slack_webhook_routes_review_command_to_agent(monkeypatch) -> None:
     event_data = captured["event_data"]
     assert isinstance(event_data, dict)
     assert event_data["channel_context"] == channel_context
-    assert (
-        event_data["text"]
-        == "<@UBOT> review https://github.com/langchain-ai/open-swe/pull/1244"
-    )
+    assert event_data["text"] == "<@UBOT> review https://github.com/langchain-ai/open-swe/pull/1244"
 
 
 def test_slack_webhook_malformed_review_command_starts_agent(monkeypatch) -> None:
@@ -871,12 +788,8 @@ def test_slack_webhook_malformed_review_command_starts_agent(monkeypatch) -> Non
     monkeypatch.setattr(webhook_common, "SLACK_BOT_USER_ID", "UBOT")
     monkeypatch.setattr(webhook_common, "SLACK_BOT_USERNAME", "open-swe")
     monkeypatch.setattr(slack_utils.time, "time", lambda: 1700000000)
-    monkeypatch.setattr(
-        webhook_common, "get_slack_repo_config", fake_get_slack_repo_config
-    )
-    monkeypatch.setattr(
-        slack_webhooks, "process_slack_mention", fake_process_slack_mention
-    )
+    monkeypatch.setattr(webhook_common, "get_slack_repo_config", fake_get_slack_repo_config)
+    monkeypatch.setattr(slack_webhooks, "process_slack_mention", fake_process_slack_mention)
 
     client = TestClient(app)
     response = _post_slack_webhook(
@@ -899,8 +812,7 @@ def test_slack_webhook_malformed_review_command_starts_agent(monkeypatch) -> Non
     event_data = captured["event_data"]
     assert isinstance(event_data, dict)
     assert (
-        event_data["text"]
-        == "<@UBOT> review https://github.com/langchain-ai/open-swe/issues/1244"
+        event_data["text"] == "<@UBOT> review https://github.com/langchain-ai/open-swe/issues/1244"
     )
 
 
@@ -930,19 +842,13 @@ def test_slack_webhook_non_pr_review_request_starts_agent(monkeypatch) -> None:
     monkeypatch.setattr(webhook_common, "SLACK_BOT_USER_ID", "UBOT")
     monkeypatch.setattr(webhook_common, "SLACK_BOT_USERNAME", "open-swe")
     monkeypatch.setattr(slack_utils.time, "time", lambda: 1700000000)
-    monkeypatch.setattr(
-        webhook_common, "get_slack_repo_config", fake_get_slack_repo_config
-    )
-    monkeypatch.setattr(
-        slack_webhooks, "process_slack_mention", fake_process_slack_mention
-    )
+    monkeypatch.setattr(webhook_common, "get_slack_repo_config", fake_get_slack_repo_config)
+    monkeypatch.setattr(slack_webhooks, "process_slack_mention", fake_process_slack_mention)
     monkeypatch.setattr(
         webhook_common,
         "_is_repo_allowed",
         lambda repo_config: (_ for _ in ()).throw(
-            AssertionError(
-                "Slack webhook should not gate inferred repos with allowlists"
-            )
+            AssertionError("Slack webhook should not gate inferred repos with allowlists")
         ),
     )
 
@@ -995,12 +901,8 @@ def test_slack_webhook_threaded_followup_uses_parent_thread_ts(monkeypatch) -> N
     monkeypatch.setattr(webhook_common, "SLACK_BOT_USER_ID", "UBOT")
     monkeypatch.setattr(webhook_common, "SLACK_BOT_USERNAME", "open-swe")
     monkeypatch.setattr(slack_utils.time, "time", lambda: 1700000000)
-    monkeypatch.setattr(
-        webhook_common, "get_slack_repo_config", fake_get_slack_repo_config
-    )
-    monkeypatch.setattr(
-        slack_webhooks, "process_slack_mention", fake_process_slack_mention
-    )
+    monkeypatch.setattr(webhook_common, "get_slack_repo_config", fake_get_slack_repo_config)
+    monkeypatch.setattr(slack_webhooks, "process_slack_mention", fake_process_slack_mention)
 
     client = TestClient(app)
     response = _post_slack_webhook(
@@ -1057,12 +959,8 @@ def test_slack_webhook_accepts_unmentioned_direct_message(monkeypatch) -> None:
     monkeypatch.setattr(webhook_common, "SLACK_BOT_USER_ID", "UBOT")
     monkeypatch.setattr(webhook_common, "SLACK_BOT_USERNAME", "open-swe")
     monkeypatch.setattr(slack_utils.time, "time", lambda: 1700000000)
-    monkeypatch.setattr(
-        webhook_common, "get_slack_repo_config", fake_get_slack_repo_config
-    )
-    monkeypatch.setattr(
-        slack_webhooks, "process_slack_mention", fake_process_slack_mention
-    )
+    monkeypatch.setattr(webhook_common, "get_slack_repo_config", fake_get_slack_repo_config)
+    monkeypatch.setattr(slack_webhooks, "process_slack_mention", fake_process_slack_mention)
 
     response = _post_slack_webhook(
         TestClient(app),
@@ -1096,15 +994,11 @@ def test_slack_webhook_accepts_unmentioned_direct_message(monkeypatch) -> None:
 def test_slack_webhook_accepts_unmentioned_ready_plan_reply(monkeypatch) -> None:
     captured: dict[str, object] = {}
 
-    async def fake_ready_plan_reply(
-        channel_id: str, thread_ts: str, user_id: str
-    ) -> bool:
+    async def fake_ready_plan_reply(channel_id: str, thread_ts: str, user_id: str) -> bool:
         captured["plan_reply_check"] = (channel_id, thread_ts, user_id)
         return True
 
-    async def fake_get_slack_repo_config(
-        *args: object, **kwargs: object
-    ) -> dict[str, str]:
+    async def fake_get_slack_repo_config(*args: object, **kwargs: object) -> dict[str, str]:
         return {"owner": "langchain-ai", "name": "open-swe"}
 
     async def fake_process_slack_mention(
@@ -1118,12 +1012,8 @@ def test_slack_webhook_accepts_unmentioned_ready_plan_reply(monkeypatch) -> None
     monkeypatch.setattr(
         slack_webhooks, "_slack_user_can_reply_to_ready_plan", fake_ready_plan_reply
     )
-    monkeypatch.setattr(
-        webhook_common, "get_slack_repo_config", fake_get_slack_repo_config
-    )
-    monkeypatch.setattr(
-        slack_webhooks, "process_slack_mention", fake_process_slack_mention
-    )
+    monkeypatch.setattr(webhook_common, "get_slack_repo_config", fake_get_slack_repo_config)
+    monkeypatch.setattr(slack_webhooks, "process_slack_mention", fake_process_slack_mention)
 
     response = _post_slack_webhook(
         TestClient(app),
@@ -1148,9 +1038,7 @@ def test_slack_webhook_accepts_unmentioned_ready_plan_reply(monkeypatch) -> None
 
 
 def test_slack_webhook_ignores_unmentioned_non_plan_reply(monkeypatch) -> None:
-    async def fake_ready_plan_reply(
-        channel_id: str, thread_ts: str, user_id: str
-    ) -> bool:
+    async def fake_ready_plan_reply(channel_id: str, thread_ts: str, user_id: str) -> bool:
         return False
 
     monkeypatch.setattr(webhook_common, "SLACK_SIGNING_SECRET", _TEST_SLACK_SECRET)
@@ -1185,9 +1073,7 @@ def test_slack_webhook_ignores_unmentioned_non_plan_reply(monkeypatch) -> None:
 def test_process_github_pr_ready_creates_reviewer_run(monkeypatch) -> None:
     captured: dict[str, object] = {}
 
-    async def fake_get_github_app_installation_token_with_expiry() -> (
-        tuple[str | None, str | None]
-    ):
+    async def fake_get_github_app_installation_token_with_expiry() -> tuple[str | None, str | None]:
         return "app-token", None
 
     def fake_cache_github_token(
@@ -1211,9 +1097,7 @@ def test_process_github_pr_ready_creates_reviewer_run(monkeypatch) -> None:
         runs = _FakeRunsClient()
         threads = _FakeThreadsClient()
 
-    async def fake_set_reviewer_thread_metadata(
-        thread_id: str, **kwargs: object
-    ) -> None:
+    async def fake_set_reviewer_thread_metadata(thread_id: str, **kwargs: object) -> None:
         captured["set_metadata_thread_id"] = thread_id
         captured["set_metadata_kwargs"] = kwargs
 
@@ -1227,9 +1111,7 @@ def test_process_github_pr_ready_creates_reviewer_run(monkeypatch) -> None:
         captured["status_comment_kwargs"] = kwargs
         return 1
 
-    monkeypatch.setattr(
-        webhook_common, "cache_github_token_for_thread", fake_cache_github_token
-    )
+    monkeypatch.setattr(webhook_common, "cache_github_token_for_thread", fake_cache_github_token)
     monkeypatch.setattr(
         webhook_common,
         "set_reviewer_thread_metadata",
@@ -1238,9 +1120,7 @@ def test_process_github_pr_ready_creates_reviewer_run(monkeypatch) -> None:
     monkeypatch.setattr(
         webhook_common, "post_review_started_comment", fake_post_review_started_comment
     )
-    monkeypatch.setattr(
-        webhook_common, "get_client", lambda url: _FakeLangGraphClient()
-    )
+    monkeypatch.setattr(webhook_common, "get_client", lambda url: _FakeLangGraphClient())
 
     asyncio.run(
         github_webhooks.process_github_pr_ready(
@@ -1261,9 +1141,7 @@ def test_process_github_pr_ready_creates_reviewer_run(monkeypatch) -> None:
     kwargs = cast(dict[str, object], captured["kwargs"])
     input_data = cast(dict[str, object], kwargs["input"])
     prompt = cast(list[dict[str, str]], input_data["messages"])[-1]["content"]
-    config = cast(
-        dict[str, object], cast(dict[str, object], kwargs["config"])["configurable"]
-    )
+    config = cast(dict[str, object], cast(dict[str, object], kwargs["config"])["configurable"])
 
     assert captured["graph"] == "reviewer"
     assert captured["thread_create_kwargs"] == {
@@ -1291,9 +1169,7 @@ def test_trigger_pr_review_from_ref_creates_reviewer_run(monkeypatch) -> None:
     async def fake_get_github_app_installation_token() -> str | None:
         return "app-token"
 
-    async def fake_get_github_app_installation_token_with_expiry() -> (
-        tuple[str | None, str | None]
-    ):
+    async def fake_get_github_app_installation_token_with_expiry() -> tuple[str | None, str | None]:
         return "app-token", None
 
     async def fake_fetch_github_pr_metadata(
@@ -1327,15 +1203,11 @@ def test_trigger_pr_review_from_ref_creates_reviewer_run(monkeypatch) -> None:
         runs = _FakeRunsClient()
         threads = _FakeThreadsClient()
 
-    async def fake_set_reviewer_thread_metadata(
-        thread_id: str, **kwargs: object
-    ) -> None:
+    async def fake_set_reviewer_thread_metadata(thread_id: str, **kwargs: object) -> None:
         captured["set_metadata_thread_id"] = thread_id
         captured["set_metadata_kwargs"] = kwargs
 
-    monkeypatch.setattr(
-        webhook_common, "_is_repo_auto_review_enabled", fake_auto_review_enabled
-    )
+    monkeypatch.setattr(webhook_common, "_is_repo_auto_review_enabled", fake_auto_review_enabled)
     monkeypatch.setattr(
         webhook_common,
         "get_github_app_installation_token",
@@ -1351,12 +1223,8 @@ def test_trigger_pr_review_from_ref_creates_reviewer_run(monkeypatch) -> None:
         captured["status_comment_kwargs"] = kwargs
         return 1
 
-    monkeypatch.setattr(
-        webhook_common, "fetch_github_pr_metadata", fake_fetch_github_pr_metadata
-    )
-    monkeypatch.setattr(
-        webhook_common, "cache_github_token_for_thread", fake_cache_github_token
-    )
+    monkeypatch.setattr(webhook_common, "fetch_github_pr_metadata", fake_fetch_github_pr_metadata)
+    monkeypatch.setattr(webhook_common, "cache_github_token_for_thread", fake_cache_github_token)
     monkeypatch.setattr(
         webhook_common,
         "set_reviewer_thread_metadata",
@@ -1365,9 +1233,7 @@ def test_trigger_pr_review_from_ref_creates_reviewer_run(monkeypatch) -> None:
     monkeypatch.setattr(
         webhook_common, "post_review_started_comment", fake_post_review_started_comment
     )
-    monkeypatch.setattr(
-        webhook_common, "get_client", lambda url: _FakeLangGraphClient()
-    )
+    monkeypatch.setattr(webhook_common, "get_client", lambda url: _FakeLangGraphClient())
 
     result = asyncio.run(
         github_webhooks.trigger_pr_review_from_ref(
@@ -1386,9 +1252,7 @@ def test_trigger_pr_review_from_ref_creates_reviewer_run(monkeypatch) -> None:
     kwargs = cast(dict[str, object], captured["kwargs"])
     input_data = cast(dict[str, object], kwargs["input"])
     prompt = cast(list[dict[str, str]], input_data["messages"])[-1]["content"]
-    config = cast(
-        dict[str, object], cast(dict[str, object], kwargs["config"])["configurable"]
-    )
+    config = cast(dict[str, object], cast(dict[str, object], kwargs["config"])["configurable"])
     assert result["success"] is True
     assert auto_review_checked is False
     assert captured["graph"] == "reviewer"
@@ -1457,9 +1321,7 @@ async def test_request_pr_review_tool_uses_shared_trigger(monkeypatch) -> None:
         },
     )
 
-    result = await request_pr_review_tool(
-        "https://github.com/langchain-ai/open-swe/pull/1244"
-    )
+    result = await request_pr_review_tool("https://github.com/langchain-ai/open-swe/pull/1244")
 
     pr_ref = captured["pr_ref"]
     assert isinstance(pr_ref, GitHubPrRef)
@@ -1492,13 +1354,9 @@ def test_process_github_pr_comment_without_email_skips(
         captured["reaction_token"] = kwargs["token"]
         return True
 
-    async def fake_fetch_comments(
-        repo_config: dict[str, str], pr_number: int, *, token: str
-    ):
+    async def fake_fetch_comments(repo_config: dict[str, str], pr_number: int, *, token: str):
         captured["fetch_token"] = token
-        return [
-            {"body": "@open-swe review", "author": "external-user", "created_at": "now"}
-        ]
+        return [{"body": "@open-swe review", "author": "external-user", "created_at": "now"}]
 
     async def fake_trigger_or_queue_run(*args, **kwargs) -> None:
         captured["triggered"] = {"args": args, "kwargs": kwargs}
@@ -1508,12 +1366,8 @@ def test_process_github_pr_comment_without_email_skips(
         webhook_common, "email_for_login", lambda login: asyncio.sleep(0, result=None)
     )
     monkeypatch.setattr(webhook_common, "react_to_github_comment", fake_react)
-    monkeypatch.setattr(
-        webhook_common, "fetch_pr_comments_since_last_tag", fake_fetch_comments
-    )
-    monkeypatch.setattr(
-        webhook_common, "_trigger_or_queue_run", fake_trigger_or_queue_run
-    )
+    monkeypatch.setattr(webhook_common, "fetch_pr_comments_since_last_tag", fake_fetch_comments)
+    monkeypatch.setattr(webhook_common, "_trigger_or_queue_run", fake_trigger_or_queue_run)
 
     asyncio.run(
         github_webhooks.process_github_pr_comment(
@@ -1533,9 +1387,7 @@ def test_process_github_issue_uses_resolved_user_token_for_reaction(
 ) -> None:
     captured: dict[str, object] = {}
 
-    async def fake_get_or_resolve_thread_github_token(
-        thread_id: str, email: str
-    ) -> str | None:
+    async def fake_get_or_resolve_thread_github_token(thread_id: str, email: str) -> str | None:
         captured["thread_id"] = thread_id
         captured["email"] = email
         return "user-token"
@@ -1584,15 +1436,9 @@ def test_process_github_issue_uses_resolved_user_token_for_reaction(
         "_thread_exists",
         lambda thread_id: asyncio.sleep(0, result=False),
     )
-    monkeypatch.setattr(
-        webhook_common, "react_to_github_comment", fake_react_to_github_comment
-    )
-    monkeypatch.setattr(
-        webhook_common, "fetch_issue_comments", fake_fetch_issue_comments
-    )
-    monkeypatch.setattr(
-        webhook_common, "get_client", lambda url: _FakeLangGraphClient()
-    )
+    monkeypatch.setattr(webhook_common, "react_to_github_comment", fake_react_to_github_comment)
+    monkeypatch.setattr(webhook_common, "fetch_issue_comments", fake_fetch_issue_comments)
+    monkeypatch.setattr(webhook_common, "get_client", lambda url: _FakeLangGraphClient())
     monkeypatch.setattr(
         webhook_common,
         "email_for_login",
@@ -1628,9 +1474,7 @@ def test_process_github_issue_uses_resolved_user_token_for_reaction(
 def test_process_github_issue_existing_thread_uses_followup_prompt(monkeypatch) -> None:
     captured: dict[str, object] = {}
 
-    async def fake_get_or_resolve_thread_github_token(
-        thread_id: str, email: str
-    ) -> str | None:
+    async def fake_get_or_resolve_thread_github_token(thread_id: str, email: str) -> str | None:
         return "user-token"
 
     async def fake_get_github_app_installation_token() -> str | None:
@@ -1650,9 +1494,7 @@ def test_process_github_issue_existing_thread_uses_followup_prompt(monkeypatch) 
     async def fake_fetch_issue_comments(
         repo_config: dict[str, str], issue_number: int, *, token: str | None = None
     ) -> list[dict[str, object]]:
-        raise AssertionError(
-            "fetch_issue_comments should not be called for follow-up prompts"
-        )
+        raise AssertionError("fetch_issue_comments should not be called for follow-up prompts")
 
     async def fake_thread_exists(thread_id: str) -> bool:
         return True
@@ -1675,15 +1517,9 @@ def test_process_github_issue_existing_thread_uses_followup_prompt(monkeypatch) 
         fake_get_github_app_installation_token,
     )
     monkeypatch.setattr(webhook_common, "_thread_exists", fake_thread_exists)
-    monkeypatch.setattr(
-        webhook_common, "react_to_github_comment", fake_react_to_github_comment
-    )
-    monkeypatch.setattr(
-        webhook_common, "fetch_issue_comments", fake_fetch_issue_comments
-    )
-    monkeypatch.setattr(
-        webhook_common, "get_client", lambda url: _FakeLangGraphClient()
-    )
+    monkeypatch.setattr(webhook_common, "react_to_github_comment", fake_react_to_github_comment)
+    monkeypatch.setattr(webhook_common, "fetch_issue_comments", fake_fetch_issue_comments)
+    monkeypatch.setattr(webhook_common, "get_client", lambda url: _FakeLangGraphClient())
     monkeypatch.setattr(
         webhook_common,
         "email_for_login",
@@ -1730,19 +1566,13 @@ def test_process_github_issue_existing_thread_uses_followup_prompt(monkeypatch) 
 def test_github_webhook_routes_pr_comment_review_to_agent(monkeypatch) -> None:
     captured: dict[str, object] = {}
 
-    async def fake_process_pr_comment(
-        payload: dict[str, object], event_type: str
-    ) -> None:
+    async def fake_process_pr_comment(payload: dict[str, object], event_type: str) -> None:
         captured["payload"] = payload
         captured["event_type"] = event_type
 
-    monkeypatch.setattr(
-        github_webhooks, "process_github_pr_comment", fake_process_pr_comment
-    )
+    monkeypatch.setattr(github_webhooks, "process_github_pr_comment", fake_process_pr_comment)
     monkeypatch.setattr(webhook_common, "GITHUB_WEBHOOK_SECRET", _TEST_WEBHOOK_SECRET)
-    monkeypatch.setattr(
-        webhook_common, "ALLOWED_GITHUB_ORGS", frozenset({"langchain-ai"})
-    )
+    monkeypatch.setattr(webhook_common, "ALLOWED_GITHUB_ORGS", frozenset({"langchain-ai"}))
 
     client = TestClient(app)
     response = _post_github_webhook(
@@ -1772,19 +1602,13 @@ def test_github_webhook_routes_pr_comment_review_to_agent(monkeypatch) -> None:
 def test_github_webhook_routes_pr_review_request_comment_to_agent(monkeypatch) -> None:
     captured: dict[str, object] = {}
 
-    async def fake_process_pr_comment(
-        payload: dict[str, object], event_type: str
-    ) -> None:
+    async def fake_process_pr_comment(payload: dict[str, object], event_type: str) -> None:
         captured["payload"] = payload
         captured["event_type"] = event_type
 
-    monkeypatch.setattr(
-        github_webhooks, "process_github_pr_comment", fake_process_pr_comment
-    )
+    monkeypatch.setattr(github_webhooks, "process_github_pr_comment", fake_process_pr_comment)
     monkeypatch.setattr(webhook_common, "GITHUB_WEBHOOK_SECRET", _TEST_WEBHOOK_SECRET)
-    monkeypatch.setattr(
-        webhook_common, "ALLOWED_GITHUB_ORGS", frozenset({"langchain-ai"})
-    )
+    monkeypatch.setattr(webhook_common, "ALLOWED_GITHUB_ORGS", frozenset({"langchain-ai"}))
 
     client = TestClient(app)
     response = _post_github_webhook(

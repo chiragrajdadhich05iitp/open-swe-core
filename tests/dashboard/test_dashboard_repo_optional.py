@@ -116,9 +116,7 @@ class _FakeThreadsClient:
     ) -> dict[str, Any]:
         return {"thread_id": thread_id, "metadata": metadata, "if_exists": if_exists}
 
-    async def update(
-        self, *, thread_id: str, metadata: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def update(self, *, thread_id: str, metadata: dict[str, Any]) -> dict[str, Any]:
         return {"thread_id": thread_id, "metadata": metadata}
 
     async def get(self, thread_id: str) -> dict[str, Any]:
@@ -187,9 +185,7 @@ def test_create_thread_record_omits_repo_less_marker_when_repo_unset(
     )
 
     configurable = asyncio.run(
-        thread_api._build_dashboard_configurable(
-            "thread-id", "octo", {"source": "dashboard"}
-        )
+        thread_api._build_dashboard_configurable("thread-id", "octo", {"source": "dashboard"})
     )
     assert "repo_explicitly_none" not in configurable
     assert "repo" not in configurable

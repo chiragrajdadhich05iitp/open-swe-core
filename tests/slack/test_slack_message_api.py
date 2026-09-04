@@ -230,9 +230,7 @@ async def test_post_slack_thread_reply_with_ts_sends_blocks(
 
     assert result == ("1.0", None)
     payload = client_cm.post.call_args.kwargs["json"]
-    expected_footer = (
-        f"<{slack_utils.dashboard_thread_url('mapped-thread')}|Open in Web>"
-    )
+    expected_footer = f"<{slack_utils.dashboard_thread_url('mapped-thread')}|Open in Web>"
     assert payload["text"] == f"Pick {expected_footer}"
     assert payload["blocks"] == [
         *blocks,
@@ -359,10 +357,7 @@ async def test_upload_slack_thread_file_completes_external_upload(
     }
     safe_request.assert_awaited_once()
     assert safe_request.call_args.kwargs["content"] == b"<html />"
-    assert (
-        safe_request.call_args.kwargs["validate_url"]
-        is slack_utils._validate_slack_upload_url
-    )
+    assert safe_request.call_args.kwargs["validate_url"] is slack_utils._validate_slack_upload_url
     complete_call = client_cm.post.call_args_list[1]
     assert complete_call.args[0].endswith("/files.completeUploadExternal")
     assert complete_call.kwargs["data"] == {
@@ -387,9 +382,7 @@ async def test_upload_slack_thread_file_handles_malformed_response(
     client_cm = _async_client_cm(ticket)
 
     with patch.object(slack_utils.httpx, "AsyncClient", return_value=client_cm):
-        result = await slack_utils.upload_slack_thread_file(
-            "C1", "1.0", "plan.html", b"x"
-        )
+        result = await slack_utils.upload_slack_thread_file("C1", "1.0", "plan.html", b"x")
 
     assert result == (None, "invalid_slack_response")
 
@@ -412,30 +405,22 @@ async def test_upload_slack_thread_file_rejects_unsafe_upload_url(
     monkeypatch.setattr(slack_utils, "request_with_safe_redirects", safe_request)
 
     with patch.object(slack_utils.httpx, "AsyncClient", return_value=client_cm):
-        result = await slack_utils.upload_slack_thread_file(
-            "C1", "1.0", "plan.html", b"x"
-        )
+        result = await slack_utils.upload_slack_thread_file("C1", "1.0", "plan.html", b"x")
 
     assert result == (None, "unsafe_upload_url")
     assert client_cm.post.await_count == 1
 
 
 def test_validate_slack_upload_url() -> None:
-    assert slack_utils._validate_slack_upload_url(
-        "https://files.slack.com/upload/v1/test"
-    ) == (
+    assert slack_utils._validate_slack_upload_url("https://files.slack.com/upload/v1/test") == (
         True,
         "",
     )
-    allowed, _ = slack_utils._validate_slack_upload_url(
-        "https://files.slack.com.evil.test/x"
-    )
+    allowed, _ = slack_utils._validate_slack_upload_url("https://files.slack.com.evil.test/x")
     assert allowed is False
     allowed, _ = slack_utils._validate_slack_upload_url("https://edge.slack.com/x")
     assert allowed is False
     allowed, _ = slack_utils._validate_slack_upload_url("http://files.slack.com/x")
     assert allowed is False
-    allowed, _ = slack_utils._validate_slack_upload_url(
-        "https://files.slack.com:8443/x"
-    )
+    allowed, _ = slack_utils._validate_slack_upload_url("https://files.slack.com:8443/x")
     assert allowed is False

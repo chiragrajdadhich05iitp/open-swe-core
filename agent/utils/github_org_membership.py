@@ -54,7 +54,9 @@ async def is_user_active_org_member(username: str, org: str) -> bool:
         )
         return False
 
-    url = f"https://api.github.com/orgs/{quote(org, safe='')}/memberships/{quote(username, safe='')}"
+    url = (
+        f"https://api.github.com/orgs/{quote(org, safe='')}/memberships/{quote(username, safe='')}"
+    )
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(
@@ -66,9 +68,7 @@ async def is_user_active_org_member(username: str, org: str) -> bool:
                 },
             )
     except Exception:
-        logger.exception(
-            "Error calling GitHub org membership API for %s/%s", org, username
-        )
+        logger.exception("Error calling GitHub org membership API for %s/%s", org, username)
         return False
 
     if response.status_code == 404:
@@ -85,8 +85,6 @@ async def is_user_active_org_member(username: str, org: str) -> bool:
     try:
         state = response.json().get("state")
     except ValueError:
-        logger.warning(
-            "Failed to parse org membership response for %s/%s", org, username
-        )
+        logger.warning("Failed to parse org membership response for %s/%s", org, username)
         return False
     return state == "active"

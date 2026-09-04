@@ -64,9 +64,7 @@ def sandbox_wrap_command(
         print(len(payload))
         """
     ).strip()
-    args = " ".join(
-        shlex.quote(arg) for arg in (source, destination, str(limit), prefix, suffix)
-    )
+    args = " ".join(shlex.quote(arg) for arg in (source, destination, str(limit), prefix, suffix))
     encoded = base64.b64encode(script.encode()).decode()
     return f"printf %s {shlex.quote(encoded)} | base64 -d | python3 - {args}"
 

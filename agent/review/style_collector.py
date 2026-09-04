@@ -68,11 +68,7 @@ async def _paginate(
         link = r.headers.get("Link", "")
         for part in link.split(","):
             segments = [s.strip() for s in part.split(";")]
-            if (
-                len(segments) >= 2
-                and 'rel="next"' in segments[1]
-                and segments[0].startswith("<")
-            ):
+            if len(segments) >= 2 and 'rel="next"' in segments[1] and segments[0].startswith("<"):
                 next_url = segments[0][1:-1]
                 break
         first = False
@@ -169,9 +165,7 @@ async def collect_review_samples(
                 continue
 
             reviews_url = f"{GITHUB_API}/repos/{owner}/{repo}/pulls/{pr_number}/reviews"
-            for review in await _paginate(
-                client, reviews_url, headers=headers, cap=100
-            ):
+            for review in await _paginate(client, reviews_url, headers=headers, cap=100):
                 if not isinstance(review, dict):
                     continue
                 user = review.get("user")
@@ -199,12 +193,8 @@ async def collect_review_samples(
                     )
                 )
 
-            comments_url = (
-                f"{GITHUB_API}/repos/{owner}/{repo}/pulls/{pr_number}/comments"
-            )
-            for comment in await _paginate(
-                client, comments_url, headers=headers, cap=200
-            ):
+            comments_url = f"{GITHUB_API}/repos/{owner}/{repo}/pulls/{pr_number}/comments"
+            for comment in await _paginate(client, comments_url, headers=headers, cap=200):
                 if not isinstance(comment, dict):
                     continue
                 user = comment.get("user")
@@ -233,12 +223,8 @@ async def collect_review_samples(
                     )
                 )
 
-            issue_comments_url = (
-                f"{GITHUB_API}/repos/{owner}/{repo}/issues/{pr_number}/comments"
-            )
-            for comment in await _paginate(
-                client, issue_comments_url, headers=headers, cap=100
-            ):
+            issue_comments_url = f"{GITHUB_API}/repos/{owner}/{repo}/issues/{pr_number}/comments"
+            for comment in await _paginate(client, issue_comments_url, headers=headers, cap=100):
                 if not isinstance(comment, dict):
                     continue
                 user = comment.get("user")
@@ -265,9 +251,7 @@ async def collect_review_samples(
                     )
                 )
 
-        top_reviewers = [
-            login for login, _ in reviewer_counts.most_common(max_reviewers)
-        ]
+        top_reviewers = [login for login, _ in reviewer_counts.most_common(max_reviewers)]
         top_set = set(top_reviewers)
 
         per_reviewer: Counter[str] = Counter()

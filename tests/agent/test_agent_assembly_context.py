@@ -82,9 +82,7 @@ async def _capture_create_deep_agent_kwargs(
                 ("openai:gpt-5.6-sol", "low"),
             ),
         ),
-        patch(
-            "agent.server.load_profile", new_callable=AsyncMock, return_value=profile
-        ),
+        patch("agent.server.load_profile", new_callable=AsyncMock, return_value=profile),
         patch(
             "agent.server.load_thread_settings",
             new_callable=AsyncMock,
@@ -103,9 +101,7 @@ async def _capture_create_deep_agent_kwargs(
 
 
 @pytest.mark.asyncio
-async def test_existing_thread_reloads_sender_draft_preference_into_run_config() -> (
-    None
-):
+async def test_existing_thread_reloads_sender_draft_preference_into_run_config() -> None:
     config = _base_config()
     configurable = config.get("configurable")
     assert isinstance(configurable, dict)
@@ -142,17 +138,13 @@ async def test_agent_starts_sandbox_while_loading_settings() -> None:
     SANDBOX_BACKENDS.pop("thread-ctx", None)
     with (
         patch("agent.server.ensure_sandbox_for_thread", side_effect=ensure_sandbox),
-        patch(
-            "agent.server._cached_team_default_model_pair", side_effect=load_defaults
-        ),
+        patch("agent.server._cached_team_default_model_pair", side_effect=load_defaults),
         patch(
             "agent.server._cached_gateway_enabled",
             new_callable=AsyncMock,
             return_value=False,
         ),
-        patch(
-            "agent.server._cached_profile", new_callable=AsyncMock, return_value=None
-        ),
+        patch("agent.server._cached_profile", new_callable=AsyncMock, return_value=None),
         patch(
             "agent.server._cached_fable_enabled",
             new_callable=AsyncMock,
@@ -213,9 +205,7 @@ async def test_agent_wires_user_organization_and_bundled_skills_into_agents() ->
     skill = await backend.aread("/bundled-skills/baby-sit/SKILL.md")
     assert skill.file_data and "name: baby-sit" in skill.file_data["content"]
     artifacts = await backend.aread("/bundled-skills/html-artifacts/SKILL.md")
-    assert (
-        artifacts.file_data and "name: html-artifacts" in artifacts.file_data["content"]
-    )
+    assert artifacts.file_data and "name: html-artifacts" in artifacts.file_data["content"]
     subagents = captured["subagents"]
     assert isinstance(subagents, list)
     gp = next(s for s in subagents if s["name"] == "general-purpose")
@@ -299,9 +289,7 @@ async def test_agent_includes_read_user_settings_only_on_parent() -> None:
     assert isinstance(tools, list)
     assert isinstance(subagents, list)
     assert read_user_settings in tools
-    general_purpose = next(
-        item for item in subagents if item["name"] == "general-purpose"
-    )
+    general_purpose = next(item for item in subagents if item["name"] == "general-purpose")
     assert read_user_settings not in general_purpose["tools"]
 
 
@@ -316,9 +304,7 @@ async def test_agent_includes_thread_tools_only_on_parent() -> None:
     assert isinstance(subagents, list)
     thread_tools = (get_thread, list_threads, manage_thread)
     assert all(tool in tools for tool in thread_tools)
-    general_purpose = next(
-        item for item in subagents if item["name"] == "general-purpose"
-    )
+    general_purpose = next(item for item in subagents if item["name"] == "general-purpose")
     assert all(tool not in general_purpose["tools"] for tool in thread_tools)
 
 
@@ -392,9 +378,7 @@ async def test_agent_excludes_sandbox_file_downloads_for_other_providers(
     assert create_sandbox_file_download_url not in tools
     assert create_sandbox_service_url not in tools
     assert output_iframe not in tools
-    general_purpose = next(
-        item for item in subagents if item["name"] == "general-purpose"
-    )
+    general_purpose = next(item for item in subagents if item["name"] == "general-purpose")
     assert create_sandbox_file_download_url not in general_purpose["tools"]
     assert create_sandbox_service_url not in general_purpose["tools"]
     assert output_iframe not in general_purpose["tools"]
@@ -419,9 +403,7 @@ async def test_dashboard_agent_excludes_slack_tools() -> None:
     tools = captured["tools"]
     assert isinstance(tools, list)
 
-    tool_names = {
-        getattr(tool, "name", None) or getattr(tool, "__name__", None) for tool in tools
-    }
+    tool_names = {getattr(tool, "name", None) or getattr(tool, "__name__", None) for tool in tools}
     assert tool_names.isdisjoint(
         {
             "slack_add_reaction",
@@ -451,9 +433,7 @@ async def test_slack_source_context_includes_slack_tools(source: str) -> None:
     tools = captured["tools"]
     assert isinstance(tools, list)
 
-    tool_names = {
-        getattr(tool, "name", None) or getattr(tool, "__name__", None) for tool in tools
-    }
+    tool_names = {getattr(tool, "name", None) or getattr(tool, "__name__", None) for tool in tools}
     assert {
         "slack_add_reaction",
         "slack_attach_html",
@@ -472,13 +452,9 @@ async def test_agent_excludes_deepagents_grep_tool() -> None:
     assert isinstance(middleware, list)
     assert isinstance(subagents, list)
 
-    exclusion = next(
-        item for item in middleware if type(item).__name__ == "ExcludeToolsMiddleware"
-    )
+    exclusion = next(item for item in middleware if type(item).__name__ == "ExcludeToolsMiddleware")
     assert exclusion._excluded == frozenset({"grep"})
-    general_purpose = next(
-        item for item in subagents if item["name"] == "general-purpose"
-    )
+    general_purpose = next(item for item in subagents if item["name"] == "general-purpose")
     subagent_exclusion = next(
         item
         for item in general_purpose["middleware"]
@@ -506,9 +482,7 @@ async def test_stop_summary_agent_is_read_only_and_slack_only() -> None:
     assert isinstance(tools, list)
     assert isinstance(middleware, list)
 
-    tool_names = {
-        getattr(tool, "name", None) or getattr(tool, "__name__", None) for tool in tools
-    }
+    tool_names = {getattr(tool, "name", None) or getattr(tool, "__name__", None) for tool in tools}
     assert tool_names == {"slack_read_thread_messages", "slack_thread_reply"}
     middleware_names = {type(item).__name__ for item in middleware}
     assert "ExcludeToolsMiddleware" in middleware_names

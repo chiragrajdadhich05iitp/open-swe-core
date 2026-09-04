@@ -97,9 +97,7 @@ async def test_create_download_url_defaults_to_a_non_expiring_link(
     backend = _Backend()
     client = _configure(monkeypatch, backend)
 
-    await download_tool.create_sandbox_file_download_url(
-        "/workspace/project/result.zip"
-    )
+    await download_tool.create_sandbox_file_download_url("/workspace/project/result.zip")
 
     assert client.calls == [
         (
@@ -130,9 +128,7 @@ async def test_create_download_url_rejects_paths_outside_work_dir(
     backend = _Backend()
     client = _configure(monkeypatch, backend)
 
-    with pytest.raises(
-        ValueError, match="must resolve within the sandbox work directory"
-    ):
+    with pytest.raises(ValueError, match="must resolve within the sandbox work directory"):
         await download_tool.create_sandbox_file_download_url(file_path)
 
     assert client.calls == []
@@ -144,9 +140,7 @@ async def test_create_download_url_rejects_symlink_outside_work_dir(
     backend = _Backend()
     client = _configure(monkeypatch, backend)
 
-    with pytest.raises(
-        ValueError, match="must resolve within the sandbox work directory"
-    ):
+    with pytest.raises(ValueError, match="must resolve within the sandbox work directory"):
         await download_tool.create_sandbox_file_download_url("link-to-secret")
 
     assert client.calls == []

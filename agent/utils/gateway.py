@@ -53,9 +53,7 @@ def _langsmith_api_key() -> str | None:
 
 def gateway_base_url() -> str:
     """Gateway host, overridable via ``LANGSMITH_GATEWAY_BASE_URL`` (regional/self-hosted)."""
-    return (
-        os.environ.get("LANGSMITH_GATEWAY_BASE_URL") or DEFAULT_GATEWAY_BASE_URL
-    ).rstrip("/")
+    return (os.environ.get("LANGSMITH_GATEWAY_BASE_URL") or DEFAULT_GATEWAY_BASE_URL).rstrip("/")
 
 
 def gateway_env_default() -> bool:

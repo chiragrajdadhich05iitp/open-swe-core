@@ -43,9 +43,7 @@ def test_enriching_a_field_adds_only_that_key() -> None:
     }
 
 
-@pytest.mark.parametrize(
-    "raw", [None, "not-a-mapping", 42, [], {"slack_thread": "wrong-type"}]
-)
+@pytest.mark.parametrize("raw", [None, "not-a-mapping", 42, [], {"slack_thread": "wrong-type"}])
 def test_parse_never_raises(raw: object) -> None:
     assert isinstance(SourceContext.parse(raw), SourceContext)
 
@@ -57,10 +55,7 @@ def test_from_metadata_tolerates_missing_and_malformed_metadata() -> None:
 
 
 def test_slack_location_requires_both_halves() -> None:
-    assert (
-        SourceContext.parse({"slack_thread": {"channel_id": "C1"}}).slack_location
-        is None
-    )
+    assert SourceContext.parse({"slack_thread": {"channel_id": "C1"}}).slack_location is None
     assert SourceContext.parse(
         {"slack_thread": {"channel_id": "C1", "thread_ts": "1.2"}}
     ).slack_location == ("C1", "1.2")

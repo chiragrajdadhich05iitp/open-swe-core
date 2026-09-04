@@ -33,9 +33,7 @@ async def test_trace_url_resolves_project_id_by_name(
     )
 
     agent_url = await ls_utils.get_langsmith_trace_url("t1")
-    review_url = await ls_utils.get_langsmith_trace_url(
-        "t2", project_name=REVIEW_TRACING_PROJECT
-    )
+    review_url = await ls_utils.get_langsmith_trace_url("t2", project_name=REVIEW_TRACING_PROJECT)
 
     assert agent_url == "https://smith.example/o/tenant-1/projects/p/agent-pid/t/t1"
     assert review_url == "https://smith.example/o/tenant-1/projects/p/review-pid/t/t2"

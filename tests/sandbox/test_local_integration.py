@@ -70,9 +70,7 @@ def test_create_local_sandbox_keeps_explicit_global_git_config(monkeypatch, tmp_
 
 def test_create_local_sandbox_excludes_credential_broker_env(monkeypatch, tmp_path):
     monkeypatch.setenv("LOCAL_SANDBOX_ROOT_DIR", str(tmp_path / "work"))
-    monkeypatch.setenv(
-        "OPEN_SWE_OPENAI_OAUTH_BROKER_URL", "http://127.0.0.1:3210/token"
-    )
+    monkeypatch.setenv("OPEN_SWE_OPENAI_OAUTH_BROKER_URL", "http://127.0.0.1:3210/token")
     monkeypatch.setenv("OPEN_SWE_OPENAI_OAUTH_BROKER_TOKEN", "broker-secret")
     monkeypatch.setenv("OPEN_SWE_OPENAI_OAUTH_ACCOUNT_FILE", "/tmp/legacy-account.json")
     monkeypatch.setenv("OPENAI_API_KEY", "provider-secret")

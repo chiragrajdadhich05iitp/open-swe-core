@@ -61,9 +61,7 @@ def test_provider_fallback_resolves_openai_within_provider() -> None:
 
 
 def test_supported_openai_models_are_the_gpt_5_6_family() -> None:
-    openai_options = [
-        model for model in SUPPORTED_MODELS if model["id"].startswith("openai:")
-    ]
+    openai_options = [model for model in SUPPORTED_MODELS if model["id"].startswith("openai:")]
     assert [(model["id"], model["label"]) for model in openai_options] == [
         ("openai:gpt-5.6-sol", "GPT-5.6 Sol"),
         ("openai:gpt-5.6-terra", "GPT-5.6 Terra"),
@@ -71,9 +69,7 @@ def test_supported_openai_models_are_the_gpt_5_6_family() -> None:
     ]
 
 
-@pytest.mark.parametrize(
-    "model_id", [DEPRECATED_OPENAI, DEPRECATED_ANTHROPIC, DEPRECATED_GLM]
-)
+@pytest.mark.parametrize("model_id", [DEPRECATED_OPENAI, DEPRECATED_ANTHROPIC, DEPRECATED_GLM])
 def test_deprecated_models_are_no_longer_selectable(model_id: str) -> None:
     assert model_id not in SUPPORTED_MODEL_IDS
     assert all(model["id"] != model_id for model in SUPPORTED_MODELS)
@@ -82,8 +78,7 @@ def test_deprecated_models_are_no_longer_selectable(model_id: str) -> None:
 
 def test_fireworks_glm_5_3_replaces_glm_5_2() -> None:
     assert any(
-        model["id"] == SUPPORTED_GLM and model["label"] == "GLM 5.3"
-        for model in SUPPORTED_MODELS
+        model["id"] == SUPPORTED_GLM and model["label"] == "GLM 5.3" for model in SUPPORTED_MODELS
     )
 
 
@@ -242,9 +237,7 @@ def test_gate_fable_passthrough_when_enabled() -> None:
 
 
 def test_gate_fable_swaps_to_opus_when_disabled() -> None:
-    assert gate_fable_model(
-        "anthropic:claude-fable-5", "high", fable_enabled=False
-    ) == (
+    assert gate_fable_model("anthropic:claude-fable-5", "high", fable_enabled=False) == (
         SUPPORTED_ANTHROPIC,
         "high",
     )

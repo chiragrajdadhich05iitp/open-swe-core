@@ -118,9 +118,7 @@ def main() -> None:
     load_dotenv()
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset-name", default="openswe-reviewer-v1")
-    ap.add_argument(
-        "--dry-run", action="store_true", help="Build examples but don't upload."
-    )
+    ap.add_argument("--dry-run", action="store_true", help="Build examples but don't upload.")
     ap.add_argument("--limit", type=int, default=None)
     args = ap.parse_args()
 
@@ -134,9 +132,7 @@ def main() -> None:
         try:
             ex = build_example(entry)
             examples.append(ex)
-            print(
-                f"  [{i}/{len(raw)}] {ex['inputs']['repo']}#{ex['inputs']['pr_number']} ok"
-            )
+            print(f"  [{i}/{len(raw)}] {ex['inputs']['repo']}#{ex['inputs']['pr_number']} ok")
         except Exception as exc:
             print(
                 f"  [{i}/{len(raw)}] FAILED for {entry.get('url')}: {exc}",

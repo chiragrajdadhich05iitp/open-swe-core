@@ -24,9 +24,7 @@ from .langsmith import async_langsmith_client, sync_langsmith_client
 
 logger = logging.getLogger(__name__)
 
-OUTCOMES_DATASET_NAME = os.environ.get(
-    "REVIEWER_OUTCOMES_DATASET", "openswe-reviewer-outcomes"
-)
+OUTCOMES_DATASET_NAME = os.environ.get("REVIEWER_OUTCOMES_DATASET", "openswe-reviewer-outcomes")
 
 TRUE_POSITIVE = "true_positive"
 FALSE_POSITIVE = "false_positive"
@@ -75,9 +73,7 @@ def _outcomes_credentials() -> tuple[str, str] | None:
     api_key = os.environ.get("LANGSMITH_API_KEY") or os.environ.get("LANGCHAIN_API_KEY")
     if not api_key:
         return None
-    return api_key, os.environ.get(
-        "LANGSMITH_ENDPOINT", "https://api.smith.langchain.com"
-    )
+    return api_key, os.environ.get("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
 
 
 async def _find_dataset(client: AsyncLangSmithClient) -> Any:
@@ -102,9 +98,7 @@ async def _ensure_dataset(client: AsyncLangSmithClient) -> Any:
 
 
 def _example_id(repo: str, finding_id: str, label_source: str) -> uuid.UUID:
-    return uuid.uuid5(
-        uuid.NAMESPACE_URL, f"finding-outcome:{repo}:{finding_id}:{label_source}"
-    )
+    return uuid.uuid5(uuid.NAMESPACE_URL, f"finding-outcome:{repo}:{finding_id}:{label_source}")
 
 
 def _truncate(value: Any, limit: int) -> Any:
@@ -182,9 +176,7 @@ async def upsert_finding_outcome(
             "label_source": label_source,
             "finding": {
                 "title": finding.get("title"),
-                "description": _truncate(
-                    finding.get("description"), _DIFF_HUNK_MAX_CHARS
-                ),
+                "description": _truncate(finding.get("description"), _DIFF_HUNK_MAX_CHARS),
                 "severity": finding.get("severity"),
                 "confidence": finding.get("confidence"),
                 "category": finding.get("category"),
@@ -250,9 +242,7 @@ async def upsert_run_outcome(
             client,
             credentials,
             dataset_id=await _ensure_dataset(client),
-            example_id=uuid.uuid5(
-                uuid.NAMESPACE_URL, f"run-outcome:{run_id}:{label_source}"
-            ),
+            example_id=uuid.uuid5(uuid.NAMESPACE_URL, f"run-outcome:{run_id}:{label_source}"),
             inputs=inputs,
             outputs=outputs,
             metadata=metadata,
@@ -306,9 +296,7 @@ async def emit_finding_status_outcome(
     )
 
 
-async def read_outcomes_for_repo(
-    repo: str, *, limit: int = 100
-) -> dict[str, list[dict[str, Any]]]:
+async def read_outcomes_for_repo(repo: str, *, limit: int = 100) -> dict[str, list[dict[str, Any]]]:
     """Return confirmed (true-positive) and dismissed (false-positive) findings
     for ``repo`` from the outcomes dataset. Best-effort; returns empty on error."""
     confirmed: list[dict[str, Any]] = []

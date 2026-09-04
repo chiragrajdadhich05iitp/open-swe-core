@@ -192,19 +192,13 @@ async def manage_code_channel(
             slack_view_id = data.get("view_id")
             if isinstance(slack_view_id, str) and slack_view_id:
                 try:
-                    await store_block_suggestions(
-                        client, channel_id, slack_view_id, suggestions
-                    )
+                    await store_block_suggestions(client, channel_id, slack_view_id, suggestions)
                 except Exception as exc:  # noqa: BLE001
-                    result["warnings"] = [
-                        f"Could not store Block Kit suggestions: {exc}"
-                    ]
+                    result["warnings"] = [f"Could not store Block Kit suggestions: {exc}"]
         return result
     if action == "list_views":
         views, error = await list_views(channel_id)
-        return _result(
-            action, channel_id, {"views": views} if views is not None else None, error
-        )
+        return _result(action, channel_id, {"views": views} if views is not None else None, error)
     if action == "remove_view":
         data, error = await remove_view(channel_id, view_key=view_key, view_id=view_id)
         result = _result(action, channel_id, data, error)
@@ -214,9 +208,7 @@ async def manage_code_channel(
                 await delete_block_suggestions(client, channel_id, removed_view_id)
         return result
     if action == "get_canvas":
-        data, error = await get_canvas(
-            channel_id, canvas_id, include_resolved=include_resolved
-        )
+        data, error = await get_canvas(channel_id, canvas_id, include_resolved=include_resolved)
         return _result(action, channel_id, data, error)
     if action == "set_canvas":
         resolved_content, content_error = await _resolve_content(content, file_path)
@@ -231,9 +223,7 @@ async def manage_code_channel(
         )
         result = _result(action, channel_id, None, error if not ok else None)
         if status_error:
-            result["warnings"] = [
-                f"Could not set session status to closed: {status_error}"
-            ]
+            result["warnings"] = [f"Could not set session status to closed: {status_error}"]
         return result
     return {"success": False, "error": f"Unknown action {action}"}
 
@@ -348,17 +338,13 @@ async def _create(
                 locked_active.get("thread_ts"),
             ) != (source_channel, source_ts):
                 raise RuntimeError("Slack thread moved concurrently; retry")
-            await bind_slack_thread_id(
-                client, channel_id, CODE_CHANNEL_SESSION_TS, thread_id
-            )
+            await bind_slack_thread_id(client, channel_id, CODE_CHANNEL_SESSION_TS, thread_id)
             bound = True
             await client.threads.update(
                 thread_id=thread_id,
                 metadata={
                     "source": "slack",
-                    "source_context": SourceContext.parse(
-                        {"slack_thread": new_slack}
-                    ).dump(),
+                    "source_context": SourceContext.parse({"slack_thread": new_slack}).dump(),
                 },
             )
     except Exception as exc:  # noqa: BLE001

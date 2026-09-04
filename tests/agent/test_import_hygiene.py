@@ -16,9 +16,7 @@ def _closure_check(entry: str, forbidden: list[str]) -> dict[str, bool]:
         f"importlib.import_module({entry!r}); "
         f"print(json.dumps({{m: (m in sys.modules) for m in {forbidden!r}}}))"
     )
-    out = subprocess.run(
-        [sys.executable, "-c", code], capture_output=True, text=True, check=True
-    )
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
     return json.loads(out.stdout.strip().splitlines()[-1])
 
 
@@ -36,18 +34,12 @@ def test_webapp_does_not_import_agent_stack() -> None:
             "agent.tools",
         ],
     )
-    assert not any(
-        loaded.values()
-    ), f"forbidden modules imported by agent.webapp: {loaded}"
+    assert not any(loaded.values()), f"forbidden modules imported by agent.webapp: {loaded}"
 
 
 def test_server_does_not_import_exa_or_dashboard_routes() -> None:
-    loaded = _closure_check(
-        "agent.server", ["exa_py", "agent.dashboard.routes", "agent.webapp"]
-    )
-    assert not any(
-        loaded.values()
-    ), f"forbidden modules imported by agent.server: {loaded}"
+    loaded = _closure_check("agent.server", ["exa_py", "agent.dashboard.routes", "agent.webapp"])
+    assert not any(loaded.values()), f"forbidden modules imported by agent.server: {loaded}"
 
 
 def test_lazy_names_all_resolve() -> None:
@@ -68,6 +60,4 @@ exec("from agent.dashboard import router as value", namespace)
 if isinstance(namespace["value"], types.ModuleType):
     raise AssertionError("agent.dashboard.router resolved to a module")
 """
-    subprocess.run(
-        [sys.executable, "-c", code], capture_output=True, text=True, check=True
-    )
+    subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)

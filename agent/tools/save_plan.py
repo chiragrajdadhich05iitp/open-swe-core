@@ -61,9 +61,7 @@ async def save_plan(
     except Exception:
         config = {}
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
-    thread_id = (
-        configurable.get("thread_id") if isinstance(configurable, dict) else None
-    )
+    thread_id = configurable.get("thread_id") if isinstance(configurable, dict) else None
     if not thread_id:
         return {"success": False, "error": "no thread_id in run config"}
 

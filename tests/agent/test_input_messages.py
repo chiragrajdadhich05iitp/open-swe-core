@@ -48,17 +48,13 @@ def test_multimodal_input_preserves_non_text_blocks_and_order() -> None:
 
     assert isinstance(message["content"], list)
     assert message["content"][0] is image
-    assert (
-        _parse(message["content"][1]["text"]).findtext("content") == "describe <this>"
-    )
+    assert _parse(message["content"][1]["text"]).findtext("content") == "describe <this>"
 
 
 def test_first_seen_introductions_are_practical_and_mutate_registry() -> None:
     injected = set()
     kwargs = {
-        "people": [
-            {"id": "github:octocat", "platform": "github", "github_login": "octocat"}
-        ],
+        "people": [{"id": "github:octocat", "platform": "github", "github_login": "octocat"}],
         "channels": [{"id": "slack:C123", "platform": "slack", "topic": "a < b"}],
         "injected_dynamic_context_hashes": injected,
     }
@@ -123,9 +119,7 @@ def test_run_input_preserves_files() -> None:
 
 def test_entity_ids_must_be_namespaced() -> None:
     with pytest.raises(ValueError):
-        human_input(
-            "hello", {"sender_id": "octocat", "surface": "web", "kind": "human"}
-        )
+        human_input("hello", {"sender_id": "octocat", "surface": "web", "kind": "human"})
 
 
 def _person_intro_message(entity_id: str) -> HumanMessage:
@@ -151,9 +145,7 @@ def test_visible_dynamic_context_hashes_falls_back_without_a_usable_cutoff() -> 
     messages = [_person_intro_message("slack:U1")]
 
     for event in ({"cutoff_index": "x"}, {}, None):
-        assert visible_dynamic_context_hashes(
-            {"messages": messages, "_summarization_event": event}
-        )
+        assert visible_dynamic_context_hashes({"messages": messages, "_summarization_event": event})
 
 
 def test_visible_dynamic_context_hashes_honors_out_of_range_cutoff() -> None:
@@ -162,8 +154,6 @@ def test_visible_dynamic_context_hashes_honors_out_of_range_cutoff() -> None:
     event = {"cutoff_index": 99}
 
     assert (
-        visible_dynamic_context_hashes(
-            {"messages": messages, "_summarization_event": event}
-        )
+        visible_dynamic_context_hashes({"messages": messages, "_summarization_event": event})
         == set()
     )

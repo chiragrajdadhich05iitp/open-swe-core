@@ -9,9 +9,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 from agent.middleware.sanitize_thinking_blocks import SanitizeThinkingBlocksMiddleware
 
 
-def _make_request(
-    messages: list[object], model: object | None = None
-) -> ModelRequest[None]:
+def _make_request(messages: list[object], model: object | None = None) -> ModelRequest[None]:
     request = MagicMock()
     request.model = model or MagicMock(spec=ChatAnthropic)
     request.messages = messages
@@ -38,9 +36,7 @@ class TestSanitizeThinkingBlocksMiddleware:
             assert req is request
             return cast(ModelResponse[Any], response)
 
-        result = await SanitizeThinkingBlocksMiddleware().awrap_model_call(
-            request, handler
-        )
+        result = await SanitizeThinkingBlocksMiddleware().awrap_model_call(request, handler)
 
         assert result is response
         assert message.content == [{"type": "text", "text": "ok"}]
@@ -56,9 +52,7 @@ class TestSanitizeThinkingBlocksMiddleware:
         message = AIMessage(content=[thinking_block, text_block])
         request = _make_request([message])
 
-        await SanitizeThinkingBlocksMiddleware().awrap_model_call(
-            request, _noop_handler
-        )
+        await SanitizeThinkingBlocksMiddleware().awrap_model_call(request, _noop_handler)
 
         assert message.content == [thinking_block, text_block]
 
@@ -77,9 +71,7 @@ class TestSanitizeThinkingBlocksMiddleware:
             assert req is request
             return cast(ModelResponse[Any], response)
 
-        result = await SanitizeThinkingBlocksMiddleware().awrap_model_call(
-            request, handler
-        )
+        result = await SanitizeThinkingBlocksMiddleware().awrap_model_call(request, handler)
 
         assert result is response
         assert message.content == [{"type": "text", "text": "ok"}]
@@ -90,8 +82,6 @@ class TestSanitizeThinkingBlocksMiddleware:
         message = AIMessage(content=[thinking_block, {"type": "text", "text": "ok"}])
         request = _make_request([message], model=MagicMock())
 
-        await SanitizeThinkingBlocksMiddleware().awrap_model_call(
-            request, _noop_handler
-        )
+        await SanitizeThinkingBlocksMiddleware().awrap_model_call(request, _noop_handler)
 
         assert message.content == [thinking_block, {"type": "text", "text": "ok"}]

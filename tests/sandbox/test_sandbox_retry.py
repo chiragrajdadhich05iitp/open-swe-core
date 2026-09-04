@@ -18,9 +18,7 @@ def _transient() -> SandboxRetryableConnectionError:
 
 def test_only_the_pre_start_failure_counts_as_transient() -> None:
     assert is_transient_sandbox_error(_transient())
-    assert not is_transient_sandbox_error(
-        SandboxClientError("Sandbox request timed out: sb-dead")
-    )
+    assert not is_transient_sandbox_error(SandboxClientError("Sandbox request timed out: sb-dead"))
 
 
 @pytest.mark.asyncio
@@ -34,9 +32,7 @@ async def test_a_gateway_blip_is_retried_until_it_clears() -> None:
             raise _transient()
         return "ok"
 
-    with patch(
-        "agent.sandboxes.retry.asyncio.sleep", new_callable=AsyncMock
-    ) as mock_sleep:
+    with patch("agent.sandboxes.retry.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
         result = await retry_transient_sandbox_errors(operation, description="test")
 
     assert result == "ok"
@@ -49,9 +45,7 @@ async def test_a_gateway_blip_is_retried_until_it_clears() -> None:
 
 @pytest.mark.asyncio
 async def test_a_terminal_sandbox_error_is_not_retried() -> None:
-    operation = AsyncMock(
-        side_effect=SandboxClientError("Sandbox request timed out: sb-dead")
-    )
+    operation = AsyncMock(side_effect=SandboxClientError("Sandbox request timed out: sb-dead"))
 
     with pytest.raises(SandboxClientError):
         await retry_transient_sandbox_errors(operation, description="test")

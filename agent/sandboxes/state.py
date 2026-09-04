@@ -47,9 +47,7 @@ class SandboxUnreachableError(RuntimeError):
         )
 
 
-_SYNC_UNSUPPORTED = (
-    "SandboxBackendProxy is async-only; use the a-prefixed method instead."
-)
+_SYNC_UNSUPPORTED = "SandboxBackendProxy is async-only; use the a-prefixed method instead."
 
 
 class SandboxBackendProxy(BaseSandbox):
@@ -115,9 +113,7 @@ class SandboxBackendProxy(BaseSandbox):
 
     def _startup_completed(self, task: asyncio.Task[SandboxBackendProtocol]) -> None:
         if task.cancelled():
-            logger.warning(
-                "Sandbox startup was cancelled for thread %s", self._thread_id
-            )
+            logger.warning("Sandbox startup was cancelled for thread %s", self._thread_id)
             return
         exception = task.exception()
         if exception is not None:
@@ -152,9 +148,7 @@ class SandboxBackendProxy(BaseSandbox):
                 return self._backend
             if self._startup_task is None:
                 if self._reconnect is not None:
-                    logger.info(
-                        "Reconnecting sandbox backend for thread %s", self._thread_id
-                    )
+                    logger.info("Reconnecting sandbox backend for thread %s", self._thread_id)
                     self.start()
                 else:
                     sandbox_id = await get_sandbox_id_from_metadata(self._thread_id)
@@ -171,9 +165,7 @@ class SandboxBackendProxy(BaseSandbox):
                     self._startup_task.add_done_callback(self._startup_completed)
             startup_task = self._startup_task
             if startup_task is None:
-                raise RuntimeError(
-                    f"Sandbox startup task missing for thread {self._thread_id}"
-                )
+                raise RuntimeError(f"Sandbox startup task missing for thread {self._thread_id}")
 
         try:
             sandbox_backend = await asyncio.shield(startup_task)
@@ -191,9 +183,7 @@ class SandboxBackendProxy(BaseSandbox):
                 SANDBOX_BACKENDS[self._thread_id] = self
             backend = self._backend
             if backend is None:
-                raise RuntimeError(
-                    f"No sandbox backend cached for thread {self._thread_id}"
-                )
+                raise RuntimeError(f"No sandbox backend cached for thread {self._thread_id}")
             return backend
 
     def ls(self, path: str) -> LsResult:
@@ -205,9 +195,7 @@ class SandboxBackendProxy(BaseSandbox):
     def read(self, file_path: str, offset: int = 0, limit: int = 2000) -> ReadResult:
         raise NotImplementedError(_SYNC_UNSUPPORTED)
 
-    async def aread(
-        self, file_path: str, offset: int = 0, limit: int = 2000
-    ) -> ReadResult:
+    async def aread(self, file_path: str, offset: int = 0, limit: int = 2000) -> ReadResult:
         return await (await self._aget_backend()).aread(file_path, offset, limit)
 
     def grep(
@@ -228,9 +216,7 @@ class SandboxBackendProxy(BaseSandbox):
         *,
         max_count: int | None = None,
     ) -> GrepResult:
-        return await (await self._aget_backend()).agrep(
-            pattern, path, glob, max_count=max_count
-        )
+        return await (await self._aget_backend()).agrep(pattern, path, glob, max_count=max_count)
 
     def glob(self, pattern: str, path: str | None = None) -> GlobResult:
         raise NotImplementedError(_SYNC_UNSUPPORTED)
@@ -273,9 +259,7 @@ class SandboxBackendProxy(BaseSandbox):
     def upload_files(self, files: list[tuple[str, bytes]]) -> list[FileUploadResponse]:
         raise NotImplementedError(_SYNC_UNSUPPORTED)
 
-    async def aupload_files(
-        self, files: list[tuple[str, bytes]]
-    ) -> list[FileUploadResponse]:
+    async def aupload_files(self, files: list[tuple[str, bytes]]) -> list[FileUploadResponse]:
         return await (await self._aget_backend()).aupload_files(files)
 
     def download_files(self, paths: list[str]) -> list[FileDownloadResponse]:
@@ -287,9 +271,7 @@ class SandboxBackendProxy(BaseSandbox):
     def execute(self, command: str, *, timeout: int | None = None) -> ExecuteResponse:
         raise NotImplementedError(_SYNC_UNSUPPORTED)
 
-    async def aexecute(
-        self, command: str, *, timeout: int | None = None
-    ) -> ExecuteResponse:
+    async def aexecute(self, command: str, *, timeout: int | None = None) -> ExecuteResponse:
         return await (await self._aget_backend()).aexecute(command, timeout=timeout)
 
     def execute_with_offload(
@@ -310,9 +292,7 @@ class SandboxBackendProxy(BaseSandbox):
         *,
         max_inline_bytes: int,
         max_capture_bytes: int | None = None,
-        timeout: (
-            int | None
-        ) = None,  # noqa: ASYNC109 - forwarded to backend, not an asyncio contract
+        timeout: (int | None) = None,  # noqa: ASYNC109 - forwarded to backend, not an asyncio contract
     ) -> ExecuteOffloadResult:
         backend = await self._aget_backend()
         offload = getattr(backend, "aexecute_with_offload", None)

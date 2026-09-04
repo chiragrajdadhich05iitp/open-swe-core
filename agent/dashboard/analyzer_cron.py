@@ -47,11 +47,7 @@ async def ensure_continual_cron(full_name: str) -> str | None:
         logger.exception("Failed to create continual cron for %s", full_name)
         return None
 
-    cron_id = (
-        cron.get("cron_id")
-        if isinstance(cron, dict)
-        else getattr(cron, "cron_id", None)
-    )
+    cron_id = cron.get("cron_id") if isinstance(cron, dict) else getattr(cron, "cron_id", None)
     if isinstance(cron_id, str) and cron_id:
         await REVIEW_STYLES.set_continual_cron(full_name, cron_id)
         return cron_id

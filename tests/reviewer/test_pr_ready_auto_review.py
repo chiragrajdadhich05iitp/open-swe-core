@@ -35,9 +35,7 @@ def _pr_payload(
     }
 
 
-def _patch_dispatch_deps(
-    monkeypatch: pytest.MonkeyPatch, fake_client: MagicMock
-) -> AsyncMock:
+def _patch_dispatch_deps(monkeypatch: pytest.MonkeyPatch, fake_client: MagicMock) -> AsyncMock:
     monkeypatch.setattr(
         webhook_common,
         "get_github_app_installation_token_with_expiry",
@@ -63,9 +61,7 @@ async def test_pr_ready_non_draft_triggers_run(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr(webhook_common, "get_profile", AsyncMock(return_value=None))
     monkeypatch.setattr(webhook_common, "get_team_settings", AsyncMock(return_value={}))
 
-    await github_webhooks.process_github_pr_ready(
-        _pr_payload(action="opened", draft=False)
-    )
+    await github_webhooks.process_github_pr_ready(_pr_payload(action="opened", draft=False))
 
     fake_client.runs.create.assert_awaited_once()
     assert fake_client.runs.create.await_args is not None
@@ -81,9 +77,7 @@ async def test_pr_ready_public_repo_uses_scoped_reviewer_token(
     fake_client = MagicMock()
     fake_client.runs.create = AsyncMock()
     get_token = AsyncMock(return_value=("scoped-token", "expires"))
-    monkeypatch.setattr(
-        webhook_common, "get_github_app_installation_token_with_expiry", get_token
-    )
+    monkeypatch.setattr(webhook_common, "get_github_app_installation_token_with_expiry", get_token)
     monkeypatch.setattr(
         webhook_common,
         "_ensure_thread_exists_for_metadata",
@@ -113,9 +107,7 @@ async def test_pr_ready_private_repo_uses_full_reviewer_token(
     fake_client = MagicMock()
     fake_client.runs.create = AsyncMock()
     get_token = AsyncMock(return_value=("full-token", "expires"))
-    monkeypatch.setattr(
-        webhook_common, "get_github_app_installation_token_with_expiry", get_token
-    )
+    monkeypatch.setattr(webhook_common, "get_github_app_installation_token_with_expiry", get_token)
     monkeypatch.setattr(
         webhook_common,
         "_ensure_thread_exists_for_metadata",
@@ -144,9 +136,7 @@ async def test_pr_ready_for_review_triggers_run(
     fake_client = MagicMock()
     fake_client.runs.create = AsyncMock()
     _patch_dispatch_deps(monkeypatch, fake_client)
-    monkeypatch.setattr(
-        webhook_common, "_get_thread_metadata_safe", AsyncMock(return_value=None)
-    )
+    monkeypatch.setattr(webhook_common, "_get_thread_metadata_safe", AsyncMock(return_value=None))
     monkeypatch.setattr(webhook_common, "get_profile", AsyncMock(return_value=None))
     monkeypatch.setattr(webhook_common, "get_team_settings", AsyncMock(return_value={}))
 
@@ -165,9 +155,7 @@ async def test_pr_ready_for_review_skips_when_head_already_reviewed(
     fake_client.runs.create = AsyncMock()
     set_metadata = AsyncMock()
     get_token = AsyncMock(return_value=("token", None))
-    monkeypatch.setattr(
-        webhook_common, "get_github_app_installation_token_with_expiry", get_token
-    )
+    monkeypatch.setattr(webhook_common, "get_github_app_installation_token_with_expiry", get_token)
     monkeypatch.setattr(webhook_common, "set_reviewer_thread_metadata", set_metadata)
     monkeypatch.setattr(
         webhook_common,
@@ -228,8 +216,7 @@ async def test_pr_ready_for_review_uses_re_review_after_previous_review(
     assert configurable["last_reviewed_sha"] == "oldsha"
     assert configurable["head_sha"] == "headsha"
     assert any(
-        "marked ready for review" in message["content"]
-        for message in kwargs["input"]["messages"]
+        "marked ready for review" in message["content"] for message in kwargs["input"]["messages"]
     )
     head_sha_writes = [
         c.kwargs.get("head_sha")
@@ -257,9 +244,7 @@ async def test_pr_ready_draft_user_override_off_wins_over_team_on(
         AsyncMock(return_value={"review_draft_prs": True}),
     )
 
-    await github_webhooks.process_github_pr_ready(
-        _pr_payload(action="opened", draft=True)
-    )
+    await github_webhooks.process_github_pr_ready(_pr_payload(action="opened", draft=True))
 
     fake_client.runs.create.assert_not_called()
 
@@ -282,9 +267,7 @@ async def test_pr_ready_draft_user_override_on_wins_over_team_off(
         AsyncMock(return_value={"review_draft_prs": False}),
     )
 
-    await github_webhooks.process_github_pr_ready(
-        _pr_payload(action="opened", draft=True)
-    )
+    await github_webhooks.process_github_pr_ready(_pr_payload(action="opened", draft=True))
 
     fake_client.runs.create.assert_awaited_once()
 
@@ -308,9 +291,7 @@ async def test_pr_ready_draft_user_default_falls_back_to_team_on(
         AsyncMock(return_value={"review_draft_prs": True}),
     )
 
-    await github_webhooks.process_github_pr_ready(
-        _pr_payload(action="opened", draft=True)
-    )
+    await github_webhooks.process_github_pr_ready(_pr_payload(action="opened", draft=True))
 
     fake_client.runs.create.assert_awaited_once()
 
@@ -330,9 +311,7 @@ async def test_pr_ready_draft_no_profile_falls_back_to_team_off(
         AsyncMock(return_value={"review_draft_prs": False}),
     )
 
-    await github_webhooks.process_github_pr_ready(
-        _pr_payload(action="opened", draft=True)
-    )
+    await github_webhooks.process_github_pr_ready(_pr_payload(action="opened", draft=True))
 
     fake_client.runs.create.assert_not_called()
 
@@ -351,9 +330,7 @@ async def test_pr_ready_draft_no_profile_falls_back_to_team_on(
         AsyncMock(return_value={"review_draft_prs": True}),
     )
 
-    await github_webhooks.process_github_pr_ready(
-        _pr_payload(action="opened", draft=True)
-    )
+    await github_webhooks.process_github_pr_ready(_pr_payload(action="opened", draft=True))
 
     fake_client.runs.create.assert_awaited_once()
 
@@ -395,9 +372,7 @@ async def test_converted_to_draft_disables_watch_when_drafts_off(
             new_callable=AsyncMock,
             return_value={"review_draft_prs": False},
         ),
-        patch(
-            "agent.webhooks.common.set_reviewer_thread_metadata", side_effect=fake_set
-        ),
+        patch("agent.webhooks.common.set_reviewer_thread_metadata", side_effect=fake_set),
     ):
         await github_webhooks.process_github_pr_close(_converted_to_draft_payload())
     assert captured and captured[0][1]["watch"] is False

@@ -107,9 +107,7 @@ async def test_read_user_settings_fails_before_settings_reads() -> None:
 
 
 @pytest.mark.asyncio
-async def test_slack_participants_include_broadcasts_and_exclude_system_messages() -> (
-    None
-):
+async def test_slack_participants_include_broadcasts_and_exclude_system_messages() -> None:
     messages = [
         {"user": "U1"},
         {"user": "UBROADCAST", "subtype": "thread_broadcast"},
@@ -129,9 +127,7 @@ async def test_slack_participants_include_broadcasts_and_exclude_system_messages
         return {"github_login": login, "status": "active"}
 
     with (
-        patch.object(
-            participants, "login_for_slack_id", side_effect=login_for_slack_id
-        ),
+        patch.object(participants, "login_for_slack_id", side_effect=login_for_slack_id),
         patch.object(participants, "get_mapping", side_effect=get_mapping),
     ):
         logins, unresolved = await participants._mapped_slack_logins(messages)
@@ -185,10 +181,8 @@ async def test_dashboard_participants_are_read_from_trusted_metadata() -> None:
         patch.object(participants, "get_client", return_value=Client()),
         patch.object(participants, "get_mapping", side_effect=get_mapping),
     ):
-        logins, unresolved, error = (
-            await participants.resolve_thread_participant_logins(
-                {"configurable": {"thread_id": "thread-1", "source": "dashboard"}}
-            )
+        logins, unresolved, error = await participants.resolve_thread_participant_logins(
+            {"configurable": {"thread_id": "thread-1", "source": "dashboard"}}
         )
 
     assert error is None

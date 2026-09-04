@@ -17,14 +17,10 @@ class _FakeStore:
     def __init__(self) -> None:
         self.items: dict[tuple[tuple[str, ...], str], dict[str, Any]] = {}
 
-    async def get_item(
-        self, namespace: tuple[str, ...], key: str
-    ) -> dict[str, Any] | None:
+    async def get_item(self, namespace: tuple[str, ...], key: str) -> dict[str, Any] | None:
         return self.items.get((namespace, key))
 
-    async def put_item(
-        self, namespace: tuple[str, ...], key: str, value: dict[str, Any]
-    ) -> None:
+    async def put_item(self, namespace: tuple[str, ...], key: str, value: dict[str, Any]) -> None:
         self.items[(namespace, key)] = {"value": value}
 
     async def delete_item(self, namespace: tuple[str, ...], key: str) -> None:
@@ -113,9 +109,7 @@ async def test_github_reaction_added_creates_langsmith_feedback(
         "list_findings",
         fake_list_findings,
     )
-    monkeypatch.setattr(
-        github_feedback, "create_langsmith_feedback", fake_create_feedback
-    )
+    monkeypatch.setattr(github_feedback, "create_langsmith_feedback", fake_create_feedback)
 
     await process_github_reaction_added(_reaction_payload(), delivery_id="delivery-1")
 
@@ -167,9 +161,7 @@ async def test_github_reaction_removed_deletes_langsmith_feedback(
         "list_findings",
         fake_list_findings,
     )
-    monkeypatch.setattr(
-        github_feedback, "delete_langsmith_feedback", fake_delete_feedback
-    )
+    monkeypatch.setattr(github_feedback, "delete_langsmith_feedback", fake_delete_feedback)
 
     await process_github_reaction_removed(
         _reaction_payload(action="deleted"), delivery_id="delivery-2"
@@ -192,9 +184,7 @@ async def test_github_webhook_ignores_reaction_event(
     payload = _reaction_payload()
     background_tasks = _FakeBackgroundTasks()
 
-    monkeypatch.setattr(
-        webhook_common, "verify_github_signature", lambda *args, **kwargs: True
-    )
+    monkeypatch.setattr(webhook_common, "verify_github_signature", lambda *args, **kwargs: True)
 
     response = await github_routes.github_webhook(
         cast(Request, _FakeRequest(payload)), cast(BackgroundTasks, background_tasks)

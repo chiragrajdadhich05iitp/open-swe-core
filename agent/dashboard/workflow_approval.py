@@ -15,9 +15,7 @@ _MAX_APPROVAL_RECORDS = 20
 _TERMINAL_STATUSES = {WORKFLOW_APPROVAL_APPROVED, WORKFLOW_APPROVAL_REJECTED}
 
 
-def _approvals_from_metadata(
-    metadata: Mapping[str, Any] | None
-) -> dict[str, dict[str, Any]]:
+def _approvals_from_metadata(metadata: Mapping[str, Any] | None) -> dict[str, dict[str, Any]]:
     raw = metadata.get(WORKFLOW_PUSH_APPROVALS_KEY) if metadata else None
     if not isinstance(raw, dict):
         return {}
@@ -98,9 +96,7 @@ def _safe_int(value: Any, default: int = 0) -> int:
         return default
 
 
-def _normalize_diff_stats(
-    value: Mapping[str, Any] | None, file_count: int
-) -> dict[str, int]:
+def _normalize_diff_stats(value: Mapping[str, Any] | None, file_count: int) -> dict[str, int]:
     if not isinstance(value, Mapping):
         return {"files": file_count, "additions": 0, "deletions": 0}
     return {
@@ -131,9 +127,7 @@ def workflow_push_approval_response(record: Mapping[str, Any]) -> dict[str, Any]
         ),
         "diffPreview": str(record.get("diff_preview") or ""),
         "diffPreviewTruncated": record.get("diff_preview_truncated") is True,
-        "approvalUrl": (
-            approval_url if isinstance(approval_url, str) and approval_url else None
-        ),
+        "approvalUrl": (approval_url if isinstance(approval_url, str) and approval_url else None),
         "requestedAt": requested_at if isinstance(requested_at, str) else None,
         "decidedAt": decided_at if isinstance(decided_at, str) else None,
         "decidedBy": decided_by if isinstance(decided_by, str) else None,
@@ -143,9 +137,7 @@ def workflow_push_approval_response(record: Mapping[str, Any]) -> dict[str, Any]
 def workflow_push_approval_responses(
     approvals: Mapping[str, Mapping[str, Any]],
 ) -> list[dict[str, Any]]:
-    ordered = sorted(
-        approvals.values(), key=lambda r: str(r.get("requested_at", "")), reverse=True
-    )
+    ordered = sorted(approvals.values(), key=lambda r: str(r.get("requested_at", "")), reverse=True)
     return [workflow_push_approval_response(record) for record in ordered]
 
 
@@ -171,9 +163,7 @@ async def decide_workflow_push_approval(
     record = approvals.get(fingerprint)
     if not record:
         return None
-    record["status"] = (
-        WORKFLOW_APPROVAL_APPROVED if approved else WORKFLOW_APPROVAL_REJECTED
-    )
+    record["status"] = WORKFLOW_APPROVAL_APPROVED if approved else WORKFLOW_APPROVAL_REJECTED
     record["decided_at"] = now_iso()
     record["decided_by"] = actor
     approvals[fingerprint] = record
@@ -186,7 +176,5 @@ async def _save_approvals(thread_id: str, approvals: dict[str, dict[str, Any]]) 
     trimmed = ordered[-_MAX_APPROVAL_RECORDS:]
     await get_client().threads.update(
         thread_id=thread_id,
-        metadata={
-            WORKFLOW_PUSH_APPROVALS_KEY: {str(r["fingerprint"]): r for r in trimmed}
-        },
+        metadata={WORKFLOW_PUSH_APPROVALS_KEY: {str(r["fingerprint"]): r for r in trimmed}},
     )

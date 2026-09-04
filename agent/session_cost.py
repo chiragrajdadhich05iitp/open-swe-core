@@ -97,8 +97,7 @@ def _blocks_contain(blocks: list[dict[str, Any]] | None, text: str) -> bool:
         if isinstance(elements, list):
             values.extend(elements)
         if any(
-            isinstance(value, dict) and text in str(value.get("text") or "")
-            for value in values
+            isinstance(value, dict) and text in str(value.get("text") or "") for value in values
         ):
             return True
     return False
@@ -136,18 +135,12 @@ async def _refresh_once(
         return "pending", "Slack message unavailable"
     text = message.get("text")
     blocks = message.get("blocks")
-    if not isinstance(text, str) or (
-        blocks is not None and not isinstance(blocks, list)
-    ):
+    if not isinstance(text, str) or (blocks is not None and not isinstance(blocks, list)):
         return "unavailable", "invalid Slack message"
 
-    updated_text, updated_blocks = with_slack_session_cost(
-        text, blocks, snapshot.total_cost
-    )
+    updated_text, updated_blocks = with_slack_session_cost(text, blocks, snapshot.total_cost)
     cost_label = format_slack_session_cost(snapshot.total_cost)
-    if cost_label not in updated_text or not _blocks_contain(
-        updated_blocks, cost_label
-    ):
+    if cost_label not in updated_text or not _blocks_contain(updated_blocks, cost_label):
         return "unavailable", "Slack usage footer unavailable"
     if updated_text == text and updated_blocks == blocks:
         return "updated", "already current"
@@ -167,9 +160,7 @@ async def run_session_cost_refresh(
     client = client or langgraph_client()
     raw_attempt = state.get("attempt")
     attempt = (
-        raw_attempt
-        if isinstance(raw_attempt, int) and not isinstance(raw_attempt, bool)
-        else -1
+        raw_attempt if isinstance(raw_attempt, int) and not isinstance(raw_attempt, bool) else -1
     )
     if attempt < 0 or attempt >= len(_RETRY_DELAYS_SECONDS):
         return {"status": "unavailable", "reason": "invalid attempt"}
@@ -189,13 +180,9 @@ async def run_session_cost_refresh(
         return {"status": status, "reason": reason}
     next_attempt = attempt + 1
     if next_attempt >= len(_RETRY_DELAYS_SECONDS):
-        logger.info(
-            "Session-cost refresh exhausted for run %s: %s", state.get("run_id"), reason
-        )
+        logger.info("Session-cost refresh exhausted for run %s: %s", state.get("run_id"), reason)
         return {"status": "exhausted", "reason": reason}
-    scheduled = await schedule_session_cost_refresh(
-        state, attempt=next_attempt, client=client
-    )
+    scheduled = await schedule_session_cost_refresh(state, attempt=next_attempt, client=client)
     return {
         "status": "retry_scheduled" if scheduled else "unavailable",
         "reason": reason,

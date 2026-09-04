@@ -17,25 +17,19 @@ def _config() -> dict:
     }
 
 
-def _backend(
-    content: bytes = b"test", *, prepare_output: str | None = None
-) -> MagicMock:
+def _backend(content: bytes = b"test", *, prepare_output: str | None = None) -> MagicMock:
     backend = MagicMock()
     backend.aexecute = AsyncMock(
         side_effect=[
             MagicMock(
                 exit_code=0,
-                output=(
-                    prepare_output if prepare_output is not None else str(len(content))
-                ),
+                output=(prepare_output if prepare_output is not None else str(len(content))),
             ),
             MagicMock(exit_code=0, output=""),
         ]
     )
     backend.adownload_files = AsyncMock(
-        return_value=[
-            FileDownloadResponse(path="/workspace/test.html", content=content)
-        ]
+        return_value=[FileDownloadResponse(path="/workspace/test.html", content=content)]
     )
     return backend
 

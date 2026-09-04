@@ -44,9 +44,7 @@ class PlanModeMiddleware(AgentMiddleware):
         self._excluded = excluded
         self._initial = initial
 
-    def before_agent(
-        self, state: Any, runtime: Any
-    ) -> dict[str, Any] | None:  # noqa: ARG002
+    def before_agent(self, state: Any, runtime: Any) -> dict[str, Any] | None:  # noqa: ARG002
         # Reset plan_mode to the value resolved for THIS run so a stale ``True``
         # left in the thread state by a previous run's ``enter_plan_mode`` does
         # not silently force a later (e.g. approved/implementing) run back into

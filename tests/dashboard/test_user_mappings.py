@@ -16,9 +16,7 @@ class _FakeStore:
         value = self.items.get((tuple(namespace), key))
         return {"value": value} if value is not None else None
 
-    async def put_item(
-        self, namespace: list[str], key: str, value: dict[str, Any]
-    ) -> None:
+    async def put_item(self, namespace: list[str], key: str, value: dict[str, Any]) -> None:
         self.items[(tuple(namespace), key)] = value
 
     async def delete_item(self, namespace: list[str], key: str) -> None:
@@ -77,9 +75,7 @@ async def test_cache_readers_after_refresh(fake_store: _FakeStore) -> None:
 
 @pytest.mark.asyncio
 async def test_pending_status_not_trusted(fake_store: _FakeStore) -> None:
-    await um.upsert_mapping(
-        github_login="newbie", work_email="n@x.com", status="pending"
-    )
+    await um.upsert_mapping(github_login="newbie", work_email="n@x.com", status="pending")
     um.clear_cache()
     await um.refresh_cache()
     assert um.is_login_mapped("newbie") is False

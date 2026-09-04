@@ -65,9 +65,7 @@ class _Threads:
         assert ttl == baby_sit.WATCH_LOCK_TTL_MINUTES
         async with self.create_lock:
             if thread_id in self.active:
-                response = httpx.Response(
-                    409, request=httpx.Request("POST", "http://test")
-                )
+                response = httpx.Response(409, request=httpx.Request("POST", "http://test"))
                 raise ConflictError("already exists", response=response, body=None)
             self.active.add(thread_id)
 
@@ -175,9 +173,7 @@ async def test_failure_dispatch_is_deduplicated_until_retry_is_recorded(
     watch_client: _Client, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     await _start_watch(watch_client)
-    monkeypatch.setattr(
-        baby_sit, "get_github_app_installation_token", AsyncMock(return_value="t")
-    )
+    monkeypatch.setattr(baby_sit, "get_github_app_installation_token", AsyncMock(return_value="t"))
     monkeypatch.setattr(
         baby_sit,
         "fetch_pr",
@@ -205,9 +201,7 @@ async def test_failure_dispatch_is_deduplicated_until_retry_is_recorded(
     assert await baby_sit.evaluate_watch("acme/repo#7") == "duplicate"
     assert dispatch.await_count == 1
 
-    monkeypatch.setattr(
-        baby_sit, "post_slack_thread_reply", AsyncMock(return_value=True)
-    )
+    monkeypatch.setattr(baby_sit, "post_slack_thread_reply", AsyncMock(return_value=True))
     await baby_sit.record_retry(
         "acme/repo#7",
         thread_id="thread-1",
@@ -226,9 +220,7 @@ async def test_concurrent_failure_evaluations_dispatch_once(
     first_client, second_client = shared_watch_clients
     _use_client(monkeypatch, first_client)
     await _start_watch(first_client)
-    monkeypatch.setattr(
-        baby_sit, "get_github_app_installation_token", AsyncMock(return_value="t")
-    )
+    monkeypatch.setattr(baby_sit, "get_github_app_installation_token", AsyncMock(return_value="t"))
     monkeypatch.setattr(
         baby_sit,
         "fetch_pr",
@@ -276,9 +268,7 @@ async def test_success_waits_for_stable_check_set_before_notifying(
     watch_client: _Client, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     await _start_watch(watch_client)
-    monkeypatch.setattr(
-        baby_sit, "get_github_app_installation_token", AsyncMock(return_value="t")
-    )
+    monkeypatch.setattr(baby_sit, "get_github_app_installation_token", AsyncMock(return_value="t"))
     monkeypatch.setattr(
         baby_sit,
         "fetch_pr",
@@ -326,9 +316,7 @@ async def test_terminal_notification_falls_back_to_originating_agent_thread(
     watch.source_context = SourceContext()
     watch.run_config = {"thread_id": "thread-1", "source": "dashboard"}
     await baby_sit.WATCHES.save(watch)
-    monkeypatch.setattr(
-        baby_sit, "get_github_app_installation_token", AsyncMock(return_value="t")
-    )
+    monkeypatch.setattr(baby_sit, "get_github_app_installation_token", AsyncMock(return_value="t"))
     monkeypatch.setattr(
         baby_sit,
         "fetch_pr",
@@ -378,9 +366,7 @@ async def test_new_head_resets_retry_budget(
     watch_client: _Client, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     await _start_watch(watch_client)
-    monkeypatch.setattr(
-        baby_sit, "post_slack_thread_reply", AsyncMock(return_value=True)
-    )
+    monkeypatch.setattr(baby_sit, "post_slack_thread_reply", AsyncMock(return_value=True))
     for _ in range(3):
         await baby_sit.record_retry(
             "acme/repo#7",
@@ -389,9 +375,7 @@ async def test_new_head_resets_retry_budget(
             check_name="tests",
             evidence="runner timeout",
         )
-    monkeypatch.setattr(
-        baby_sit, "get_github_app_installation_token", AsyncMock(return_value="t")
-    )
+    monkeypatch.setattr(baby_sit, "get_github_app_installation_token", AsyncMock(return_value="t"))
     monkeypatch.setattr(
         baby_sit,
         "fetch_pr",
@@ -429,21 +413,15 @@ async def test_failed_webhook_matches_active_head_and_deduplicates_delivery(
         },
     }
 
-    first = await baby_sit.handle_ci_webhook(
-        payload, "check_run", delivery_id="delivery-1"
-    )
-    second = await baby_sit.handle_ci_webhook(
-        payload, "check_run", delivery_id="delivery-1"
-    )
+    first = await baby_sit.handle_ci_webhook(payload, "check_run", delivery_id="delivery-1")
+    second = await baby_sit.handle_ci_webhook(payload, "check_run", delivery_id="delivery-1")
     payload["check_run"] = {
         "status": "completed",
         "conclusion": "failure",
         "head_sha": "head-2",
         "check_suite": {"head_branch": "feature"},
     }
-    new_head = await baby_sit.handle_ci_webhook(
-        payload, "check_run", delivery_id="delivery-2"
-    )
+    new_head = await baby_sit.handle_ci_webhook(payload, "check_run", delivery_id="delivery-2")
 
     assert first == {"matched": 1, "dispatched": 1}
     assert second == {"matched": 1, "dispatched": 0}

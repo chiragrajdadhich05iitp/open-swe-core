@@ -53,9 +53,7 @@ def _configure(monkeypatch: pytest.MonkeyPatch) -> tuple[_Backend, _AsyncClient]
 async def test_create_sandbox_service_url(monkeypatch: pytest.MonkeyPatch) -> None:
     _, client = _configure(monkeypatch)
 
-    result = await service_tool.create_sandbox_service_url(
-        3000, expires_in_seconds=3600
-    )
+    result = await service_tool.create_sandbox_service_url(3000, expires_in_seconds=3600)
 
     assert result == {
         "url": "https://service.example/auth?token=secret",
@@ -101,11 +99,7 @@ async def test_create_sandbox_service_url_detects_sandbox_change(
 ) -> None:
     backend, _ = _configure(monkeypatch)
     current = [backend, _Backend()]
-    monkeypatch.setattr(
-        service_tool, "unwrap_sandbox_backend", lambda _value: current.pop(0)
-    )
+    monkeypatch.setattr(service_tool, "unwrap_sandbox_backend", lambda _value: current.pop(0))
 
-    with pytest.raises(
-        RuntimeError, match="sandbox changed while creating the service URL"
-    ):
+    with pytest.raises(RuntimeError, match="sandbox changed while creating the service URL"):
         await service_tool.create_sandbox_service_url(3000)

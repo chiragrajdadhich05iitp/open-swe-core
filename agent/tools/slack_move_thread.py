@@ -106,9 +106,7 @@ async def slack_move_thread(
     active_ts = str(active.get("thread_ts") or "")
     if (active_channel, active_ts) != (source_channel, source_ts):
         try:
-            return await _finish_existing_move(
-                client, thread_id, active, configured_slack
-            )
+            return await _finish_existing_move(client, thread_id, active, configured_slack)
         except Exception as exc:  # noqa: BLE001
             return {
                 "success": False,
@@ -120,9 +118,7 @@ async def slack_move_thread(
     if not _CHANNEL_ID_RE.fullmatch(target_channel):
         return {"success": False, "error": "channel_id must be a Slack channel ID"}
 
-    root_text = append_slack_web_link_footer(
-        clean_message, dashboard_thread_url(thread_id)
-    )
+    root_text = append_slack_web_link_footer(clean_message, dashboard_thread_url(thread_id))
     new_ts, slack_error = await post_slack_top_level_message_with_ts(
         target_channel,
         root_text,
@@ -154,9 +150,7 @@ async def slack_move_thread(
                 thread_id=thread_id,
                 metadata={
                     "source": "slack",
-                    "source_context": SourceContext.parse(
-                        {"slack_thread": new_slack}
-                    ).dump(),
+                    "source_context": SourceContext.parse({"slack_thread": new_slack}).dump(),
                 },
             )
             persisted = await get_active_slack_thread(client, thread_id)
@@ -185,9 +179,7 @@ async def slack_move_thread(
             "retryable": True,
         }
 
-    source_run = await lookup_slack_thread_run_mapping(
-        client, source_channel, source_ts
-    )
+    source_run = await lookup_slack_thread_run_mapping(client, source_channel, source_ts)
     if isinstance(source_run, Mapping):
         run_id = source_run.get("run_id")
         if isinstance(run_id, str) and run_id:

@@ -24,9 +24,7 @@ async def test_posts_resolved_trace_url() -> None:
 
 async def test_falls_back_when_trace_url_unresolved() -> None:
     with (
-        patch.object(
-            linear_utils, "get_langsmith_trace_url", AsyncMock(return_value=None)
-        ),
+        patch.object(linear_utils, "get_langsmith_trace_url", AsyncMock(return_value=None)),
         patch.object(linear_utils, "comment_on_linear_issue", AsyncMock()) as comment,
     ):
         await linear_utils.post_linear_trace_comment("issue-1", "thread-1", "comment-1")

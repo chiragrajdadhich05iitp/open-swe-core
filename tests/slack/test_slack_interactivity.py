@@ -61,9 +61,7 @@ async def test_selected_option_updates_original_message(
     update = AsyncMock(return_value=(True, None))
     monkeypatch.setattr(slack_routes.common, "update_slack_message", update)
 
-    await slack_routes._update_selected_option_message(
-        payload, payload["actions"][0], "Option B"
-    )
+    await slack_routes._update_selected_option_message(payload, payload["actions"][0], "Option B")
 
     update.assert_awaited_once_with(
         "C1",
@@ -89,9 +87,7 @@ async def test_external_channel_interaction_is_blocked(
 ) -> None:
     payload = _option_payload()
     lookup = AsyncMock(return_value="thread-1")
-    monkeypatch.setattr(
-        slack_routes.common, "verify_slack_signature", lambda **_kwargs: True
-    )
+    monkeypatch.setattr(slack_routes.common, "verify_slack_signature", lambda **_kwargs: True)
     monkeypatch.setattr(slack_routes.common, "lookup_slack_thread_id", lookup)
     monkeypatch.setattr(
         slack_routes.common,
@@ -114,9 +110,7 @@ async def test_option_interaction_schedules_update_before_agent_processing(
     payload = _option_payload()
     update = AsyncMock()
     process = AsyncMock()
-    monkeypatch.setattr(
-        slack_routes.common, "verify_slack_signature", lambda **_kwargs: True
-    )
+    monkeypatch.setattr(slack_routes.common, "verify_slack_signature", lambda **_kwargs: True)
     monkeypatch.setattr(slack_routes, "get_langgraph_client", lambda: object())
     monkeypatch.setattr(
         slack_routes.common,
@@ -175,21 +169,15 @@ async def test_code_channel_view_action_routes_to_channel_session(
         ],
     }
     process = AsyncMock()
-    monkeypatch.setattr(
-        slack_routes.common, "verify_slack_signature", lambda **_kwargs: True
-    )
-    monkeypatch.setattr(
-        slack_routes.common, "is_code_channel", AsyncMock(return_value=True)
-    )
+    monkeypatch.setattr(slack_routes.common, "verify_slack_signature", lambda **_kwargs: True)
+    monkeypatch.setattr(slack_routes.common, "is_code_channel", AsyncMock(return_value=True))
     monkeypatch.setattr(slack_routes, "get_langgraph_client", lambda: object())
     monkeypatch.setattr(
         slack_routes.common,
         "lookup_slack_thread_id",
         AsyncMock(return_value="thread-1"),
     )
-    monkeypatch.setattr(
-        slack_routes.common, "claim_slack_event", AsyncMock(return_value=True)
-    )
+    monkeypatch.setattr(slack_routes.common, "claim_slack_event", AsyncMock(return_value=True))
     monkeypatch.setattr(
         slack_routes.common, "_get_slack_channel_context", AsyncMock(return_value={})
     )
@@ -226,21 +214,13 @@ async def test_code_channel_external_select_returns_registered_suggestions(
         "action_id": "repository",
         "value": "open",
     }
-    options = [
-        {"text": {"type": "plain_text", "text": "open-swe"}, "value": "open-swe"}
-    ]
+    options = [{"text": {"type": "plain_text", "text": "open-swe"}, "value": "open-swe"}]
     get_suggestions = AsyncMock(return_value=options)
-    monkeypatch.setattr(
-        slack_routes.common, "verify_slack_signature", lambda **_kwargs: True
-    )
+    monkeypatch.setattr(slack_routes.common, "verify_slack_signature", lambda **_kwargs: True)
     monkeypatch.setattr(slack_routes, "get_langgraph_client", lambda: object())
     monkeypatch.setattr(slack_routes.common, "get_block_suggestions", get_suggestions)
 
-    result = await slack_routes.slack_interactivity(
-        _request(payload), BackgroundTasks()
-    )
+    result = await slack_routes.slack_interactivity(_request(payload), BackgroundTasks())
 
     assert result == {"options": options}
-    get_suggestions.assert_awaited_once_with(
-        ANY, "C-code", "V-plan", "repository", "open"
-    )
+    get_suggestions.assert_awaited_once_with(ANY, "C-code", "V-plan", "repository", "open")

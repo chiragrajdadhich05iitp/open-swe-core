@@ -112,9 +112,7 @@ def injected_dynamic_context_hashes_from_metadata(metadata: object) -> set[str]:
     return {value for value in values if isinstance(value, str) and value}
 
 
-def message_sender_id(
-    content: object, *, kind: MessageKind | None = None
-) -> str | None:
+def message_sender_id(content: object, *, kind: MessageKind | None = None) -> str | None:
     values = content if isinstance(content, list) else [content]
     for value in values:
         text = value.get("text") if isinstance(value, dict) else value
@@ -124,9 +122,7 @@ def message_sender_id(
             root = ElementTree.fromstring(text)
         except ElementTree.ParseError:
             continue
-        messages = (
-            [root] if root.tag == "input-message" else root.findall(".//input-message")
-        )
+        messages = [root] if root.tag == "input-message" else root.findall(".//input-message")
         for message in messages:
             sender = message.get("sender")
             if sender and (kind is None or message.get("kind") == kind):
@@ -146,9 +142,7 @@ def input_message_text(content: object) -> str | None:
             root = ElementTree.fromstring(text)
         except ElementTree.ParseError:
             continue
-        messages = (
-            [root] if root.tag == "input-message" else root.findall(".//input-message")
-        )
+        messages = [root] if root.tag == "input-message" else root.findall(".//input-message")
         for message in messages:
             body = message.findtext("content")
             if body and body.strip():
@@ -254,9 +248,7 @@ def _data_element(name: str, value: object) -> str:
     if not name.replace("_", "").replace("-", "").isalnum():
         raise ValueError(f"invalid structured data field: {name}")
     if isinstance(value, dict):
-        children = "\n".join(
-            _data_element(str(key), item) for key, item in value.items()
-        )
+        children = "\n".join(_data_element(str(key), item) for key, item in value.items())
         return f"<{name}>\n{children}\n</{name}>"
     if isinstance(value, (list, tuple)):
         children = "\n".join(_data_element("item", item) for item in value)
@@ -274,9 +266,7 @@ def _serialize_message(text: str, context: InputMessageContext) -> str:
     channel_id = context.get("channel_id")
     if channel_id:
         attributes.insert(1, f'channel="{_xml_attr(_validate_entity_id(channel_id))}"')
-    children = [
-        _data_element(name, value) for name, value in context.get("data", {}).items()
-    ]
+    children = [_data_element(name, value) for name, value in context.get("data", {}).items()]
     children.append(f"<content>{_xml_text(text)}</content>")
     body = "\n".join(children)
     return f"<input-message {' '.join(attributes)}>\n{body}\n</input-message>"
@@ -328,17 +318,13 @@ def _structured_content(
     return blocks
 
 
-def human_input(
-    content: str | list[dict[str, Any]], context: InputMessageContext
-) -> RunMessage:
+def human_input(content: str | list[dict[str, Any]], context: InputMessageContext) -> RunMessage:
     if context["kind"] != "human":
         raise ValueError("human_input requires kind='human'")
     return {"role": "user", "content": _structured_content(content, context)}
 
 
-def system_input(
-    content: str | list[dict[str, Any]], context: InputMessageContext
-) -> RunMessage:
+def system_input(content: str | list[dict[str, Any]], context: InputMessageContext) -> RunMessage:
     if context["kind"] != "system":
         raise ValueError("system_input requires kind='system'")
     return {"role": "user", "content": _structured_content(content, context)}
@@ -374,9 +360,7 @@ def build_input_messages(
     injected_dynamic_context_hashes: set[str] | None = None,
 ) -> list[RunMessage]:
     injected = (
-        injected_dynamic_context_hashes
-        if injected_dynamic_context_hashes is not None
-        else set()
+        injected_dynamic_context_hashes if injected_dynamic_context_hashes is not None else set()
     )
     messages: list[RunMessage] = []
     for identity, builder in (
@@ -423,9 +407,7 @@ def build_run_input(
 
 
 def wrap_system_prompt(text: str, *, additions: list[str] | None = None) -> str:
-    if text.startswith(_SYSTEM_WRAPPER_MARKER) and text.endswith(
-        "</system-instructions>"
-    ):
+    if text.startswith(_SYSTEM_WRAPPER_MARKER) and text.endswith("</system-instructions>"):
         if not additions:
             return text
         closing = "</system-instructions>"

@@ -72,9 +72,7 @@ class _FakeThreadsClient:
     ) -> dict[str, Any]:
         return {"thread_id": thread_id, "metadata": metadata}
 
-    async def update(
-        self, *, thread_id: str, metadata: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def update(self, *, thread_id: str, metadata: dict[str, Any]) -> dict[str, Any]:
         return {"thread_id": thread_id, "metadata": metadata}
 
     async def get(self, thread_id: str) -> dict[str, Any]:
@@ -251,9 +249,7 @@ async def test_approve_plan_tool_exits_plan_mode(
             "plan_status": "ready",
         }
 
-    async def fake_get_content(
-        thread_id: str, *, raise_on_error: bool = False
-    ) -> dict[str, Any]:
+    async def fake_get_content(thread_id: str, *, raise_on_error: bool = False) -> dict[str, Any]:
         assert raise_on_error is True
         return {
             "html": "<html><head><title>Plan</title></head><body>Do it</body></html>",
@@ -335,9 +331,7 @@ async def test_approve_plan_tool_ignores_stale_state_approver(
     async def fake_thread_metadata(thread_id: str) -> dict[str, Any]:
         return {"github_login": "owner", "plan_mode": True}
 
-    async def fake_get_content(
-        thread_id: str, *, raise_on_error: bool = False
-    ) -> dict[str, Any]:
+    async def fake_get_content(thread_id: str, *, raise_on_error: bool = False) -> dict[str, Any]:
         return {"markdown": "# Plan", "status": "ready"}
 
     async def fake_list_comments(
@@ -408,9 +402,7 @@ async def test_approve_plan_tool_allows_non_owner_configurable_identity(
     async def fake_thread_metadata(thread_id: str) -> dict[str, Any]:
         return {"github_login": "owner", "plan_mode": True}
 
-    async def fake_get_content(
-        thread_id: str, *, raise_on_error: bool = False
-    ) -> dict[str, Any]:
+    async def fake_get_content(thread_id: str, *, raise_on_error: bool = False) -> dict[str, Any]:
         return {"markdown": "# Plan", "status": "ready"}
 
     async def fake_list_comments(
@@ -432,9 +424,7 @@ async def test_approve_plan_tool_allows_non_owner_configurable_identity(
     monkeypatch.setattr(approve_plan_tool, "list_plan_comments", fake_list_comments)
     monkeypatch.setattr(approve_plan_tool, "set_plan_status", fake_set_status)
 
-    result = await approve_plan_tool.approve_plan(
-        state={"plan_mode": True}, tool_call_id="call-1"
-    )
+    result = await approve_plan_tool.approve_plan(state={"plan_mode": True}, tool_call_id="call-1")
 
     assert isinstance(result, Command)
     assert saved["approved_by"] == {"id": "other", "name": "other", "source": "linear"}

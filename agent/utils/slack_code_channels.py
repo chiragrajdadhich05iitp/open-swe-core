@@ -74,9 +74,7 @@ async def is_code_channel(channel_id: str) -> bool:
     return isinstance(record, dict) and record.get("record_type") == "agent_channel"
 
 
-async def _call(
-    method: str, payload: dict[str, Any]
-) -> tuple[dict[str, Any] | None, str | None]:
+async def _call(method: str, payload: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
     if not SLACK_BOT_TOKEN:
         return None, "missing_slack_bot_token"
     async with httpx.AsyncClient(timeout=DEFAULT_HTTP_TIMEOUT) as http_client:
@@ -161,9 +159,7 @@ async def create_code_channel(
     if error or data is None:
         return None, error
     channel = data.get("channel")
-    channel_id = (
-        channel.get("id") if isinstance(channel, dict) else data.get("channel_id")
-    )
+    channel_id = channel.get("id") if isinstance(channel, dict) else data.get("channel_id")
     if isinstance(channel_id, str) and channel_id:
         return channel_id, None
     return None, "missing_channel_id"
@@ -174,9 +170,7 @@ async def set_session_status_result(
 ) -> tuple[dict[str, Any] | None, str | None]:
     if status not in {"processing", "active", "suspended", "closed"}:
         return None, "invalid_status"
-    return await _call(
-        "agents.sessions.setStatus", {"channel_id": channel_id, "status": status}
-    )
+    return await _call("agents.sessions.setStatus", {"channel_id": channel_id, "status": status})
 
 
 async def set_session_status(channel_id: str, status: SessionStatus) -> bool:
@@ -209,9 +203,7 @@ async def set_properties(
     if code_channel is not None:
         items = code_channel.get("context_bar_items")
         if items is not None:
-            if not isinstance(items, list) or not all(
-                isinstance(item, dict) for item in items
-            ):
+            if not isinstance(items, list) or not all(isinstance(item, dict) for item in items):
                 return None, "invalid_context_bar_items"
             if error := _context_items_error(items):
                 return None, error
@@ -236,13 +228,9 @@ async def set_properties(
     return await _call("agents.conversations.setProperties", payload)
 
 
-async def set_context_bar(
-    channel_id: str, items: list[dict[str, Any]]
-) -> tuple[bool, str | None]:
+async def set_context_bar(channel_id: str, items: list[dict[str, Any]]) -> tuple[bool, str | None]:
     """Replace the agent-supplied items at the top of a code channel."""
-    _, error = await set_properties(
-        channel_id, code_channel={"context_bar_items": items}
-    )
+    _, error = await set_properties(channel_id, code_channel={"context_bar_items": items})
     return error is None, error
 
 
@@ -358,9 +346,7 @@ async def get_block_suggestions(
     ][:100]
 
 
-async def delete_block_suggestions(
-    client: LangGraphClient, channel_id: str, view_id: str
-) -> None:
+async def delete_block_suggestions(client: LangGraphClient, channel_id: str, view_id: str) -> None:
     await client.store.delete_item(
         (_VIEW_SUGGESTIONS_NAMESPACE, channel_id, view_id), "suggestions"
     )
@@ -430,9 +416,7 @@ async def set_view(
 async def list_views(
     channel_id: str,
 ) -> tuple[list[dict[str, Any]] | None, str | None]:
-    data, error = await _call(
-        "agents.conversations.listViews", {"channel_id": channel_id}
-    )
+    data, error = await _call("agents.conversations.listViews", {"channel_id": channel_id})
     if error or data is None:
         return None, error
     views = data.get("views")
@@ -514,14 +498,10 @@ def repo_context_bar_items(
     if branch:
         item = {"key": "branch", "label": branch, "icon": "branch"}
         if owner and name:
-            item["url"] = (
-                f"https://github.com/{owner}/{name}/tree/{quote(branch, safe='/')}"
-            )
+            item["url"] = f"https://github.com/{owner}/{name}/tree/{quote(branch, safe='/')}"
         items.append(item)
     if pr_url.startswith("https://"):
-        items.append(
-            {"key": "pr", "label": "Pull request", "icon": "hierarchy", "url": pr_url}
-        )
+        items.append({"key": "pr", "label": "Pull request", "icon": "hierarchy", "url": pr_url})
     if dashboard_url.startswith("https://"):
         items.append(
             {

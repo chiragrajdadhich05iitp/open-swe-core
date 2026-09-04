@@ -66,9 +66,7 @@ async def _refresh_stale_entry(
         try:
             value = await loader()
         except Exception:
-            logger.warning(
-                "TTL cache background refresh failed for %s", key, exc_info=True
-            )
+            logger.warning("TTL cache background refresh failed for %s", key, exc_info=True)
             return
         _CACHE[key] = (value, _now() + ttl_seconds)
 

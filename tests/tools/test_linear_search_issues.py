@@ -75,9 +75,7 @@ async def test_search_issues_filters_without_text(
         captured.update({"query": query, "variables": variables})
         return {
             "issues": {
-                "nodes": [
-                    {"id": "issue-id", "identifier": "DCD-21", "title": "Fix filters"}
-                ],
+                "nodes": [{"id": "issue-id", "identifier": "DCD-21", "title": "Fix filters"}],
                 "totalCount": 1,
                 "pageInfo": {"hasNextPage": False, "endCursor": None},
             }

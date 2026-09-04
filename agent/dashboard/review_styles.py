@@ -18,9 +18,7 @@ REVIEW_STYLES_NAMESPACE: list[str] = ["review_styles"]
 AnalysisStatus = Literal["idle", "running", "completed", "failed"]
 
 _TERMINAL_SUCCESS = frozenset({"success", "completed"})
-_TERMINAL_FAILURE = frozenset(
-    {"error", "failed", "timeout", "interrupted", "cancelled"}
-)
+_TERMINAL_FAILURE = frozenset({"error", "failed", "timeout", "interrupted", "cancelled"})
 
 
 def normalize_repo_full_name(raw: str) -> str:
@@ -118,9 +116,7 @@ class ReviewStyleStore(TypedStore[ReviewStyle]):
             return existing
         return await self.put(full_name, ReviewStyle.seed(full_name, created_by))
 
-    async def set_custom_prompt(
-        self, full_name: str, custom_prompt: str
-    ) -> ReviewStyle:
+    async def set_custom_prompt(self, full_name: str, custom_prompt: str) -> ReviewStyle:
         record = await self.get_or_seed(full_name)
         record.custom_prompt = custom_prompt
         if record.status == "running":
@@ -128,9 +124,7 @@ class ReviewStyleStore(TypedStore[ReviewStyle]):
             record.error = None
         return await self.save(record)
 
-    async def set_continual_cron(
-        self, full_name: str, cron_id: str | None
-    ) -> ReviewStyle:
+    async def set_continual_cron(self, full_name: str, cron_id: str | None) -> ReviewStyle:
         record = await self.get_or_seed(full_name)
         record.continual_cron_id = cron_id
         return await self.save(record)
@@ -227,9 +221,7 @@ async def reconcile_running_status(
     if run_status in _TERMINAL_FAILURE:
         if record.has_saved_prompt:
             return await REVIEW_STYLES.mark_completed(full_name)
-        return await REVIEW_STYLES.mark_failed(
-            full_name, "Analysis run ended. Please retry."
-        )
+        return await REVIEW_STYLES.mark_failed(full_name, "Analysis run ended. Please retry.")
 
     if run_missing:
         if record.has_saved_prompt:

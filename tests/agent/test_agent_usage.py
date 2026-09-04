@@ -15,9 +15,7 @@ class FakeStore:
     async def put_item(self, namespace: list[str], key: str, value: dict) -> None:
         self.values[(tuple(namespace), key)] = value
 
-    async def search_items(
-        self, namespace: list[str], *, limit: int, offset: int
-    ) -> dict:
+    async def search_items(self, namespace: list[str], *, limit: int, offset: int) -> dict:
         self.search_calls.append((tuple(namespace), offset))
         values = [
             {"value": value}
@@ -184,9 +182,7 @@ async def test_legacy_records_are_backfilled_once(monkeypatch):
             "kind": "reviewer",
             "pr": {"owner": "o", "name": "r", "number": 3},
             "last_reviewed_sha": "sha",
-            "findings": [
-                {"id": "f_1", "status": "open", "github_review_comment_id": 1}
-            ],
+            "findings": [{"id": "f_1", "status": "open", "github_review_comment_id": 1}],
         },
     }
     monkeypatch.setattr(agent_usage, "_client", lambda: FakeClient(store, [thread]))

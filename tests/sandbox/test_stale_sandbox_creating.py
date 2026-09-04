@@ -30,9 +30,7 @@ async def test_ensure_sandbox_creates_new_when_no_metadata() -> None:
             new_callable=AsyncMock,
             return_value=sandbox_backend,
         ) as create_sandbox,
-        patch(
-            "agent.sandboxes.lifecycle.configure_git_identity", new_callable=AsyncMock
-        ),
+        patch("agent.sandboxes.lifecycle.configure_git_identity", new_callable=AsyncMock),
         patch(
             "agent.sandboxes.lifecycle.client.threads.update", new_callable=AsyncMock
         ) as update_thread,
@@ -81,9 +79,7 @@ async def test_ensure_sandbox_reconnects_to_metadata_sandbox() -> None:
             new_callable=AsyncMock,
             side_effect=passthrough,
         ) as refresh_proxy,
-        patch(
-            "agent.sandboxes.lifecycle.configure_git_identity", new_callable=AsyncMock
-        ),
+        patch("agent.sandboxes.lifecycle.configure_git_identity", new_callable=AsyncMock),
         patch(
             "agent.sandboxes.lifecycle.client.threads.update", new_callable=AsyncMock
         ) as update_thread,
@@ -131,9 +127,7 @@ async def test_ensure_sandbox_resolves_unresolved_backend_proxy() -> None:
             new_callable=AsyncMock,
             side_effect=passthrough,
         ) as refresh_proxy,
-        patch(
-            "agent.sandboxes.lifecycle.configure_git_identity", new_callable=AsyncMock
-        ),
+        patch("agent.sandboxes.lifecycle.configure_git_identity", new_callable=AsyncMock),
         patch(
             "agent.sandboxes.lifecycle.client.threads.update", new_callable=AsyncMock
         ) as update_thread,

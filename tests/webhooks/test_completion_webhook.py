@@ -145,9 +145,7 @@ async def test_ordinary_agent_error_does_not_settle_review_check(
     metadata["review_check_run_id"] = 42
     client = _FakeClient(metadata)
     monkeypatch.setattr(completion, "langgraph_client", lambda: client)
-    monkeypatch.setattr(
-        completion, "post_slack_thread_reply", AsyncMock(return_value=True)
-    )
+    monkeypatch.setattr(completion, "post_slack_thread_reply", AsyncMock(return_value=True))
     token = AsyncMock(return_value="token")
     settle = AsyncMock()
     monkeypatch.setattr(completion, "get_github_app_installation_token", token)
@@ -367,9 +365,7 @@ async def test_later_failed_run_posts_even_if_prior_run_replied(
 
 @pytest.mark.asyncio
 async def test_linear_source_comments_on_issue(monkeypatch: pytest.MonkeyPatch) -> None:
-    client = _FakeClient(
-        {"source": "linear", "source_context": {"linear_issue": {"id": "iss_1"}}}
-    )
+    client = _FakeClient({"source": "linear", "source_context": {"linear_issue": {"id": "iss_1"}}})
     monkeypatch.setattr(completion, "langgraph_client", lambda: client)
     comment = AsyncMock(return_value=True)
     monkeypatch.setattr(completion, "comment_on_linear_issue", comment)
@@ -387,9 +383,7 @@ async def test_linear_source_comments_on_issue(monkeypatch: pytest.MonkeyPatch) 
 
 @pytest.mark.asyncio
 async def test_missing_thread_id_is_ignored() -> None:
-    result = await completion.handle_run_completion(
-        {"run_id": "run-1", "status": "error"}
-    )
+    result = await completion.handle_run_completion({"run_id": "run-1", "status": "error"})
     assert result["status"] == "ignored"
 
 
@@ -402,9 +396,7 @@ async def test_missing_run_id_falls_back_to_thread_level_dedupe(
     reply = AsyncMock(return_value=True)
     monkeypatch.setattr(completion, "post_slack_thread_reply", reply)
 
-    result = await completion.handle_run_completion(
-        {"thread_id": "t1", "status": "error"}
-    )
+    result = await completion.handle_run_completion({"thread_id": "t1", "status": "error"})
 
     assert result["status"] == "ok"
     reply.assert_awaited_once()
@@ -422,9 +414,7 @@ async def test_missing_run_id_respects_thread_level_dedupe(
     reply = AsyncMock(return_value=True)
     monkeypatch.setattr(completion, "post_slack_thread_reply", reply)
 
-    result = await completion.handle_run_completion(
-        {"thread_id": "t1", "status": "error"}
-    )
+    result = await completion.handle_run_completion({"thread_id": "t1", "status": "error"})
 
     assert result["status"] == "ignored"
     reply.assert_not_called()

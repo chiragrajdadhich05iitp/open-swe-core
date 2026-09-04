@@ -67,15 +67,11 @@ class TestSingleKeyRoundtrip:
         assert encrypt_token("") == ""
         assert decrypt_token("") == ""
 
-    def test_invalid_ciphertext_returns_empty(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_invalid_ciphertext_returns_empty(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _set_key(monkeypatch, Fernet.generate_key().decode())
         assert decrypt_token("not-a-valid-fernet-token") == ""
 
-    def test_decrypt_without_key_returns_empty(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_decrypt_without_key_returns_empty(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv("TOKEN_ENCRYPTION_KEY", raising=False)
         assert decrypt_token("anything") == ""
 
@@ -104,9 +100,7 @@ class TestMultiKeyDecrypt:
 
         assert Fernet(new_key.encode()).decrypt(ciphertext.encode()).decode() == token
 
-    def test_decrypt_fails_when_no_key_matches(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_decrypt_fails_when_no_key_matches(self, monkeypatch: pytest.MonkeyPatch) -> None:
         old_key = Fernet.generate_key().decode()
         _set_key(monkeypatch, old_key)
         old_ciphertext = encrypt_token("ghp_token")

@@ -43,9 +43,7 @@ async def approve_plan(
     except Exception:
         config = {}
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
-    thread_id = (
-        configurable.get("thread_id") if isinstance(configurable, dict) else None
-    )
+    thread_id = configurable.get("thread_id") if isinstance(configurable, dict) else None
     if not thread_id:
         return {"success": False, "error": "no thread_id in run config"}
 
@@ -91,9 +89,7 @@ async def approve_plan(
 async def _thread_metadata(thread_id: str) -> dict[str, Any]:
     thread = await get_client().threads.get(thread_id)
     metadata = (
-        thread.get("metadata")
-        if isinstance(thread, dict)
-        else getattr(thread, "metadata", None)
+        thread.get("metadata") if isinstance(thread, dict) else getattr(thread, "metadata", None)
     )
     return metadata if isinstance(metadata, dict) else {}
 
@@ -120,9 +116,7 @@ def _current_approver(configurable: Any) -> dict[str, str]:
         or ""
     )
     name = str(
-        slack_thread.get("triggering_user_name")
-        or configurable.get("github_login")
-        or actor_id
+        slack_thread.get("triggering_user_name") or configurable.get("github_login") or actor_id
     )
     return make_plan_approver(actor_id=actor_id, name=name, source=source)
 

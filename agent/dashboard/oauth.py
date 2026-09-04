@@ -207,9 +207,7 @@ async def enforce_org_login_gate(login: str) -> None:
         if await is_user_active_org_member(login, org):
             return
     logger.warning("Rejected dashboard login for %r — not in allowed org(s)", login)
-    raise HTTPException(
-        403, "your GitHub account is not a member of an authorized organization"
-    )
+    raise HTTPException(403, "your GitHub account is not a member of an authorized organization")
 
 
 def issue_session(*, login: str, email: str | None, avatar_url: str | None) -> str:
@@ -438,9 +436,7 @@ def expires_at_from_github_response(data: dict[str, Any], *, field: str) -> str 
 class GithubOAuthError(HTTPException):
     """A GitHub OAuth token endpoint error, carrying GitHub's ``error`` code."""
 
-    def __init__(
-        self, status_code: int, detail: str, *, error_code: str | None = None
-    ) -> None:
+    def __init__(self, status_code: int, detail: str, *, error_code: str | None = None) -> None:
         super().__init__(status_code, detail)
         self.error_code = error_code
 
@@ -448,9 +444,7 @@ class GithubOAuthError(HTTPException):
 # Error codes GitHub returns when a refresh token can never mint a new access
 # token again (the user must re-authorize). Anything else is treated as
 # transient so we don't needlessly drop a usable authorization.
-UNRECOVERABLE_REFRESH_ERROR_CODES = frozenset(
-    {"bad_refresh_token", "unauthorized_client"}
-)
+UNRECOVERABLE_REFRESH_ERROR_CODES = frozenset({"bad_refresh_token", "unauthorized_client"})
 
 
 def is_unrecoverable_refresh_error(exc: BaseException) -> bool:

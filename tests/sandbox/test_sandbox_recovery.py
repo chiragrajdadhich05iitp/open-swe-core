@@ -58,9 +58,7 @@ async def test_unreachable_sandbox_notifies_then_ends_the_run() -> None:
     set_sandbox_backend("thread-1", FakeSandboxBackend("sb-old"))
 
     async def handler(_request: ToolCallRequest) -> ToolMessage:
-        raise SandboxConnectionError(
-            "WebSocket upgrade to sb-dead failed (no valid HTTP response)"
-        )
+        raise SandboxConnectionError("WebSocket upgrade to sb-dead failed (no valid HTTP response)")
 
     try:
         with (

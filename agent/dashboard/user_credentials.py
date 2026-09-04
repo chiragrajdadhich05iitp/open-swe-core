@@ -56,9 +56,7 @@ async def _provider_for_tool_loading(login: str, key: str) -> dict[str, Any] | N
     try:
         return await _get_provider(login, key)
     except Exception:
-        logger.warning(
-            "user credentials lookup failed for %s/%s", login, key, exc_info=True
-        )
+        logger.warning("user credentials lookup failed for %s/%s", login, key, exc_info=True)
         return None
 
 
@@ -97,9 +95,7 @@ class NotionCredentials:
     client_secret: str | None = None
 
 
-def _expires_at_from_response(
-    data: dict[str, Any], *, field: str = "expires_in"
-) -> str | None:
+def _expires_at_from_response(data: dict[str, Any], *, field: str = "expires_in") -> str | None:
     raw = data.get(field)
     if not isinstance(raw, int | float) or raw <= 0:
         return None
@@ -166,9 +162,7 @@ def _notion_record_from_response(
         record["token_expires_at"] = token_expires_at
     elif existing.get("token_expires_at"):
         record["token_expires_at"] = existing["token_expires_at"]
-    refresh_token_expires_at = _expires_at_from_response(
-        data, field="refresh_token_expires_in"
-    )
+    refresh_token_expires_at = _expires_at_from_response(data, field="refresh_token_expires_in")
     if refresh_token_expires_at:
         record["refresh_token_expires_at"] = refresh_token_expires_at
     elif existing.get("refresh_token_expires_at"):
@@ -184,17 +178,13 @@ def _notion_record_from_response(
     return record
 
 
-async def connect_notion(
-    login: str, data: dict[str, Any], flow: dict[str, Any]
-) -> dict[str, Any]:
+async def connect_notion(login: str, data: dict[str, Any], flow: dict[str, Any]) -> dict[str, Any]:
     client_id = flow.get("client_id")
     token_endpoint = flow.get("token_endpoint")
     if not isinstance(client_id, str) or not isinstance(token_endpoint, str):
         raise ValueError("stored Notion OAuth flow is incomplete")
     client_secret = (
-        flow.get("client_secret")
-        if isinstance(flow.get("client_secret"), str)
-        else None
+        flow.get("client_secret") if isinstance(flow.get("client_secret"), str) else None
     )
     await _put_provider(
         login,
@@ -247,11 +237,7 @@ async def _refresh_stored_notion_token(
     refresh_token = _decrypt_notion_refresh_token(record)
     token_endpoint = record.get("token_endpoint")
     client_id = record.get("client_id")
-    if (
-        not refresh_token
-        or not isinstance(token_endpoint, str)
-        or not isinstance(client_id, str)
-    ):
+    if not refresh_token or not isinstance(token_endpoint, str) or not isinstance(client_id, str):
         return None, False
     try:
         data = await refresh_notion_access_token(
@@ -263,9 +249,7 @@ async def _refresh_stored_notion_token(
     except Exception as exc:  # noqa: BLE001
         logger.warning("Notion token refresh failed for %s", login, exc_info=True)
         return None, is_reauth_required_error(exc)
-    await _put_provider(
-        login, NOTION_KEY, _notion_record_from_response(data, existing=record)
-    )
+    await _put_provider(login, NOTION_KEY, _notion_record_from_response(data, existing=record))
     access_token = data.get("access_token")
     return (access_token if isinstance(access_token, str) else None), False
 
@@ -320,9 +304,7 @@ async def _load_notion_credentials(
                 client_id=record.get("client_id", ""),
                 client_secret=_decrypt_notion_client_secret(record),
             )
-        refreshed, refresh_token_dead = await _refresh_stored_notion_token(
-            login, record
-        )
+        refreshed, refresh_token_dead = await _refresh_stored_notion_token(login, record)
         if refreshed:
             refreshed_record = await _get_provider(login, NOTION_KEY) or record
             return NotionCredentials(
@@ -346,9 +328,7 @@ async def _load_notion_credentials(
                         client_id=latest.get("client_id", ""),
                         client_secret=_decrypt_notion_client_secret(latest),
                     )
-            logger.info(
-                "Dropping dead Notion authorization for %s; reconnect required", login
-            )
+            logger.info("Dropping dead Notion authorization for %s; reconnect required", login)
             await disconnect_notion(login)
             return None
         return NotionCredentials(
@@ -381,9 +361,7 @@ async def get_currents_status(login: str) -> dict[str, Any]:
     }
 
 
-async def connect_currents(
-    login: str, update: CurrentsCredentialsUpdate
-) -> dict[str, Any]:
+async def connect_currents(login: str, update: CurrentsCredentialsUpdate) -> dict[str, Any]:
     await _put_provider(
         login,
         CURRENTS_KEY,
@@ -426,9 +404,7 @@ async def get_langsmith_status(login: str) -> dict[str, Any]:
     }
 
 
-async def connect_langsmith(
-    login: str, update: UserLangSmithCredentialsUpdate
-) -> dict[str, Any]:
+async def connect_langsmith(login: str, update: UserLangSmithCredentialsUpdate) -> dict[str, Any]:
     await _put_provider(
         login,
         LANGSMITH_KEY,

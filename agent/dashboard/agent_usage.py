@@ -25,12 +25,10 @@ REVIEW_FINDING_NAMESPACE = ["usage", "v2", "review_findings"]
 Period = Literal["7d", "30d", "all"]
 _PAGE_SIZE = 1000
 _AGENT_SOURCES = frozenset({"dashboard", "github", "slack", "linear", "schedule"})
-_WRITE_LOCKS: weakref.WeakValueDictionary[
-    tuple[tuple[str, ...], str, int], asyncio.Lock
-] = weakref.WeakValueDictionary()
-_USAGE_CACHE: dict[
-    tuple[str, str], tuple[int, dict[str, Any], dict[str, Any] | None]
-] = {}
+_WRITE_LOCKS: weakref.WeakValueDictionary[tuple[tuple[str, ...], str, int], asyncio.Lock] = (
+    weakref.WeakValueDictionary()
+)
+_USAGE_CACHE: dict[tuple[str, str], tuple[int, dict[str, Any], dict[str, Any] | None]] = {}
 _USAGE_CACHE_TTL_MS = 60_000
 
 LEGACY_THREAD_NAMESPACE = ["agent_usage", "threads"]
@@ -77,11 +75,7 @@ def _normalize_period(period: str | None) -> Period:
 
 def _period_cutoff_ms(period: Period) -> int:
     days = 7 if period == "7d" else 30 if period == "30d" else 0
-    return (
-        int((datetime.now(UTC) - timedelta(days=days)).timestamp() * 1000)
-        if days
-        else 0
-    )
+    return int((datetime.now(UTC) - timedelta(days=days)).timestamp() * 1000) if days else 0
 
 
 def _store_key(*parts: object) -> str:
@@ -90,9 +84,7 @@ def _store_key(*parts: object) -> str:
 
 
 def _record(item: Any) -> dict[str, Any] | None:
-    value = (
-        item.get("value") if isinstance(item, dict) else getattr(item, "value", None)
-    )
+    value = item.get("value") if isinstance(item, dict) else getattr(item, "value", None)
     return value if isinstance(value, dict) else None
 
 
@@ -120,23 +112,15 @@ async def _mutate(
     update: Callable[[dict[str, Any] | None], dict[str, Any]],
 ) -> None:
     async with _write_lock(namespace, key):
-        await _client().store.put_item(
-            namespace, key, update(await _get(namespace, key))
-        )
+        await _client().store.put_item(namespace, key, update(await _get(namespace, key)))
 
 
 async def _all(namespace: list[str]) -> list[dict[str, Any]]:
     values: list[dict[str, Any]] = []
     offset = 0
     while True:
-        result = await _client().store.search_items(
-            namespace, limit=_PAGE_SIZE, offset=offset
-        )
-        items = (
-            result.get("items")
-            if isinstance(result, dict)
-            else getattr(result, "items", [])
-        )
+        result = await _client().store.search_items(namespace, limit=_PAGE_SIZE, offset=offset)
+        items = result.get("items") if isinstance(result, dict) else getattr(result, "items", [])
         page = list(items or [])
         values.extend(value for item in page if (value := _record(item)) is not None)
         if len(page) < _PAGE_SIZE:
@@ -153,11 +137,7 @@ def _email(value: object) -> str:
 
 
 def _int(value: object, fallback: object = 0) -> int:
-    return (
-        value
-        if isinstance(value, int)
-        else fallback if isinstance(fallback, int) else 0
-    )
+    return value if isinstance(value, int) else fallback if isinstance(fallback, int) else 0
 
 
 async def _backfill_legacy_agent_records() -> None:
@@ -192,11 +172,7 @@ async def _backfill_legacy_agent_records() -> None:
         owner = record.get("owner")
         repo = record.get("repo")
         number = record.get("pr_number")
-        if (
-            not isinstance(owner, str)
-            or not isinstance(repo, str)
-            or not isinstance(number, int)
-        ):
+        if not isinstance(owner, str) or not isinstance(repo, str) or not isinstance(number, int):
             continue
         key = _store_key("pr", owner.lower(), repo.lower(), number)
         if await _get(AGENT_PR_NAMESPACE, key):
@@ -229,14 +205,8 @@ async def _backfill_legacy_reviews() -> None:
             thread_id = thread.get("thread_id") if isinstance(thread, Mapping) else None
             if not isinstance(thread_id, str) or not thread_id:
                 continue
-            findings = [
-                item
-                for item in metadata.get("findings") or []
-                if isinstance(item, dict)
-            ]
-            head_sha = (
-                metadata.get("last_reviewed_sha") or metadata.get("head_sha") or ""
-            )
+            findings = [item for item in metadata.get("findings") or [] if isinstance(item, dict)]
+            head_sha = metadata.get("last_reviewed_sha") or metadata.get("head_sha") or ""
             reviewed_at_ms = _timestamp_ms(
                 metadata.get("created_at")
                 or (thread.get("created_at") if isinstance(thread, Mapping) else None)
@@ -311,9 +281,7 @@ async def _backfill_legacy_review(
                 "updated_at_ms": reviewed_at_ms,
                 "resolved_at_ms": reviewed_at_ms if status == "resolved" else 0,
                 "resolved_sha": (
-                    finding.get("last_confirmed_sha") or ""
-                    if status == "resolved"
-                    else ""
+                    finding.get("last_confirmed_sha") or "" if status == "resolved" else ""
                 ),
             },
         )
@@ -330,9 +298,7 @@ async def _backfill_legacy_usage() -> None:
             await _backfill_legacy_agent_records()
             await _backfill_legacy_reviews()
         except Exception:  # noqa: BLE001
-            logger.warning(
-                "Legacy usage backfill failed; retrying next read", exc_info=True
-            )
+            logger.warning("Legacy usage backfill failed; retrying next read", exc_info=True)
             return
         await _client().store.put_item(
             BACKFILL_NAMESPACE, _BACKFILL_KEY, {"completed_at_ms": _now_ms()}
@@ -410,8 +376,7 @@ async def record_agent_pr_usage(
             "changed_files": max(0, changed_files),
             "state": "closed" if was_merged else state or "open",
             "merged": was_merged or bool(merged),
-            "merged_at_ms": _timestamp_ms(merged_at)
-            or (existing or {}).get("merged_at_ms", 0),
+            "merged_at_ms": _timestamp_ms(merged_at) or (existing or {}).get("merged_at_ms", 0),
             "updated_at_ms": now_ms,
         }
         if not existing:
@@ -436,11 +401,7 @@ async def update_agent_pr_usage_from_webhook(payload: dict[str, Any]) -> None:
     owner = owner_payload.get("login") if isinstance(owner_payload, dict) else None
     repo = repo_payload.get("name")
     number = pr.get("number")
-    if (
-        not isinstance(owner, str)
-        or not isinstance(repo, str)
-        or not isinstance(number, int)
-    ):
+    if not isinstance(owner, str) or not isinstance(repo, str) or not isinstance(number, int):
         return
     key = _store_key("pr", owner.lower(), repo.lower(), number)
     existing = await _get(AGENT_PR_NAMESPACE, key)
@@ -448,9 +409,7 @@ async def update_agent_pr_usage_from_webhook(payload: dict[str, Any]) -> None:
         return
     await record_agent_pr_usage(
         thread_id=(
-            existing.get("thread_id")
-            if isinstance(existing.get("thread_id"), str)
-            else None
+            existing.get("thread_id") if isinstance(existing.get("thread_id"), str) else None
         ),
         github_login=existing.get("github_login"),
         user_email=existing.get("user_email"),
@@ -463,11 +422,7 @@ async def update_agent_pr_usage_from_webhook(payload: dict[str, Any]) -> None:
         additions=_int(pr.get("additions"), existing.get("additions")),
         deletions=_int(pr.get("deletions"), existing.get("deletions")),
         changed_files=_int(pr.get("changed_files"), existing.get("changed_files")),
-        state=(
-            pr.get("state")
-            if isinstance(pr.get("state"), str)
-            else existing.get("state")
-        ),
+        state=(pr.get("state") if isinstance(pr.get("state"), str) else existing.get("state")),
         merged=bool(pr.get("merged")),
         created_at=pr.get("created_at"),
         merged_at=pr.get("merged_at"),
@@ -505,9 +460,7 @@ async def record_reviewer_publication(
             "published_at_ms": (existing or {}).get("published_at_ms") or now_ms,
         }
 
-    await _mutate(
-        REVIEW_NAMESPACE, _store_key("review", thread_id, head_sha), update_review
-    )
+    await _mutate(REVIEW_NAMESPACE, _store_key("review", thread_id, head_sha), update_review)
     for finding in findings:
         finding_id = finding.get("id")
         if not isinstance(finding_id, str) or not finding_id:
@@ -554,15 +507,12 @@ def _human_reply_count(finding: Mapping[str, Any]) -> int:
         return sum(
             1
             for interaction in interactions
-            if isinstance(interaction, dict)
-            and interaction.get("kind") == "human_reply"
+            if isinstance(interaction, dict) and interaction.get("kind") == "human_reply"
         )
     return int(bool(finding.get("last_human_reply_at")))
 
 
-async def record_reviewer_finding_state(
-    thread_id: str, finding: Mapping[str, Any]
-) -> None:
+async def record_reviewer_finding_state(thread_id: str, finding: Mapping[str, Any]) -> None:
     """Update an already-published finding's outcome state."""
     finding_id = finding.get("id")
     if not isinstance(finding_id, str) or not finding_id:
@@ -593,9 +543,7 @@ async def record_reviewer_finding_state(
     async with _write_lock(REVIEW_FINDING_NAMESPACE, key):
         existing = await _get(REVIEW_FINDING_NAMESPACE, key)
         if existing:
-            await _client().store.put_item(
-                REVIEW_FINDING_NAMESPACE, key, update(existing)
-            )
+            await _client().store.put_item(REVIEW_FINDING_NAMESPACE, key, update(existing))
 
 
 def _aliases(records: list[dict[str, Any]]) -> dict[str, str]:
@@ -608,21 +556,15 @@ def _aliases(records: list[dict[str, Any]]) -> dict[str, str]:
 
 
 def _user_key(record: dict[str, Any], aliases: dict[str, str]) -> str | None:
-    login = _login(record.get("github_login")) or aliases.get(
-        _email(record.get("user_email")), ""
-    )
+    login = _login(record.get("github_login")) or aliases.get(_email(record.get("user_email")), "")
     if login:
         return f"github:{login}"
     email = _email(record.get("user_email"))
     return f"email:{email}" if email else None
 
 
-def _new_user(
-    key: str, record: dict[str, Any], aliases: dict[str, str]
-) -> dict[str, Any]:
-    login = _login(record.get("github_login")) or aliases.get(
-        _email(record.get("user_email")), ""
-    )
+def _new_user(key: str, record: dict[str, Any], aliases: dict[str, str]) -> dict[str, Any]:
+    login = _login(record.get("github_login")) or aliases.get(_email(record.get("user_email")), "")
     email = _email(record.get("user_email"))
     return {
         "key": key,
@@ -728,11 +670,7 @@ async def list_agent_usage_leaderboard(
         row = {
             "rank": rank,
             "user": {
-                "name": (
-                    user["name"]
-                    if is_current or user["github_login"]
-                    else "Open SWE user"
-                ),
+                "name": (user["name"] if is_current or user["github_login"] else "Open SWE user"),
                 "github_login": user["github_login"] or None,
                 "email": (user["email"] or None) if is_current else None,
             },
@@ -755,23 +693,15 @@ async def list_agent_usage_leaderboard(
             rows.append(row)
 
     reviews = [
-        record
-        for record in review_records
-        if _in_period(record, "published_at_ms", cutoff_ms)
+        record for record in review_records if _in_period(record, "published_at_ms", cutoff_ms)
     ]
     findings = [
-        record
-        for record in finding_records
-        if _in_period(record, "recorded_at_ms", cutoff_ms)
+        record for record in finding_records if _in_period(record, "recorded_at_ms", cutoff_ms)
     ]
     surfaced = [
-        record
-        for record in finding_records
-        if _in_period(record, "surfaced_at_ms", cutoff_ms)
+        record for record in finding_records if _in_period(record, "surfaced_at_ms", cutoff_ms)
     ]
-    reviewed_prs = {
-        (r.get("owner"), r.get("repo"), r.get("pr_number")) for r in reviews
-    }
+    reviewed_prs = {(r.get("owner"), r.get("repo"), r.get("pr_number")) for r in reviews}
     prs_with_findings = {
         (r.get("owner"), r.get("repo"), r.get("pr_number"))
         for r in reviews
@@ -780,9 +710,7 @@ async def list_agent_usage_leaderboard(
     addressed = [record for record in surfaced if record.get("status") == "resolved"]
     dismissed = [record for record in surfaced if record.get("status") == "dismissed"]
     unresolved = [record for record in surfaced if record.get("status") == "open"]
-    severity = Counter(
-        str(record.get("severity")) for record in findings if record.get("severity")
-    )
+    severity = Counter(str(record.get("severity")) for record in findings if record.get("severity"))
     categories = Counter(
         str(record.get("category")) for record in findings if record.get("category")
     )
@@ -803,9 +731,7 @@ async def list_agent_usage_leaderboard(
         "dismissed_findings": len(dismissed),
         "unresolved_surfaced_findings": len(unresolved),
         "resolution_rate": len(addressed) / len(surfaced) if surfaced else 0.0,
-        "human_replies": sum(
-            int(record.get("human_replies") or 0) for record in surfaced
-        ),
+        "human_replies": sum(int(record.get("human_replies") or 0) for record in surfaced),
         "severity_counts": dict(severity),
         "top_categories": [
             {"name": name, "count": count} for name, count in categories.most_common(5)

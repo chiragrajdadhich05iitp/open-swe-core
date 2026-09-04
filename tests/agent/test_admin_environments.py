@@ -11,9 +11,7 @@ from agent.sandboxes import lifecycle
 from agent.tools import admin_gate
 from agent.tools import environments as env_tools
 
-_READY = Environment(
-    slug="base", name="Base", snapshot_status="ready", snapshot_id="env-snap"
-)
+_READY = Environment(slug="base", name="Base", snapshot_status="ready", snapshot_id="env-snap")
 
 
 def _config(**configurable: object) -> RunnableConfig:
@@ -59,17 +57,13 @@ async def test_environment_without_ready_snapshot_falls_back_to_base() -> None:
             return_value="admin-snap",
         ),
     ):
-        assert (
-            await lifecycle.SandboxCreateConfig.resolve()
-        ).snapshot_id == "admin-snap"
+        assert (await lifecycle.SandboxCreateConfig.resolve()).snapshot_id == "admin-snap"
 
 
 @pytest.mark.asyncio
 async def test_snapshot_resolution_passes_the_threads_environment() -> None:
     resolve = AsyncMock(
-        return_value=_READY.model_copy(
-            update={"slug": "staging", "snapshot_id": "staging-snap"}
-        )
+        return_value=_READY.model_copy(update={"slug": "staging", "snapshot_id": "staging-snap"})
     )
     with (
         patch.object(lifecycle, "resolve_environment", resolve),
@@ -80,9 +74,7 @@ async def test_snapshot_resolution_passes_the_threads_environment() -> None:
             return_value="admin-snap",
         ),
     ):
-        snapshot_id = (
-            await lifecycle.SandboxCreateConfig.resolve("staging")
-        ).snapshot_id
+        snapshot_id = (await lifecycle.SandboxCreateConfig.resolve("staging")).snapshot_id
 
     assert snapshot_id == "staging-snap"
     resolve.assert_awaited_once_with("staging")
@@ -138,9 +130,7 @@ async def test_admin_thread_requires_flag_and_configured_admin(
     assert await server._admin_thread(admin_config, None) is True
     # Same user, no flag: an ordinary thread never gets the tools.
     assert (
-        await server._admin_thread(
-            _config(user_email="ramon.nogueira@langchain.dev"), None
-        )
+        await server._admin_thread(_config(user_email="ramon.nogueira@langchain.dev"), None)
         is False
     )
     # Flag set by a thread whose current requester is not an admin.
@@ -167,9 +157,7 @@ async def test_workspace_admin_resolves_email_for_github_login(
         new_callable=AsyncMock,
         return_value="ramon@langchain.dev",
     ):
-        assert (
-            await server._workspace_admin(_config(github_login="ramonn"), None) is True
-        )
+        assert await server._workspace_admin(_config(github_login="ramonn"), None) is True
 
 
 # --- tool gate ---
@@ -178,9 +166,7 @@ async def test_workspace_admin_resolves_email_for_github_login(
 @pytest.mark.asyncio
 async def test_tools_refuse_non_admins(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("CONFIGURED_ADMINS", "ramonn")
-    with patch.object(
-        admin_gate, "get_config", return_value=_config(github_login="someone-else")
-    ):
+    with patch.object(admin_gate, "get_config", return_value=_config(github_login="someone-else")):
         assert await env_tools.list_environments() == {
             "ok": False,
             "error": "Only workspace admins can manage environments.",
@@ -206,9 +192,7 @@ async def test_save_environment_persists_sandbox_sizing(
         )
     )
     with (
-        patch.object(
-            admin_gate, "get_config", return_value=_config(github_login="ramonn")
-        ),
+        patch.object(admin_gate, "get_config", return_value=_config(github_login="ramonn")),
         patch.object(
             env_tools.store.ENVIRONMENTS,
             "get",
@@ -241,13 +225,9 @@ async def test_save_environment_can_clear_sandbox_sizing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("CONFIGURED_ADMINS", "ramonn")
-    update = AsyncMock(
-        return_value=Environment(slug="base", name="base", prompt="prompt")
-    )
+    update = AsyncMock(return_value=Environment(slug="base", name="base", prompt="prompt"))
     with (
-        patch.object(
-            admin_gate, "get_config", return_value=_config(github_login="ramonn")
-        ),
+        patch.object(admin_gate, "get_config", return_value=_config(github_login="ramonn")),
         patch.object(
             env_tools.store.ENVIRONMENTS,
             "get",
@@ -279,12 +259,8 @@ async def test_save_environment_rejects_clear_sizing_with_values(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("CONFIGURED_ADMINS", "ramonn")
-    with patch.object(
-        admin_gate, "get_config", return_value=_config(github_login="ramonn")
-    ):
-        result = await env_tools.save_environment(
-            "base", "prompt", vcpus=8, clear_sizing=True
-        )
+    with patch.object(admin_gate, "get_config", return_value=_config(github_login="ramonn")):
+        result = await env_tools.save_environment("base", "prompt", vcpus=8, clear_sizing=True)
 
     assert result == {
         "ok": False,
@@ -320,9 +296,7 @@ async def test_capture_tool_requires_a_saved_environment(
 
 
 def test_sender_context_includes_workspace_admin_status() -> None:
-    assert "Workspace admin: yes." in construct_sender_context(
-        None, workspace_admin=True
-    )
+    assert "Workspace admin: yes." in construct_sender_context(None, workspace_admin=True)
     assert "Workspace admin: no." in construct_sender_context(None)
 
 

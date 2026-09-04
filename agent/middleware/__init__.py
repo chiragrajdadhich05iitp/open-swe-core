@@ -96,9 +96,7 @@ def _load_export(name: str) -> Any:
 
 class _LazyMiddlewareModule(ModuleType):
     def __getattribute__(self, name: str) -> Any:
-        module_map = ModuleType.__getattribute__(self, "__dict__").get(
-            "_MIDDLEWARE_MODULES", {}
-        )
+        module_map = ModuleType.__getattribute__(self, "__dict__").get("_MIDDLEWARE_MODULES", {})
         if name not in module_map:
             return ModuleType.__getattribute__(self, name)
         existing = ModuleType.__getattribute__(self, "__dict__").get(name)

@@ -41,18 +41,14 @@ def test_model_supports_images_marks_text_only_fireworks_models() -> None:
 
 def test_user_message_content_rejects_images_for_text_only_model() -> None:
     with pytest.raises(HTTPException) as exc_info:
-        thread_api._user_message_content(
-            "see attached", [_image()], model_id=_TEXT_ONLY_MODEL
-        )
+        thread_api._user_message_content("see attached", [_image()], model_id=_TEXT_ONLY_MODEL)
 
     assert exc_info.value.status_code == 422
     assert "does not support image input" in exc_info.value.detail
 
 
 def test_user_message_content_allows_images_for_vision_model() -> None:
-    content = thread_api._user_message_content(
-        "see attached", [_image()], model_id=_VISION_MODEL
-    )
+    content = thread_api._user_message_content("see attached", [_image()], model_id=_VISION_MODEL)
 
     assert isinstance(content, list)
     assert content[-1] == {"type": "text", "text": "see attached"}
@@ -125,12 +121,8 @@ async def test_resolve_agent_model_id_defaults_to_team_default(monkeypatch) -> N
     async def fake_team_default(role: str) -> tuple[str, str]:
         return _TEXT_ONLY_MODEL, "high"
 
-    monkeypatch.setattr(
-        "agent.dashboard.agent_overrides.get_team_default_model", fake_team_default
-    )
-    monkeypatch.setattr(
-        "agent.dashboard.agent_overrides.load_profile", lambda login: None
-    )
+    monkeypatch.setattr("agent.dashboard.agent_overrides.get_team_default_model", fake_team_default)
+    monkeypatch.setattr("agent.dashboard.agent_overrides.load_profile", lambda login: None)
 
     model_id = await resolve_agent_model_id(None)
     assert model_id == _TEXT_ONLY_MODEL
@@ -140,16 +132,12 @@ async def test_resolve_agent_model_id_applies_profile_override(monkeypatch) -> N
     async def fake_team_default(role: str) -> tuple[str, str]:
         return _TEXT_ONLY_MODEL, "high"
 
-    monkeypatch.setattr(
-        "agent.dashboard.agent_overrides.get_team_default_model", fake_team_default
-    )
+    monkeypatch.setattr("agent.dashboard.agent_overrides.get_team_default_model", fake_team_default)
 
     async def fake_load_profile(login: str) -> dict:
         return {"default_model": _VISION_MODEL, "reasoning_effort": "medium"}
 
-    monkeypatch.setattr(
-        "agent.dashboard.agent_overrides.load_profile", fake_load_profile
-    )
+    monkeypatch.setattr("agent.dashboard.agent_overrides.load_profile", fake_load_profile)
 
     model_id = await resolve_agent_model_id("someuser")
     assert model_id == _VISION_MODEL
@@ -159,16 +147,10 @@ async def test_resolve_agent_model_id_applies_per_thread_override(monkeypatch) -
     async def fake_team_default(role: str) -> tuple[str, str]:
         return _TEXT_ONLY_MODEL, "high"
 
-    monkeypatch.setattr(
-        "agent.dashboard.agent_overrides.get_team_default_model", fake_team_default
-    )
-    monkeypatch.setattr(
-        "agent.dashboard.agent_overrides.load_profile", lambda login: None
-    )
+    monkeypatch.setattr("agent.dashboard.agent_overrides.get_team_default_model", fake_team_default)
+    monkeypatch.setattr("agent.dashboard.agent_overrides.load_profile", lambda login: None)
 
-    model_id = await resolve_agent_model_id(
-        None, per_thread_model_id="anthropic:claude-opus-5"
-    )
+    model_id = await resolve_agent_model_id(None, per_thread_model_id="anthropic:claude-opus-5")
     assert model_id == "anthropic:claude-opus-5"
 
 
@@ -178,12 +160,8 @@ async def test_resolve_agent_model_id_deprecated_override_uses_team_default(
     async def fake_team_default(role: str) -> tuple[str, str]:
         return _TEXT_ONLY_MODEL, "high"
 
-    monkeypatch.setattr(
-        "agent.dashboard.agent_overrides.get_team_default_model", fake_team_default
-    )
-    monkeypatch.setattr(
-        "agent.dashboard.agent_overrides.load_profile", lambda login: None
-    )
+    monkeypatch.setattr("agent.dashboard.agent_overrides.get_team_default_model", fake_team_default)
+    monkeypatch.setattr("agent.dashboard.agent_overrides.load_profile", lambda login: None)
 
     model_id = await resolve_agent_model_id(
         None, per_thread_model_id="fireworks:accounts/fireworks/models/glm-5p2"
@@ -238,9 +216,7 @@ async def test_enrich_run_start_command_creates_and_stamps_new_thread(
 ) -> None:
     created: dict[str, object] = {}
     _patch_new_thread_deps(monkeypatch, profile={})
-    monkeypatch.setattr(
-        thread_api, "langgraph_client", lambda: _new_thread_client(created)
-    )
+    monkeypatch.setattr(thread_api, "langgraph_client", lambda: _new_thread_client(created))
 
     command = {
         "method": "run.start",
@@ -281,10 +257,7 @@ async def test_enrich_run_start_command_creates_and_stamps_new_thread(
     assert configurable["repo"] == {"owner": "octo", "name": "repo"}
     assert configurable["agent_model_id"] == _VISION_MODEL
     assert configurable["agent_effort"] == "medium"
-    assert (
-        configurable["prepare_run_id"]
-        == enriched["params"]["metadata"]["prepare_run_id"]
-    )
+    assert configurable["prepare_run_id"] == enriched["params"]["metadata"]["prepare_run_id"]
     assert configurable["prepare_run_id"]
     messages = enriched["params"]["input"]["messages"]
     assert messages[-1]["content"].startswith(
@@ -304,9 +277,7 @@ async def test_enrich_run_start_command_uses_vision_fallback_for_text_only_model
         monkeypatch,
         profile={"default_model": _TEXT_ONLY_MODEL, "reasoning_effort": "high"},
     )
-    monkeypatch.setattr(
-        thread_api, "langgraph_client", lambda: _new_thread_client(created)
-    )
+    monkeypatch.setattr(thread_api, "langgraph_client", lambda: _new_thread_client(created))
 
     image = _image()
     command = {
@@ -463,18 +434,14 @@ async def test_thread_summary_defaults_unknown_pr_state_to_open() -> None:
 
 
 async def test_thread_summary_omits_pr_when_no_pr_metadata() -> None:
-    summary = await thread_api._thread_summary(
-        _thread_with_metadata({"title": "No PR"})
-    )
+    summary = await thread_api._thread_summary(_thread_with_metadata({"title": "No PR"}))
 
     assert "pr" not in summary
     assert "diffStats" not in summary
 
 
 async def test_thread_summary_exposes_sandbox_id() -> None:
-    summary = await thread_api._thread_summary(
-        _thread_with_metadata({"sandbox_id": "sb-abc123"})
-    )
+    summary = await thread_api._thread_summary(_thread_with_metadata({"sandbox_id": "sb-abc123"}))
 
     assert summary["sandboxId"] == "sb-abc123"
 
@@ -589,9 +556,7 @@ async def test_thread_summary_omits_code_channel_url_without_team() -> None:
         _thread_with_metadata(
             {
                 "source": "slack",
-                "source_context": {
-                    "slack_thread": {"channel_id": "C123", "thread_ts": "0"}
-                },
+                "source_context": {"slack_thread": {"channel_id": "C123", "thread_ts": "0"}},
             }
         )
     )
@@ -635,9 +600,7 @@ async def test_recovery_patch_reaches_any_authenticated_user(monkeypatch) -> Non
 
 
 async def test_recovery_patch_requires_sandbox(monkeypatch) -> None:
-    async def fake_authorized_thread(
-        thread_id: str, login: str, *, email: str | None = None
-    ):
+    async def fake_authorized_thread(thread_id: str, login: str, *, email: str | None = None):
         return {
             "thread_id": thread_id,
             "metadata": {"source": "dashboard", "github_login": login},
@@ -653,9 +616,7 @@ async def test_recovery_patch_requires_sandbox(monkeypatch) -> None:
 
 
 async def test_recovery_patch_downloads_generated_patch(monkeypatch) -> None:
-    async def fake_authorized_thread(
-        thread_id: str, login: str, *, email: str | None = None
-    ):
+    async def fake_authorized_thread(thread_id: str, login: str, *, email: str | None = None):
         return {
             "thread_id": thread_id,
             "metadata": {
@@ -673,9 +634,7 @@ async def test_recovery_patch_downloads_generated_patch(monkeypatch) -> None:
             assert "repo" in command
             assert timeout == thread_api._RECOVERY_PATCH_TIMEOUT_SECONDS
             return SimpleNamespace(
-                output=json.dumps(
-                    {"ok": True, "path": "/tmp/open-swe-tid.patch", "size": 11}
-                ),
+                output=json.dumps({"ok": True, "path": "/tmp/open-swe-tid.patch", "size": 11}),
                 exit_code=0,
             )
 
@@ -684,22 +643,16 @@ async def test_recovery_patch_downloads_generated_patch(monkeypatch) -> None:
             return [SimpleNamespace(content=b"patch bytes")]
 
     monkeypatch.setattr(thread_api, "_authorized_thread", fake_authorized_thread)
-    monkeypatch.setattr(
-        thread_api, "create_sandbox", AsyncMock(return_value=FakeSandbox())
-    )
+    monkeypatch.setattr(thread_api, "create_sandbox", AsyncMock(return_value=FakeSandbox()))
 
-    content, filename = await thread_api.get_dashboard_thread_recovery_patch(
-        "tid", "octocat"
-    )
+    content, filename = await thread_api.get_dashboard_thread_recovery_patch("tid", "octocat")
 
     assert content == b"patch bytes"
     assert filename == "open-swe-tid.patch"
 
 
 async def test_recovery_patch_rejects_empty_patch(monkeypatch) -> None:
-    async def fake_authorized_thread(
-        thread_id: str, login: str, *, email: str | None = None
-    ):
+    async def fake_authorized_thread(thread_id: str, login: str, *, email: str | None = None):
         return {
             "thread_id": thread_id,
             "metadata": {"sandbox_id": "sbx", "github_login": login},
@@ -708,16 +661,12 @@ async def test_recovery_patch_rejects_empty_patch(monkeypatch) -> None:
     class FakeSandbox:
         async def aexecute(self, command: str, *, timeout: int | None = None):
             return SimpleNamespace(
-                output=json.dumps(
-                    {"ok": True, "path": "/tmp/open-swe-tid.patch", "size": 0}
-                ),
+                output=json.dumps({"ok": True, "path": "/tmp/open-swe-tid.patch", "size": 0}),
                 exit_code=0,
             )
 
     monkeypatch.setattr(thread_api, "_authorized_thread", fake_authorized_thread)
-    monkeypatch.setattr(
-        thread_api, "create_sandbox", AsyncMock(return_value=FakeSandbox())
-    )
+    monkeypatch.setattr(thread_api, "create_sandbox", AsyncMock(return_value=FakeSandbox()))
 
     with pytest.raises(HTTPException) as exc_info:
         await thread_api.get_dashboard_thread_recovery_patch("tid", "octocat")
@@ -727,9 +676,7 @@ async def test_recovery_patch_rejects_empty_patch(monkeypatch) -> None:
 
 
 async def test_recovery_patch_enforces_size_limit(monkeypatch) -> None:
-    async def fake_authorized_thread(
-        thread_id: str, login: str, *, email: str | None = None
-    ):
+    async def fake_authorized_thread(thread_id: str, login: str, *, email: str | None = None):
         return {
             "thread_id": thread_id,
             "metadata": {"sandbox_id": "sbx", "github_login": login},
@@ -749,9 +696,7 @@ async def test_recovery_patch_enforces_size_limit(monkeypatch) -> None:
             )
 
     monkeypatch.setattr(thread_api, "_authorized_thread", fake_authorized_thread)
-    monkeypatch.setattr(
-        thread_api, "create_sandbox", AsyncMock(return_value=FakeSandbox())
-    )
+    monkeypatch.setattr(thread_api, "create_sandbox", AsyncMock(return_value=FakeSandbox()))
 
     with pytest.raises(HTTPException) as exc_info:
         await thread_api.get_dashboard_thread_recovery_patch("tid", "octocat")
@@ -833,9 +778,7 @@ async def test_enrich_run_start_command_attributes_non_owner_message(
         email="teammate@example.com",
     )
 
-    last = ElementTree.fromstring(
-        enriched["params"]["input"]["messages"][-1]["content"]
-    )
+    last = ElementTree.fromstring(enriched["params"]["input"]["messages"][-1]["content"])
     assert last.attrib["sender"] == "github:teammate"
     assert last.findtext("content") == "fix the bug"
     assert updates[-1]["participant_logins"] == {"first": True, "teammate": True}
@@ -998,9 +941,7 @@ async def test_enrich_run_start_command_does_not_attribute_owner_message(
         email="owner@example.com",
     )
 
-    last = ElementTree.fromstring(
-        enriched["params"]["input"]["messages"][-1]["content"]
-    )
+    last = ElementTree.fromstring(enriched["params"]["input"]["messages"][-1]["content"])
     assert last.attrib["sender"] == "github:owner"
     assert last.findtext("content") == "fix the bug"
 
@@ -1118,9 +1059,7 @@ async def test_proxy_run_start_from_slack_thread_updates_trace_reply(
         async def __aexit__(self, *a: object) -> None:
             pass
 
-        async def post(
-            self, url: str, *, content: bytes, headers: dict[str, str]
-        ) -> FakeResponse:
+        async def post(self, url: str, *, content: bytes, headers: dict[str, str]) -> FakeResponse:
             captured["url"] = url
             captured["outgoing"] = json.loads(content)
             return FakeResponse()
@@ -1134,9 +1073,7 @@ async def test_proxy_run_start_from_slack_thread_updates_trace_reply(
     async def fake_resolve_email(login: str, profile: dict[str, object]) -> str:
         return f"{login}@example.com"
 
-    async def fake_update_trace_reply(
-        channel_id: str, message_ts: str, thread_id: str
-    ) -> bool:
+    async def fake_update_trace_reply(channel_id: str, message_ts: str, thread_id: str) -> bool:
         captured["handoff_update"] = {
             "channel_id": channel_id,
             "message_ts": message_ts,
@@ -1368,9 +1305,7 @@ async def test_proxy_commands_preserves_admin_writes_and_owner_reads(
         async def __aexit__(self, *args: object) -> None:
             pass
 
-        async def post(
-            self, url: str, *, content: bytes, headers: dict[str, str]
-        ) -> FakeResponse:
+        async def post(self, url: str, *, content: bytes, headers: dict[str, str]) -> FakeResponse:
             posted.append(content)
             return FakeResponse()
 
@@ -1775,9 +1710,7 @@ async def test_resolve_dashboard_thread_clears_resolved(monkeypatch) -> None:
 
     monkeypatch.setattr(thread_api, "langgraph_client", lambda: FakeClient())
 
-    summary = await thread_api.resolve_dashboard_thread(
-        "tid", "octocat", resolved=False
-    )
+    summary = await thread_api.resolve_dashboard_thread("tid", "octocat", resolved=False)
 
     assert updates[-1]["resolved"] is False
     assert updates[-1]["resolved_at_ms"] is None
@@ -1896,9 +1829,7 @@ def test_metadata_matches_filters() -> None:
         "title": "Scheduled cleanup",
     }
 
-    assert thread_api._metadata_matches_filters(
-        metadata, resolved=True, source=None, query=None
-    )
+    assert thread_api._metadata_matches_filters(metadata, resolved=True, source=None, query=None)
     assert not thread_api._metadata_matches_filters(
         metadata, resolved=False, source=None, query=None
     )
@@ -2131,9 +2062,7 @@ async def test_list_dashboard_threads_page_filters_ownerless_threads(
         lambda: SimpleNamespace(threads=FakeThreads(), runs=FakeRuns()),
     )
 
-    result = await thread_api.list_dashboard_threads_page(
-        "octocat", email=None, ownerless=True
-    )
+    result = await thread_api.list_dashboard_threads_page("octocat", email=None, ownerless=True)
 
     assert [item["id"] for item in result["items"]] == ["t2"]
 
@@ -2354,13 +2283,9 @@ async def test_list_dashboard_threads_page_can_sort_by_creation_time(
 ) -> None:
     threads = _make_threads(2, resolved_before=0)
     older = cast(dict[str, object], threads[0]["metadata"])
-    older.update(
-        {"created_at_ms": 1, "updated_at_ms": 3, "latest_run_status": "success"}
-    )
+    older.update({"created_at_ms": 1, "updated_at_ms": 3, "latest_run_status": "success"})
     newer = cast(dict[str, object], threads[1]["metadata"])
-    newer.update(
-        {"created_at_ms": 2, "updated_at_ms": 2, "latest_run_status": "success"}
-    )
+    newer.update({"created_at_ms": 2, "updated_at_ms": 2, "latest_run_status": "success"})
     requested_sorts: list[str] = []
 
     class FakeThreads:
@@ -2369,9 +2294,7 @@ async def test_list_dashboard_threads_page_can_sort_by_creation_time(
             field = f"{sort_by}_ms"
             ordered = sorted(
                 threads,
-                key=lambda thread: cast(
-                    int, cast(dict[str, object], thread["metadata"])[field]
-                ),
+                key=lambda thread: cast(int, cast(dict[str, object], thread["metadata"])[field]),
                 reverse=True,
             )
             return ordered[offset : offset + limit]
@@ -2425,9 +2348,7 @@ async def test_list_dashboard_threads_page_refreshes_only_unsettled_threads(
 
     monkeypatch.setattr(thread_api, "langgraph_client", lambda: FakeClient())
 
-    result = await thread_api.list_dashboard_threads_page(
-        "octocat", email=None, limit=3, offset=0
-    )
+    result = await thread_api.list_dashboard_threads_page("octocat", email=None, limit=3, offset=0)
 
     assert run_list_thread_ids == ["t1"]
     assert updates == [
@@ -2585,9 +2506,7 @@ async def test_working_tree_diff_reads_live_sandbox_against_head(monkeypatch) ->
         "truncated": False,
         "summary": {"files": 1, "additions": 1, "deletions": 0},
     }
-    monkeypatch.setattr(
-        thread_api, "_readable_thread_metadata", AsyncMock(return_value=metadata)
-    )
+    monkeypatch.setattr(thread_api, "_readable_thread_metadata", AsyncMock(return_value=metadata))
     sandbox = object()
     monkeypatch.setattr(thread_api, "create_sandbox", AsyncMock(return_value=sandbox))
     monkeypatch.setattr(
@@ -2597,30 +2516,20 @@ async def test_working_tree_diff_reads_live_sandbox_against_head(monkeypatch) ->
     read_diff = AsyncMock(return_value=live)
     monkeypatch.setattr("agent.utils.turn_checkpoint.read_turn_diff", read_diff)
 
-    result = await thread_api.get_dashboard_thread_working_tree_diff(
-        "thread-1", "owner"
-    )
+    result = await thread_api.get_dashboard_thread_working_tree_diff("thread-1", "owner")
 
     assert result == live
-    read_diff.assert_awaited_once_with(
-        sandbox, "/work", "HEAD", None, repo_path="/work/repo"
-    )
+    read_diff.assert_awaited_once_with(sandbox, "/work", "HEAD", None, repo_path="/work/repo")
 
 
 async def test_working_tree_diff_returns_missing_when_the_sandbox_is_unreachable(
     monkeypatch,
 ) -> None:
     metadata = {"sandbox_id": "sandbox-1"}
-    monkeypatch.setattr(
-        thread_api, "_readable_thread_metadata", AsyncMock(return_value=metadata)
-    )
-    monkeypatch.setattr(
-        thread_api, "create_sandbox", AsyncMock(side_effect=RuntimeError)
-    )
+    monkeypatch.setattr(thread_api, "_readable_thread_metadata", AsyncMock(return_value=metadata))
+    monkeypatch.setattr(thread_api, "create_sandbox", AsyncMock(side_effect=RuntimeError))
 
-    result = await thread_api.get_dashboard_thread_working_tree_diff(
-        "thread-1", "owner"
-    )
+    result = await thread_api.get_dashboard_thread_working_tree_diff("thread-1", "owner")
 
     assert result == {
         "status": "missing",
@@ -2637,12 +2546,8 @@ async def test_branch_diff_uses_repository_from_pr_url(monkeypatch) -> None:
         "pr_number": 1925,
         "pr_url": "https://github.com/langchain-ai/open-swe/pull/1925",
     }
-    monkeypatch.setattr(
-        thread_api, "_readable_thread_metadata", AsyncMock(return_value=metadata)
-    )
-    monkeypatch.setattr(
-        thread_api, "_github_token_for_login", AsyncMock(return_value="token")
-    )
+    monkeypatch.setattr(thread_api, "_readable_thread_metadata", AsyncMock(return_value=metadata))
+    monkeypatch.setattr(thread_api, "_github_token_for_login", AsyncMock(return_value="token"))
     build_diff = AsyncMock(
         return_value={
             "base_sha": "base",
@@ -2668,12 +2573,8 @@ async def test_branch_diff_without_a_pull_request_compares_against_the_base(
         "base_branch": "main",
         "branch_name": "open-swe/feature",
     }
-    monkeypatch.setattr(
-        thread_api, "_readable_thread_metadata", AsyncMock(return_value=metadata)
-    )
-    monkeypatch.setattr(
-        thread_api, "_github_token_for_login", AsyncMock(return_value="token")
-    )
+    monkeypatch.setattr(thread_api, "_readable_thread_metadata", AsyncMock(return_value=metadata))
+    monkeypatch.setattr(thread_api, "_github_token_for_login", AsyncMock(return_value="token"))
     build_compare = AsyncMock(
         return_value={
             "base_sha": "merge-base",
@@ -2703,12 +2604,8 @@ async def test_branch_diff_rejects_an_unsafe_branch_name(monkeypatch) -> None:
         "base_branch": "main",
         "branch_name": "../../etc/passwd",
     }
-    monkeypatch.setattr(
-        thread_api, "_readable_thread_metadata", AsyncMock(return_value=metadata)
-    )
-    monkeypatch.setattr(
-        thread_api, "_github_token_for_login", AsyncMock(return_value="token")
-    )
+    monkeypatch.setattr(thread_api, "_readable_thread_metadata", AsyncMock(return_value=metadata))
+    monkeypatch.setattr(thread_api, "_github_token_for_login", AsyncMock(return_value="token"))
     build_compare = AsyncMock()
     monkeypatch.setattr(thread_api, "build_compare_diff_files", build_compare)
 

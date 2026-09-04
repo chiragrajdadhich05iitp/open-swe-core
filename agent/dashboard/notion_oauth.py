@@ -18,9 +18,7 @@ NOTION_STATE_COOKIE_NAME = "osw_notion_oauth_state"
 NOTION_OAUTH_FLOW_NAMESPACE: list[str] = ["notion_oauth_flows"]
 
 _NOTION_HOST = "mcp.notion.com"
-_PROTECTED_RESOURCE_METADATA_URL = (
-    "https://mcp.notion.com/.well-known/oauth-protected-resource"
-)
+_PROTECTED_RESOURCE_METADATA_URL = "https://mcp.notion.com/.well-known/oauth-protected-resource"
 _AUTHORIZATION_SERVER_METADATA_PATH = "/.well-known/oauth-authorization-server"
 _HTTP_TIMEOUT = httpx.Timeout(15.0, connect=5.0)
 
@@ -28,9 +26,7 @@ _HTTP_TIMEOUT = httpx.Timeout(15.0, connect=5.0)
 class NotionOAuthError(Exception):
     """Notion OAuth endpoint error."""
 
-    def __init__(
-        self, status_code: int, detail: str, *, error_code: str | None = None
-    ) -> None:
+    def __init__(self, status_code: int, detail: str, *, error_code: str | None = None) -> None:
         super().__init__(detail)
         self.status_code = status_code
         self.detail = detail
@@ -49,9 +45,7 @@ def _require_notion_https_url(url: str, label: str) -> str:
 
 
 def _metadata_url(auth_server_url: str) -> str:
-    parsed = urlparse(
-        _require_notion_https_url(auth_server_url, "authorization server")
-    )
+    parsed = urlparse(_require_notion_https_url(auth_server_url, "authorization server"))
     return f"{parsed.scheme}://{parsed.netloc}{_AUTHORIZATION_SERVER_METADATA_PATH}"
 
 
@@ -139,9 +133,7 @@ async def register_notion_oauth_client(
     """Register this deployment as a Notion MCP OAuth client."""
     registration_endpoint = metadata.get("registration_endpoint")
     if not isinstance(registration_endpoint, str):
-        raise NotionOAuthError(
-            502, "Notion OAuth metadata missing registration endpoint"
-        )
+        raise NotionOAuthError(502, "Notion OAuth metadata missing registration endpoint")
     _require_notion_https_url(registration_endpoint, "registration endpoint")
     body: dict[str, Any] = {
         "client_name": os.environ.get("NOTION_MCP_CLIENT_NAME", "Open SWE"),
@@ -167,14 +159,10 @@ async def register_notion_oauth_client(
     except httpx.RequestError as exc:
         raise NotionOAuthError(503, "Notion OAuth client registration failed") from exc
     if not response.is_success:
-        raise _oauth_error_from_response(
-            response, "Notion OAuth client registration failed"
-        )
+        raise _oauth_error_from_response(response, "Notion OAuth client registration failed")
     data = response.json()
     if not isinstance(data, dict) or not isinstance(data.get("client_id"), str):
-        raise NotionOAuthError(
-            502, "Notion OAuth client registration missing client_id"
-        )
+        raise NotionOAuthError(502, "Notion OAuth client registration missing client_id")
     return data
 
 
@@ -187,9 +175,7 @@ async def store_notion_oauth_flow(
 ) -> str:
     """Create and store a short-lived Notion OAuth flow."""
     metadata = await discover_notion_oauth_metadata()
-    client_info = await register_notion_oauth_client(
-        metadata, redirect_uri=redirect_uri
-    )
+    client_info = await register_notion_oauth_client(metadata, redirect_uri=redirect_uri)
     verifier = generate_code_verifier()
     authorization_endpoint = str(metadata["authorization_endpoint"])
     client_id = str(client_info["client_id"])
@@ -202,9 +188,7 @@ async def store_notion_oauth_flow(
         "login": login,
         "encrypted_code_verifier": encrypt_token(verifier),
         "client_id": client_id,
-        "encrypted_client_secret": (
-            encrypt_token(client_secret) if client_secret else None
-        ),
+        "encrypted_client_secret": (encrypt_token(client_secret) if client_secret else None),
         "token_endpoint": str(metadata["token_endpoint"]),
         "redirect_uri": redirect_uri,
         "created_at": now_iso(),
@@ -235,9 +219,7 @@ async def pop_notion_oauth_flow(login: str, nonce_hash: str) -> dict[str, Any] |
     return value
 
 
-def _oauth_error_from_response(
-    response: httpx.Response, fallback: str
-) -> NotionOAuthError:
+def _oauth_error_from_response(response: httpx.Response, fallback: str) -> NotionOAuthError:
     error_code = None
     detail = fallback
     try:
@@ -249,9 +231,7 @@ def _oauth_error_from_response(
         if isinstance(raw_error, str):
             error_code = raw_error
             raw_description = data.get("error_description")
-            description = (
-                raw_description if isinstance(raw_description, str) else raw_error
-            )
+            description = raw_description if isinstance(raw_description, str) else raw_error
             detail = f"{fallback}: {description}"
     elif response.text:
         detail = f"{fallback}: {response.text[:200]}"
@@ -286,9 +266,7 @@ async def exchange_notion_code(code: str, flow: dict[str, Any]) -> dict[str, Any
     client_secret = flow.get("client_secret")
     if isinstance(client_secret, str) and client_secret:
         body["client_secret"] = client_secret
-    return await _request_token(
-        token_endpoint, body, fallback="Notion OAuth token exchange failed"
-    )
+    return await _request_token(token_endpoint, body, fallback="Notion OAuth token exchange failed")
 
 
 async def refresh_notion_access_token(
@@ -307,9 +285,7 @@ async def refresh_notion_access_token(
     }
     if client_secret:
         body["client_secret"] = client_secret
-    return await _request_token(
-        token_endpoint, body, fallback="Notion OAuth token refresh failed"
-    )
+    return await _request_token(token_endpoint, body, fallback="Notion OAuth token refresh failed")
 
 
 async def _request_token(

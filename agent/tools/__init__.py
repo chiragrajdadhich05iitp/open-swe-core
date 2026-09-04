@@ -209,9 +209,7 @@ def _load_export(name: str) -> Any:
 
 class _LazyToolsModule(ModuleType):
     def __getattribute__(self, name: str) -> Any:
-        module_map = ModuleType.__getattribute__(self, "__dict__").get(
-            "_TOOL_MODULES", {}
-        )
+        module_map = ModuleType.__getattribute__(self, "__dict__").get("_TOOL_MODULES", {})
         if name not in module_map:
             return ModuleType.__getattribute__(self, name)
         # Prefer public exports over same-named submodule attributes set by importlib.

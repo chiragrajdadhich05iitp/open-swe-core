@@ -156,9 +156,7 @@ async def save_environment(
             update_values.update(
                 dict.fromkeys(sizing)
                 if clear_sizing
-                else {
-                    field: value for field, value in sizing.items() if value is not None
-                }
+                else {field: value for field, value in sizing.items() if value is not None}
             )
             if create_params is not None:
                 update_values["create_params"] = create_params

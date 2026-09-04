@@ -48,11 +48,7 @@ async def ensure_background_task_cron(thread_id: str) -> str:
         metadata={"kind": CRON_KIND, "thread_id": thread_id},
         timezone="UTC",
     )
-    cron_id = (
-        cron.get("cron_id")
-        if isinstance(cron, dict)
-        else getattr(cron, "cron_id", None)
-    )
+    cron_id = cron.get("cron_id") if isinstance(cron, dict) else getattr(cron, "cron_id", None)
     if not isinstance(cron_id, str) or not cron_id:
         raise RuntimeError("background-task cron creation did not return a cron_id")
     return cron_id
@@ -95,18 +91,14 @@ def _dispatch_config(metadata: dict[str, Any], thread_id: str) -> dict[str, Any]
     ):
         value = metadata.get(key)
         if value is not None:
-            configurable["user_email" if key == "triggering_user_email" else key] = (
-                value
-            )
+            configurable["user_email" if key == "triggering_user_email" else key] = value
     configurable.update(SourceContext.from_metadata(metadata).dump())
     return configurable
 
 
 async def _claim(backend: Any, task_id: str) -> bool:
     claim = f"{TASK_ROOT}/{task_id}/notify.claim"
-    response = await backend.aexecute(
-        f"mkdir {shlex.quote(claim)} 2>/dev/null", timeout=10
-    )
+    response = await backend.aexecute(f"mkdir {shlex.quote(claim)} 2>/dev/null", timeout=10)
     return getattr(response, "exit_code", None) == 0
 
 
@@ -172,9 +164,7 @@ async def monitor_background_tasks(thread_id: str) -> dict[str, Any]:
             delivered += 1
         except Exception:
             await _unclaim(backend, task_id)
-            logger.warning(
-                "Failed to deliver background task %s", task_id, exc_info=True
-            )
+            logger.warning("Failed to deliver background task %s", task_id, exc_info=True)
     pending = any(task.get("notification") != "done" for task in terminal)
     if not running and not pending:
         lock = await backend.aexecute(
@@ -187,8 +177,7 @@ async def monitor_background_tasks(thread_id: str) -> dict[str, Any]:
                 if not any(
                     task.get("status") == "running"
                     or (
-                        task.get("status") in TERMINAL_STATES
-                        and task.get("notification") != "done"
+                        task.get("status") in TERMINAL_STATES and task.get("notification") != "done"
                     )
                     for task in fresh
                 ):

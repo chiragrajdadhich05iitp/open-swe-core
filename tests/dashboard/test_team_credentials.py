@@ -20,9 +20,7 @@ class _FakeStore:
         value = self.items.get((tuple(namespace), key))
         return {"value": value} if value is not None else None
 
-    async def put_item(
-        self, namespace: list[str], key: str, value: dict[str, Any]
-    ) -> None:
+    async def put_item(self, namespace: list[str], key: str, value: dict[str, Any]) -> None:
         self.items[(tuple(namespace), key)] = value
 
     async def delete_item(self, namespace: list[str], key: str) -> None:
@@ -44,9 +42,7 @@ def fake_store(monkeypatch: pytest.MonkeyPatch) -> _FakeStore:
 
 class TestValidators:
     def test_site_normalized(self) -> None:
-        u = DatadogCredentialsUpdate(
-            site="https://app.datadoghq.com/", api_key="k", app_key="a"
-        )
+        u = DatadogCredentialsUpdate(site="https://app.datadoghq.com/", api_key="k", app_key="a")
         assert u.site == "datadoghq.com"
 
     def test_site_default(self) -> None:
@@ -79,9 +75,7 @@ class TestMcpUrl:
 @pytest.mark.asyncio
 async def test_datadog_roundtrip_and_redaction(fake_store: _FakeStore) -> None:
     status = await tc.connect_datadog(
-        DatadogCredentialsUpdate(
-            site="datadoghq.com", api_key="secret-api-1234", app_key="appk"
-        )
+        DatadogCredentialsUpdate(site="datadoghq.com", api_key="secret-api-1234", app_key="appk")
     )
     assert status["datadog"]["connected"] is True
     assert status["datadog"]["api_key_last4"] == "1234"
@@ -101,9 +95,7 @@ async def test_datadog_roundtrip_and_redaction(fake_store: _FakeStore) -> None:
 
 @pytest.mark.asyncio
 async def test_langsmith_roundtrip(fake_store: _FakeStore) -> None:
-    status = await tc.connect_langsmith(
-        LangSmithCredentialsUpdate(api_key="ls-key-9999")
-    )
+    status = await tc.connect_langsmith(LangSmithCredentialsUpdate(api_key="ls-key-9999"))
     assert status["langsmith"]["connected"] is True
     assert status["langsmith"]["api_key_last4"] == "9999"
 

@@ -70,8 +70,6 @@ def test_summarize_run_usage_ignores_messages_without_usage() -> None:
 
 def test_summarize_run_usage_returns_none_without_reported_usage_or_model() -> None:
     assert (
-        summarize_run_usage(
-            {"messages": [HumanMessage(content="hi"), AIMessage(content="")]}
-        )
+        summarize_run_usage({"messages": [HumanMessage(content="hi"), AIMessage(content="")]})
         is None
     )

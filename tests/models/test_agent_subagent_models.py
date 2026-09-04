@@ -66,9 +66,7 @@ async def test_agent_uses_profile_subagent_model_override() -> None:
             },
         ),
         patch("agent.server.fallback_model_id_for", return_value=None),
-        patch(
-            "agent.server.make_model", side_effect=[main_model, subagent_model]
-        ) as make_model,
+        patch("agent.server.make_model", side_effect=[main_model, subagent_model]) as make_model,
         patch("agent.server.construct_system_prompt", return_value="prompt"),
         patch("agent.server.create_deep_agent", side_effect=fake_create_deep_agent),
     ):
@@ -91,9 +89,7 @@ async def test_agent_uses_profile_subagent_model_override() -> None:
 
 
 @pytest.mark.asyncio
-async def test_agent_subagent_inherits_profile_model_override_without_explicit_pair() -> (
-    None
-):
+async def test_agent_subagent_inherits_profile_model_override_without_explicit_pair() -> None:
     config: RunnableConfig = {
         "configurable": {
             "__is_for_execution__": True,
@@ -144,9 +140,7 @@ async def test_agent_subagent_inherits_profile_model_override_without_explicit_p
             },
         ),
         patch("agent.server.fallback_model_id_for", return_value=None),
-        patch(
-            "agent.server.make_model", side_effect=[main_model, subagent_model]
-        ) as make_model,
+        patch("agent.server.make_model", side_effect=[main_model, subagent_model]) as make_model,
         patch("agent.server.construct_system_prompt", return_value="prompt"),
         patch("agent.server.create_deep_agent", side_effect=fake_create_deep_agent),
     ):
@@ -222,9 +216,7 @@ async def test_agent_gate_swaps_disabled_fable_profile_to_opus() -> None:
             return_value=False,
         ),
         patch("agent.server.fallback_model_id_for", return_value=None),
-        patch(
-            "agent.server.make_model", side_effect=[main_model, subagent_model]
-        ) as make_model,
+        patch("agent.server.make_model", side_effect=[main_model, subagent_model]) as make_model,
         patch("agent.server.construct_system_prompt", return_value="prompt"),
         patch("agent.server.create_deep_agent", side_effect=fake_create_deep_agent),
     ):

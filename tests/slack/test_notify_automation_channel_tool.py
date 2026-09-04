@@ -16,9 +16,7 @@ class _FakeStore:
         value = self.items.get((tuple(namespace), key))
         return {"value": value} if value is not None else None
 
-    async def put_item(
-        self, namespace: list[str], key: str, value: dict[str, Any]
-    ) -> None:
+    async def put_item(self, namespace: list[str], key: str, value: dict[str, Any]) -> None:
         self.items[(tuple(namespace), key)] = value
 
     async def delete_item(self, namespace: list[str], key: str) -> None:
@@ -134,9 +132,7 @@ async def test_notify_automation_channel_posts_to_trusted_destination(
         return "1786504009.596419", None
 
     monkeypatch.setattr(notification_tool, "get_config", _config)
-    monkeypatch.setattr(
-        notification_tool, "post_slack_top_level_message_with_ts", fake_post
-    )
+    monkeypatch.setattr(notification_tool, "post_slack_top_level_message_with_ts", fake_post)
 
     result = await notification_tool.notify_automation_channel(
         "Opened a pull request with dependency updates."
@@ -169,14 +165,10 @@ async def test_notify_automation_channel_suppresses_duplicate_posts(
         return "1786504009.596419", None
 
     monkeypatch.setattr(notification_tool, "get_config", _config)
-    monkeypatch.setattr(
-        notification_tool, "post_slack_top_level_message_with_ts", fake_post
-    )
+    monkeypatch.setattr(notification_tool, "post_slack_top_level_message_with_ts", fake_post)
 
     first = await notification_tool.notify_automation_channel("Opened a pull request")
-    second = await notification_tool.notify_automation_channel(
-        "Opened another pull request"
-    )
+    second = await notification_tool.notify_automation_channel("Opened another pull request")
 
     assert first["success"] is True
     assert second == {
@@ -199,9 +191,7 @@ async def test_notify_automation_channel_allows_retry_after_slack_failure(
         return responses.pop(0)
 
     monkeypatch.setattr(notification_tool, "get_config", _config)
-    monkeypatch.setattr(
-        notification_tool, "post_slack_top_level_message_with_ts", fake_post
-    )
+    monkeypatch.setattr(notification_tool, "post_slack_top_level_message_with_ts", fake_post)
 
     first = await notification_tool.notify_automation_channel("Opened a pull request")
     second = await notification_tool.notify_automation_channel("Opened a pull request")

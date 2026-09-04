@@ -71,9 +71,7 @@ async def write_cached_repos(login: str, payload: dict[str, Any]) -> None:
         logger.warning("repo list cache write failed", exc_info=True)
 
 
-def schedule_repo_cache_refresh(
-    login: str, refresh: Callable[[], Awaitable[Any]]
-) -> None:
+def schedule_repo_cache_refresh(login: str, refresh: Callable[[], Awaitable[Any]]) -> None:
     """Rebuild a login's cached payload in the background, once at a time."""
     key = _cache_key(login)
     if not key or key in _refreshing:

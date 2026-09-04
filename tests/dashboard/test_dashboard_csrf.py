@@ -85,9 +85,7 @@ async def test_require_same_origin_normalizes_case_and_trailing_slash(
 async def test_require_same_origin_accepts_referer(monkeypatch) -> None:
     monkeypatch.setenv("DASHBOARD_BASE_URL", "https://dashboard.example")
 
-    oauth.require_same_origin(
-        _request(referer="https://dashboard.example/agents/thread-id")
-    )
+    oauth.require_same_origin(_request(referer="https://dashboard.example/agents/thread-id"))
 
 
 @pytest.mark.asyncio

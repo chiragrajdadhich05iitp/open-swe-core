@@ -15,9 +15,7 @@ class _FakeStore:
         value = self.items.get((tuple(namespace), key))
         return {"value": value} if value is not None else None
 
-    async def put_item(
-        self, namespace: list[str], key: str, value: dict[str, Any]
-    ) -> None:
+    async def put_item(self, namespace: list[str], key: str, value: dict[str, Any]) -> None:
         self.items[(tuple(namespace), key)] = value
 
     async def search_items(
@@ -54,10 +52,7 @@ async def test_run_email_prefers_github_mapping(fake_store: _FakeStore) -> None:
     )
     # OAuth profile carries a personal account that isn't an org member.
     profile = {"email": "johannesduplessis117@gmail.com"}
-    assert (
-        await thread_api._resolve_run_email("johannes117", profile)
-        == "johannes@langchain.dev"
-    )
+    assert await thread_api._resolve_run_email("johannes117", profile) == "johannes@langchain.dev"
 
 
 @pytest.mark.asyncio
@@ -65,7 +60,4 @@ async def test_run_email_falls_back_to_profile_when_unmapped(
     fake_store: _FakeStore,
 ) -> None:
     profile = {"email": "someone@example.com"}
-    assert (
-        await thread_api._resolve_run_email("nomapping", profile)
-        == "someone@example.com"
-    )
+    assert await thread_api._resolve_run_email("nomapping", profile) == "someone@example.com"

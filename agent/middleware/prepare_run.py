@@ -73,9 +73,7 @@ class BasePrepareRunMiddleware(AgentMiddleware):
             # ran regardless, so the flush has to cover that path too.
             flush_phases(getattr(self, "_thread_id", None))
 
-    def _prepare_fingerprint(
-        self, state: PrepareRunState, runtime: Runtime
-    ) -> str:  # noqa: ARG002
+    def _prepare_fingerprint(self, state: PrepareRunState, runtime: Runtime) -> str:  # noqa: ARG002
         payload = {
             "middleware": self.__class__.__name__,
             "message": _latest_message_fingerprint(state),
@@ -87,9 +85,7 @@ class BasePrepareRunMiddleware(AgentMiddleware):
     def _prepare_config_fingerprint(self) -> Any:
         return None
 
-    async def _prepare(
-        self, state: PrepareRunState, runtime: Runtime
-    ) -> dict[str, Any]:
+    async def _prepare(self, state: PrepareRunState, runtime: Runtime) -> dict[str, Any]:
         raise NotImplementedError
 
     async def awrap_model_call(
@@ -99,11 +95,7 @@ class BasePrepareRunMiddleware(AgentMiddleware):
     ) -> ModelResponse:
         rendered = request.state.get("rendered_system_prompt")
         if isinstance(rendered, str) and rendered:
-            existing = (
-                request.system_message.text
-                if request.system_message is not None
-                else ""
-            )
+            existing = request.system_message.text if request.system_message is not None else ""
             content = f"{rendered}\n\n{existing}" if existing else rendered
             request = request.override(
                 system_message=SystemMessage(content=wrap_system_prompt(content))

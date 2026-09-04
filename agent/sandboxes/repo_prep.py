@@ -88,15 +88,11 @@ async def prepare_review_repo(
     if not repo_owner or not repo_name:
         return False
 
-    command = _prep_command(
-        work_dir, repo_owner, repo_name, head_sha, pr_number, base_sha
-    )
+    command = _prep_command(work_dir, repo_owner, repo_name, head_sha, pr_number, base_sha)
     try:
         result = await sandbox_backend.aexecute(command, timeout=CLONE_TIMEOUT_SECONDS)
     except Exception:  # noqa: BLE001
-        logger.warning(
-            "Failed to prep review repo %s/%s", repo_owner, repo_name, exc_info=True
-        )
+        logger.warning("Failed to prep review repo %s/%s", repo_owner, repo_name, exc_info=True)
         return False
 
     exit_code = getattr(result, "exit_code", None)
@@ -156,9 +152,7 @@ async def materialize_trusted_skills(
         try:
             result = await sandbox_backend.aexecute(command)
         except Exception:  # noqa: BLE001
-            logger.warning(
-                "Failed to extract trusted skills %s", skill_dir, exc_info=True
-            )
+            logger.warning("Failed to extract trusted skills %s", skill_dir, exc_info=True)
             continue
         output = getattr(result, "output", "") or ""
         if dest in output.splitlines():

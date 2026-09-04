@@ -30,9 +30,7 @@ def test_github_constants() -> None:
     assert GITHUB_GRAPHQL == "https://api.github.com/graphql"
 
 
-def _make_response(
-    status_code: int, headers: dict[str, str] | None = None
-) -> httpx.Response:
+def _make_response(status_code: int, headers: dict[str, str] | None = None) -> httpx.Response:
     return httpx.Response(status_code, headers=headers or {})
 
 
@@ -217,9 +215,7 @@ async def test_github_request_gives_up_after_max_retries() -> None:
     client.get = AsyncMock(return_value=response_429)
 
     with patch("agent.utils.github_http.asyncio.sleep", new_callable=AsyncMock):
-        response = await github_request(
-            client, "GET", "https://api.github.com/test", max_retries=2
-        )
+        response = await github_request(client, "GET", "https://api.github.com/test", max_retries=2)
 
     assert response.status_code == 429
     assert client.get.await_count == 3
@@ -340,9 +336,7 @@ async def test_github_request_raises_after_exhausting_transport_retries() -> Non
 
     with patch("agent.utils.github_http.asyncio.sleep", new_callable=AsyncMock):
         with pytest.raises(httpx.ConnectTimeout):
-            await github_request(
-                client, "GET", "https://api.github.com/test", max_retries=1
-            )
+            await github_request(client, "GET", "https://api.github.com/test", max_retries=1)
 
     assert client.get.await_count == 2
 

@@ -51,9 +51,7 @@ def _unwrap(item: Any) -> dict[str, Any] | None:
     """The item's ``value`` — the SDK returns dicts or objects depending on transport."""
     if item is None:
         return None
-    value = (
-        item.get("value") if isinstance(item, dict) else getattr(item, "value", None)
-    )
+    value = item.get("value") if isinstance(item, dict) else getattr(item, "value", None)
     return value if isinstance(value, dict) else None
 
 
@@ -89,11 +87,7 @@ async def _search_items(
     result = await store_client().store.search_items(
         list(namespace), filter=filter, limit=limit, offset=offset
     )
-    items = (
-        result.get("items")
-        if isinstance(result, dict)
-        else getattr(result, "items", [])
-    )
+    items = result.get("items") if isinstance(result, dict) else getattr(result, "items", [])
     return list(items or [])
 
 
@@ -164,9 +158,7 @@ class TypedStore(Generic[RecordT]):
         offset: int = 0,
     ) -> list[RecordT]:
         return self._parse_all(
-            await search_values(
-                self.namespace, filter=filter, limit=limit, offset=offset
-            )
+            await search_values(self.namespace, filter=filter, limit=limit, offset=offset)
         )
 
     async def search_all(

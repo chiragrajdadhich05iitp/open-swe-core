@@ -77,9 +77,7 @@ def test_desktop_login_uses_the_requested_backend_callback(monkeypatch) -> None:
         )
 
     query = parse_qs(urlparse(response.headers["location"]).query)
-    assert query["redirect_uri"] == [
-        "https://backend.example/dashboard/api/auth/callback"
-    ]
+    assert query["redirect_uri"] == ["https://backend.example/dashboard/api/auth/callback"]
 
 
 def test_auth_callback_preserves_relative_plan_redirect(monkeypatch) -> None:
@@ -219,9 +217,7 @@ def test_auth_callback_cross_origin_redirect(monkeypatch) -> None:
 
         assert callback_response.status_code == 302
         assert callback_response.headers["location"] == f"http://localhost:3000{target}"
-        assert not callback_response.headers["location"].startswith(
-            "http://localhost:2024"
-        )
+        assert not callback_response.headers["location"].startswith("http://localhost:2024")
 
 
 def _desktop_login_env(monkeypatch) -> None:
@@ -260,9 +256,7 @@ def test_desktop_login_hands_the_session_back_over_loopback(monkeypatch) -> None
     _desktop_login_env(monkeypatch)
     verifier = "desktop-verifier"
     challenge = (
-        base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
-        .decode()
-        .rstrip("=")
+        base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).decode().rstrip("=")
     )
 
     app = FastAPI()
@@ -342,9 +336,7 @@ def test_desktop_handoff_code_carries_no_session(monkeypatch) -> None:
     _desktop_login_env(monkeypatch)
     verifier = "desktop-verifier"
     challenge = (
-        base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
-        .decode()
-        .rstrip("=")
+        base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).decode().rstrip("=")
     )
 
     app = FastAPI()
@@ -367,8 +359,7 @@ def test_desktop_handoff_code_carries_no_session(monkeypatch) -> None:
     payload = jwt.decode(handoff, "test-secret", algorithms=["HS256"])
     assert "session" not in payload
     assert not any(
-        isinstance(v, str) and v.count(".") == 2 and len(v) > 60
-        for v in payload.values()
+        isinstance(v, str) and v.count(".") == 2 and len(v) > 60 for v in payload.values()
     ), f"handoff payload looks like it embeds a token: {payload}"
     assert payload["sub"] == "alice"
 
@@ -392,9 +383,7 @@ def test_desktop_login_callback_follows_the_configured_api_origin(monkeypatch) -
         )
 
     query = parse_qs(urlparse(response.headers["location"]).query)
-    assert query["redirect_uri"] == [
-        "https://dashboard.example/dashboard/api/auth/callback"
-    ]
+    assert query["redirect_uri"] == ["https://dashboard.example/dashboard/api/auth/callback"]
 
 
 def test_web_auth_callback_rejects_missing_state_cookie(monkeypatch) -> None:

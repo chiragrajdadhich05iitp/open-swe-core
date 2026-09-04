@@ -2,21 +2,13 @@ import agent.dashboard.pull_request_checks as checks_module
 from agent.dashboard.pull_request_checks import get_pull_request_check_states
 
 
-def _rollup(
-    state: str | None, pr_state: str = "OPEN", is_draft: bool = False
-) -> dict[str, object]:
+def _rollup(state: str | None, pr_state: str = "OPEN", is_draft: bool = False) -> dict[str, object]:
     return {
         "pullRequest": {
             "state": pr_state,
             "isDraft": is_draft,
             "commits": {
-                "nodes": [
-                    {
-                        "commit": {
-                            "statusCheckRollup": {"state": state} if state else None
-                        }
-                    }
-                ]
+                "nodes": [{"commit": {"statusCheckRollup": {"state": state} if state else None}}]
             },
         }
     }

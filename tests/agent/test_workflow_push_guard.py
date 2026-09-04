@@ -87,9 +87,7 @@ def _clear_backend_cache() -> Any:
 
 
 def test_parse_git_push_supports_git_c_and_cd() -> None:
-    assert guard._parse_git_push(
-        "git -C /repo push origin feature"
-    ) == guard.ParsedGitPush(
+    assert guard._parse_git_push("git -C /repo push origin feature") == guard.ParsedGitPush(
         repo_dir="/repo", remote="origin", local_ref="feature", remote_ref="feature"
     )
     assert guard._parse_git_push(
@@ -102,10 +100,7 @@ def test_parse_git_push_supports_git_c_and_cd() -> None:
         set_upstream=True,
     )
     assert guard._parse_git_push("git status && git push") is None
-    assert (
-        guard._parse_git_push("git push origin feature; git push origin evil:feature")
-        is None
-    )
+    assert guard._parse_git_push("git push origin feature; git push origin evil:feature") is None
 
 
 async def test_workflow_change_for_push_fingerprints_workflow_diff() -> None:
@@ -207,9 +202,7 @@ async def test_unapproved_workflow_push_blocks_and_posts_slack(
 
     pending_kwargs: dict[str, Any] = {}
 
-    async def fake_pending(
-        thread_id: str, **kwargs: Any
-    ) -> tuple[dict[str, Any], bool]:
+    async def fake_pending(thread_id: str, **kwargs: Any) -> tuple[dict[str, Any], bool]:
         pending_kwargs.update(kwargs)
         return {
             "fingerprint": kwargs["fingerprint"],
@@ -254,9 +247,7 @@ async def test_unapproved_workflow_push_blocks_and_posts_slack(
     assert payload["workflow_approval_status"] == "approval_required"
     assert payload["files"] == [".github/workflows/ci.yml"]
     assert payload["diff_stats"] == {"files": 1, "additions": 1, "deletions": 1}
-    assert payload["approval_url"].endswith(
-        "?workflowApproval=" + payload["fingerprint"]
-    )
+    assert payload["approval_url"].endswith("?workflowApproval=" + payload["fingerprint"])
     assert pending_kwargs["diff_preview"]
     assert pending_kwargs["diff_preview_truncated"] is False
     assert pending_kwargs["approval_url"] == payload["approval_url"]

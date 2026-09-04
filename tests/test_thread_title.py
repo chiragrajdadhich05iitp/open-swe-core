@@ -17,18 +17,14 @@ from agent.thread_title import (
 # Stands in for LangGraph's stream writer, which travels in a contextvar. A title
 # call that sees a non-default value here is running inside the agent run, and
 # would stream its tokens into the thread the user is watching.
-_RUN_STREAM: contextvars.ContextVar[str] = contextvars.ContextVar(
-    "run_stream", default="none"
-)
+_RUN_STREAM: contextvars.ContextVar[str] = contextvars.ContextVar("run_stream", default="none")
 
 
 class _StructuredModel:
     def __init__(self, recorder: dict[str, Any] | None = None) -> None:
         self._recorder = recorder if recorder is not None else {}
 
-    async def ainvoke(
-        self, messages: list[Any], config: Any = None, **_: Any
-    ) -> _ThreadTitle:
+    async def ainvoke(self, messages: list[Any], config: Any = None, **_: Any) -> _ThreadTitle:
         self._recorder["stream"] = _RUN_STREAM.get()
         self._recorder["config"] = config
         self._recorder["messages"] = messages
@@ -104,9 +100,7 @@ async def test_title_generation_renames_code_channel(
             "source": "slack",
             "title": "please review title generation",
             "title_seed": "please review title generation",
-            "source_context": {
-                "slack_thread": {"channel_id": "C-code", "thread_ts": "0"}
-            },
+            "source_context": {"slack_thread": {"channel_id": "C-code", "thread_ts": "0"}},
         }
     )
     client = type("Client", (), {"threads": threads})()

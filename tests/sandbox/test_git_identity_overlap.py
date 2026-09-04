@@ -47,9 +47,7 @@ async def test_identity_is_written_while_the_proxy_is_configured() -> None:
             new_callable=AsyncMock,
             return_value=("token", None, None),
         ),
-        patch(
-            "agent.sandboxes.lifecycle._configure_github_proxy", side_effect=configure
-        ),
+        patch("agent.sandboxes.lifecycle._configure_github_proxy", side_effect=configure),
         patch("agent.sandboxes.lifecycle.record_proxy_token_expiry"),
     ):
         assert await _create_sandbox_with_proxy(thread_id="thread-overlap") is backend
@@ -81,9 +79,7 @@ async def test_identity_failure_fails_the_sandbox() -> None:
             new_callable=AsyncMock,
             return_value=("token", None, None),
         ),
-        patch(
-            "agent.sandboxes.lifecycle._configure_github_proxy", new_callable=AsyncMock
-        ),
+        patch("agent.sandboxes.lifecycle._configure_github_proxy", new_callable=AsyncMock),
         patch("agent.sandboxes.lifecycle.record_proxy_token_expiry"),
         pytest.raises(RuntimeError, match="identity failed"),
     ):

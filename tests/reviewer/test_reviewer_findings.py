@@ -109,9 +109,7 @@ def test_filter_findings_for_publish_drops_below_threshold_and_resolved() -> Non
         _f(id="f_c", severity="critical", file="c.py", start_line=2, end_line=2),
         _f(id="f_d", severity="high", file="d.py", status="resolved"),
     ]
-    surfaced = filter_findings_for_publish(
-        findings, severity_threshold="medium", cap=10
-    )
+    surfaced = filter_findings_for_publish(findings, severity_threshold="medium", cap=10)
     assert [f["id"] for f in surfaced] == ["f_c", "f_a"]
 
 
@@ -398,9 +396,7 @@ async def test_mutate_findings_does_not_write_after_transient_read_failure() -> 
 
     with patch("agent.review.findings.get_client", return_value=fake_client):
         with pytest.raises(RuntimeError, match="transient"):
-            await mutate_findings(
-                "tid", lambda findings: bool(findings.append(_f(id="f_new")))
-            )
+            await mutate_findings("tid", lambda findings: bool(findings.append(_f(id="f_new"))))
 
     fake_client.threads.update.assert_not_called()
 
@@ -468,9 +464,7 @@ async def test_resolve_review_head_sha_prefers_metadata_over_config() -> None:
 
 
 @pytest.mark.asyncio
-async def test_resolve_review_head_sha_falls_back_to_config_when_metadata_empty() -> (
-    None
-):
+async def test_resolve_review_head_sha_falls_back_to_config_when_metadata_empty() -> None:
     fake_client = AsyncMock()
     fake_client.threads.get.return_value = {"metadata": {}}
     with patch("agent.review.findings.get_client", return_value=fake_client):
@@ -548,9 +542,7 @@ async def test_get_thread_metadata_still_degrades_on_other_failures() -> None:
 
 
 @pytest.mark.asyncio
-async def test_set_reviewer_thread_metadata_raises_domain_error_when_thread_missing() -> (
-    None
-):
+async def test_set_reviewer_thread_metadata_raises_domain_error_when_thread_missing() -> None:
     from agent.review.findings import (
         ReviewerThreadMissingError,
         set_reviewer_thread_metadata,

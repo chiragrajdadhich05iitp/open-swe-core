@@ -28,9 +28,7 @@ def test_resolve_prompt_default_repo_skips_team_default_for_repo_less_run(
 
     monkeypatch.setattr(server, "get_team_default_repo", fake_get_team_default_repo)
 
-    repo = asyncio.run(
-        server._resolve_prompt_default_repo({"repo_explicitly_none": True})
-    )
+    repo = asyncio.run(server._resolve_prompt_default_repo({"repo_explicitly_none": True}))
 
     assert repo is None
 

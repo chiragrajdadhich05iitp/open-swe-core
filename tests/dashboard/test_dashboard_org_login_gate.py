@@ -8,9 +8,7 @@ from fastapi import HTTPException
 from agent.dashboard import oauth
 
 
-def _stub_membership(
-    monkeypatch, members: dict[str, set[str]]
-) -> dict[str, list[tuple[str, str]]]:
+def _stub_membership(monkeypatch, members: dict[str, set[str]]) -> dict[str, list[tuple[str, str]]]:
     """Stub is_user_active_org_member; ``members`` maps org -> set of logins."""
     seen: dict[str, list[tuple[str, str]]] = {"calls": []}
 
@@ -18,9 +16,7 @@ def _stub_membership(
         seen["calls"].append((username, org))
         return username in members.get(org, set())
 
-    monkeypatch.setattr(
-        oauth, "is_user_active_org_member", fake_is_user_active_org_member
-    )
+    monkeypatch.setattr(oauth, "is_user_active_org_member", fake_is_user_active_org_member)
     return seen
 
 

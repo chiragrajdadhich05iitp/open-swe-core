@@ -34,11 +34,7 @@ async def settle_review_check_on_exit(
         return None
     thread_id = configurable.get("thread_id")
     repo_config = configurable.get("repo")
-    if (
-        not isinstance(thread_id, str)
-        or not thread_id
-        or not isinstance(repo_config, dict)
-    ):
+    if not isinstance(thread_id, str) or not thread_id or not isinstance(repo_config, dict):
         return None
     owner = repo_config.get("owner")
     repo = repo_config.get("name")
@@ -51,9 +47,7 @@ async def settle_review_check_on_exit(
             return None
         token = get_github_token()
         if not token:
-            logger.warning(
-                "No GitHub token to settle stale review check on thread %s", thread_id
-            )
+            logger.warning("No GitHub token to settle stale review check on thread %s", thread_id)
             return None
         # A pending result means publish_review DID finish but its completion
         # PATCH failed transiently — retry with the real conclusion instead of
@@ -87,7 +81,5 @@ async def settle_review_check_on_exit(
         )
         logger.info("Settled stale review check run for thread %s", thread_id)
     except Exception:
-        logger.exception(
-            "Failed to settle stale review check run for thread %s", thread_id
-        )
+        logger.exception("Failed to settle stale review check run for thread %s", thread_id)
     return None

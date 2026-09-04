@@ -21,13 +21,9 @@ class _Backend:
     async def aexecute(self, command: str, *, timeout: int | None = None) -> Any:
         self.commands.append(command)
         if command.startswith("test -f "):
-            return SimpleNamespace(
-                exit_code=self.stat_exit_code, output=self.stat_output
-            )
+            return SimpleNamespace(exit_code=self.stat_exit_code, output=self.stat_output)
         if command.startswith("mkdir -p "):
-            return SimpleNamespace(
-                exit_code=self.copy_exit_code, output=self.copy_output
-            )
+            return SimpleNamespace(exit_code=self.copy_exit_code, output=self.copy_output)
         return SimpleNamespace(exit_code=0, output="")
 
 
@@ -56,9 +52,7 @@ def _configure(
         "create_sandbox_file_download_url",
         create_download_url,
     )
-    monkeypatch.setattr(
-        iframe_tool, "uuid4", lambda: SimpleNamespace(hex="artifact-id")
-    )
+    monkeypatch.setattr(iframe_tool, "uuid4", lambda: SimpleNamespace(hex="artifact-id"))
     return calls, backend
 
 
@@ -66,13 +60,9 @@ async def test_output_iframe_snapshots_html_and_returns_signed_urls(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     calls, backend = _configure(monkeypatch)
-    snapshot_path = (
-        "/workspace/project/.open-swe/iframe-artifacts/artifact-id/chart.html"
-    )
+    snapshot_path = "/workspace/project/.open-swe/iframe-artifacts/artifact-id/chart.html"
 
-    content, artifact = await iframe_tool._output_iframe(
-        "chart.html", "Quarterly chart"
-    )
+    content, artifact = await iframe_tool._output_iframe("chart.html", "Quarterly chart")
 
     assert content == "Displayed the HTML output in the dashboard."
     assert artifact == {
@@ -169,7 +159,5 @@ async def test_output_iframe_tool_keeps_urls_out_of_model_content(
 
     assert isinstance(result, ToolMessage)
     assert result.content == "Displayed the HTML output in the dashboard."
-    assert result.artifact["preview_url"] == (
-        "https://downloads.example/inline?token=secret"
-    )
+    assert result.artifact["preview_url"] == ("https://downloads.example/inline?token=secret")
     assert result.artifact["title"] == "HTML Output"

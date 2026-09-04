@@ -115,11 +115,9 @@ class TeamSettingsUpdate(TranscriptionSettingsUpdate):
 
     @model_validator(mode="after")
     def _validate_model_pairs(self) -> "TeamSettingsUpdate":
-        self.default_agent_model, self.default_agent_reasoning_effort = (
-            _normalize_stale_model_pair(
-                self.default_agent_model,
-                self.default_agent_reasoning_effort,
-            )
+        self.default_agent_model, self.default_agent_reasoning_effort = _normalize_stale_model_pair(
+            self.default_agent_model,
+            self.default_agent_reasoning_effort,
         )
         (
             self.default_agent_subagent_model,
@@ -147,11 +145,9 @@ class TeamSettingsUpdate(TranscriptionSettingsUpdate):
                 self.default_grouping_reasoning_effort,
             )
         )
-        self.default_chat_model, self.default_chat_reasoning_effort = (
-            _normalize_stale_model_pair(
-                self.default_chat_model,
-                self.default_chat_reasoning_effort,
-            )
+        self.default_chat_model, self.default_chat_reasoning_effort = _normalize_stale_model_pair(
+            self.default_chat_model,
+            self.default_chat_reasoning_effort,
         )
         self.default_thread_title_model, self.default_thread_title_reasoning_effort = (
             _normalize_stale_model_pair(
@@ -220,9 +216,7 @@ class TeamSettingsUpdate(TranscriptionSettingsUpdate):
         return self
 
 
-def _validate_model_effort_pair(
-    model: str | None, effort: str | None, role: str
-) -> None:
+def _validate_model_effort_pair(model: str | None, effort: str | None, role: str) -> None:
     if model is None and effort is None:
         return
     if model is None:

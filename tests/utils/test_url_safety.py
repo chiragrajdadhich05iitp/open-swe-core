@@ -15,9 +15,7 @@ async def test_request_with_safe_redirects_applies_custom_validator_to_redirects
         "resolve_and_validate",
         lambda url: (True, "", "allowed.example", resolved),
     )
-    redirect = MagicMock(
-        status_code=302, headers={"Location": "https://blocked.example/file"}
-    )
+    redirect = MagicMock(status_code=302, headers={"Location": "https://blocked.example/file"})
     client = MagicMock()
     client.request = AsyncMock(return_value=redirect)
 
@@ -26,9 +24,7 @@ async def test_request_with_safe_redirects_applies_custom_validator_to_redirects
         "GET",
         "https://allowed.example/file",
         validate_url=lambda url: (
-            (True, "")
-            if url.startswith("https://allowed.example/")
-            else (False, "blocked host")
+            (True, "") if url.startswith("https://allowed.example/") else (False, "blocked host")
         ),
     )
 

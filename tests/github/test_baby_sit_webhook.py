@@ -27,20 +27,14 @@ def _post(event_type: str, payload: dict[str, Any], *, delivery_id: str = "deliv
     )
 
 
-@pytest.mark.parametrize(
-    "event_type", ["check_run", "check_suite", "workflow_run", "status"]
-)
+@pytest.mark.parametrize("event_type", ["check_run", "check_suite", "workflow_run", "status"])
 def test_signed_ci_events_route_without_mention(
     event_type: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     captured: dict[str, Any] = {}
 
-    async def process(
-        payload: dict[str, Any], kind: str, delivery_id: str | None
-    ) -> None:
-        captured.update(
-            {"payload": payload, "event_type": kind, "delivery_id": delivery_id}
-        )
+    async def process(payload: dict[str, Any], kind: str, delivery_id: str | None) -> None:
+        captured.update({"payload": payload, "event_type": kind, "delivery_id": delivery_id})
 
     monkeypatch.setattr(common, "GITHUB_WEBHOOK_SECRET", _SECRET)
     monkeypatch.setattr(common, "_is_repo_allowed", lambda _repo: True)

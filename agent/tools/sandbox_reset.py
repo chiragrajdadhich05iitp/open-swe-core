@@ -65,9 +65,7 @@ async def sandbox_reset(**create_options: Any) -> dict[str, Any]:
     try:
         from agent.sandboxes.lifecycle import reset_sandbox_for_thread
 
-        old_sandbox_id, new_sandbox_id = await reset_sandbox_for_thread(
-            thread_id, create_params
-        )
+        old_sandbox_id, new_sandbox_id = await reset_sandbox_for_thread(thread_id, create_params)
     except Exception as exc:
         logger.exception("Failed to reset sandbox for thread %s", thread_id)
         return {"success": False, "error": str(exc)}

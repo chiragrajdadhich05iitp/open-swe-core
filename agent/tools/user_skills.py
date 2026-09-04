@@ -20,9 +20,7 @@ def _login() -> str | None:
     return resolve_github_login(as_json_object(get_config()))
 
 
-async def save_user_skill(
-    name: str, description: str, instructions: str = ""
-) -> dict[str, Any]:
+async def save_user_skill(name: str, description: str, instructions: str = "") -> dict[str, Any]:
     """Create or update a skill owned by the triggering user.
 
     Call this when the user asks to create or modify a reusable skill. The name

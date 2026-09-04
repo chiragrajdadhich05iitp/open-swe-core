@@ -37,6 +37,6 @@ def test_no_module_hand_rolls_a_user_message() -> None:
         lines = _role_user_literals(ast.parse(path.read_text()))
         if lines:
             offenders[relative] = lines
-    assert (
-        not offenders
-    ), f"build these through agent.input_messages.human_input/system_input instead: {offenders}"
+    assert not offenders, (
+        f"build these through agent.input_messages.human_input/system_input instead: {offenders}"
+    )

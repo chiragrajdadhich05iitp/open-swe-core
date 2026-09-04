@@ -152,9 +152,7 @@ async def test_reconcile_duplicate_markers_require_all_threads_terminal() -> Non
 
 
 @pytest.mark.asyncio
-async def test_reconcile_duplicate_markers_stay_open_when_some_threads_only_outdated() -> (
-    None
-):
+async def test_reconcile_duplicate_markers_stay_open_when_some_threads_only_outdated() -> None:
     findings = [{"id": "f1", "status": "open"}]
     replace = AsyncMock()
     marker = (

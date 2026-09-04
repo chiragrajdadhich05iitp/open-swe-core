@@ -117,9 +117,7 @@ async def test_materialize_review_diff_reuses_existing_file() -> None:
     from unittest.mock import AsyncMock, MagicMock
 
     backend = MagicMock()
-    backend.adownload_files = AsyncMock(
-        return_value=[{"content": _TWO_FILE_DIFF.encode()}]
-    )
+    backend.adownload_files = AsyncMock(return_value=[{"content": _TWO_FILE_DIFF.encode()}])
     backend.aupload_files = AsyncMock()
 
     result = await materialize_review_diff(
@@ -187,9 +185,7 @@ async def test_compute_diff_in_sandbox_reads_execute_response_output() -> None:
     from agent.review.diff import compute_diff_in_sandbox
 
     backend = MagicMock()
-    backend.aexecute = AsyncMock(
-        return_value=ExecuteResponse(output=_TWO_FILE_DIFF, exit_code=0)
-    )
+    backend.aexecute = AsyncMock(return_value=ExecuteResponse(output=_TWO_FILE_DIFF, exit_code=0))
 
     result = await compute_diff_in_sandbox(
         backend, work_dir="/w/repo", base_ref="base", head_ref="head"
@@ -208,9 +204,7 @@ async def test_compute_diff_in_sandbox_uses_two_dot_by_default() -> None:
     backend = MagicMock()
     backend.aexecute = AsyncMock(return_value="")
 
-    await compute_diff_in_sandbox(
-        backend, work_dir="/w", base_ref="oldsha", head_ref="newsha"
-    )
+    await compute_diff_in_sandbox(backend, work_dir="/w", base_ref="oldsha", head_ref="newsha")
     cmd = backend.aexecute.call_args.args[0]
     assert "oldsha..newsha" in cmd
     assert "oldsha...newsha" not in cmd

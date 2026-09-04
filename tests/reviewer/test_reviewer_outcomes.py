@@ -94,13 +94,9 @@ def _patch_client(monkeypatch, fake: _FakeClient | None) -> None:  # noqa: ANN00
     if fake is None:
         monkeypatch.setattr(reviewer_outcomes, "_outcomes_credentials", lambda: None)
         return
-    monkeypatch.setattr(
-        reviewer_outcomes, "_outcomes_credentials", lambda: ("k", "https://api")
-    )
+    monkeypatch.setattr(reviewer_outcomes, "_outcomes_credentials", lambda: ("k", "https://api"))
     monkeypatch.setattr(reviewer_outcomes, "async_langsmith_client", lambda *a: fake)
-    monkeypatch.setattr(
-        reviewer_outcomes, "sync_langsmith_client", lambda *a: cast(Any, fake)
-    )
+    monkeypatch.setattr(reviewer_outcomes, "sync_langsmith_client", lambda *a: cast(Any, fake))
 
 
 def _finding() -> Finding:
@@ -175,9 +171,7 @@ async def test_upsert_finding_outcome_updates_on_conflict(
 async def test_upsert_no_client_is_noop(monkeypatch) -> None:  # noqa: ANN001
     _patch_client(monkeypatch, None)
     assert (
-        await upsert_finding_outcome(
-            _finding(), label=TRUE_POSITIVE, label_source="x", repo="o/r"
-        )
+        await upsert_finding_outcome(_finding(), label=TRUE_POSITIVE, label_source="x", repo="o/r")
         is False
     )
 
@@ -213,13 +207,8 @@ async def test_emit_finding_status_outcome_maps_and_calls(
 async def test_emit_finding_status_outcome_no_repo_is_noop(
     monkeypatch,
 ) -> None:  # noqa: ANN001
-    monkeypatch.setattr(
-        reviewer_outcomes, "upsert_finding_outcome", lambda *a, **k: pytest_fail()
-    )
-    assert (
-        await emit_finding_status_outcome(_finding(), "dismissed", configurable={})
-        is False
-    )
+    monkeypatch.setattr(reviewer_outcomes, "upsert_finding_outcome", lambda *a, **k: pytest_fail())
+    assert await emit_finding_status_outcome(_finding(), "dismissed", configurable={}) is False
 
 
 def pytest_fail() -> bool:

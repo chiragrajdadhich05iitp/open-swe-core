@@ -44,12 +44,8 @@ async def notify_step_limit_reached(
 
     config = get_config()
     configurable = config.get("configurable", {})
-    slack_thread = (
-        configurable.get("slack_thread") if isinstance(configurable, dict) else None
-    )
-    thread_id = (
-        configurable.get("thread_id") if isinstance(configurable, dict) else None
-    )
+    slack_thread = configurable.get("slack_thread") if isinstance(configurable, dict) else None
+    thread_id = configurable.get("thread_id") if isinstance(configurable, dict) else None
     active = await get_active_slack_thread(
         get_client(url=LANGGRAPH_URL),
         thread_id if isinstance(thread_id, str) else None,

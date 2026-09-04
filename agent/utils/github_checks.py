@@ -146,9 +146,7 @@ async def post_autofix_status_check(
             response = await github_request(client, "POST", url, json=payload)
             response.raise_for_status()
     except httpx.HTTPError:
-        logger.warning(
-            "Failed to post auto-fix status check for %s/%s@%s", owner, repo, head_sha
-        )
+        logger.warning("Failed to post auto-fix status check for %s/%s@%s", owner, repo, head_sha)
         return False
     return True
 

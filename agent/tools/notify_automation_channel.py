@@ -51,10 +51,7 @@ async def notify_automation_channel(message: str) -> dict[str, Any]:
     """Notify the configured automation channel once after a concrete requested action."""
     config = get_config()
     configurable = config.get("configurable", {}) if isinstance(config, Mapping) else {}
-    if (
-        not isinstance(configurable, Mapping)
-        or configurable.get("source") != "schedule"
-    ):
+    if not isinstance(configurable, Mapping) or configurable.get("source") != "schedule":
         return {
             "success": False,
             "error": "This tool is only available to scheduled runs",
@@ -75,10 +72,7 @@ async def notify_automation_channel(message: str) -> dict[str, Any]:
         }
 
     schedule_id = configurable.get("schedule_id")
-    if (
-        not isinstance(schedule_id, str)
-        or notification.get("schedule_id") != schedule_id
-    ):
+    if not isinstance(schedule_id, str) or notification.get("schedule_id") != schedule_id:
         return {
             "success": False,
             "error": "Invalid automation notification configuration",
@@ -101,9 +95,7 @@ async def notify_automation_channel(message: str) -> dict[str, Any]:
         try:
             existing = await get_value(_NOTIFICATION_NAMESPACE, thread_id)
         except Exception:
-            logger.exception(
-                "Failed to check automation notification for %s", thread_id
-            )
+            logger.exception("Failed to check automation notification for %s", thread_id)
             return {
                 "success": False,
                 "error": "Could not check the Slack notification state",
@@ -126,9 +118,7 @@ async def notify_automation_channel(message: str) -> dict[str, Any]:
         try:
             await put_value(_NOTIFICATION_NAMESPACE, thread_id, pending)
         except Exception:
-            logger.exception(
-                "Failed to reserve automation notification for %s", thread_id
-            )
+            logger.exception("Failed to reserve automation notification for %s", thread_id)
             return {
                 "success": False,
                 "error": "Could not reserve the Slack notification",
@@ -166,8 +156,6 @@ async def notify_automation_channel(message: str) -> dict[str, Any]:
         try:
             await put_value(_NOTIFICATION_NAMESPACE, thread_id, delivered)
         except Exception:
-            logger.exception(
-                "Failed to finalize automation notification for %s", thread_id
-            )
+            logger.exception("Failed to finalize automation notification for %s", thread_id)
         await _mark_action_posted(thread_id, delivered["notified_at"])
         return {"success": True, "message_ts": message_ts}

@@ -10,9 +10,7 @@ from agent.middleware.sanitize_fireworks_messages import (
 )
 
 
-def _make_request(
-    messages: list[object], model: object | None = None
-) -> ModelRequest[None]:
+def _make_request(messages: list[object], model: object | None = None) -> ModelRequest[None]:
     request = MagicMock()
     request.model = model
     request.messages = messages
@@ -38,12 +36,8 @@ class TestSanitizeFireworksMessagesMiddleware:
         tool_result = ToolMessage(content="result", tool_call_id="tc1")
         message = AIMessage(
             content="",
-            tool_calls=[
-                {"name": "read_file", "args": {"file_path": "/x"}, "id": "tc1"}
-            ],
-            additional_kwargs={
-                "function_call": {"name": "read_file", "arguments": "{}"}
-            },
+            tool_calls=[{"name": "read_file", "args": {"file_path": "/x"}, "id": "tc1"}],
+            additional_kwargs={"function_call": {"name": "read_file", "arguments": "{}"}},
         )
         request = _make_request(
             [HumanMessage(content="hi"), message, tool_result],
@@ -55,9 +49,7 @@ class TestSanitizeFireworksMessagesMiddleware:
             assert req is request
             return cast(ModelResponse[Any], response)
 
-        result = await SanitizeFireworksMessagesMiddleware().awrap_model_call(
-            request, handler
-        )
+        result = await SanitizeFireworksMessagesMiddleware().awrap_model_call(request, handler)
 
         assert result is response
         assert "function_call" not in message.additional_kwargs
@@ -68,15 +60,11 @@ class TestSanitizeFireworksMessagesMiddleware:
     async def test_preserves_message_without_function_call(self) -> None:
         message = AIMessage(
             content="ok",
-            tool_calls=[
-                {"name": "read_file", "args": {"file_path": "/x"}, "id": "tc1"}
-            ],
+            tool_calls=[{"name": "read_file", "args": {"file_path": "/x"}, "id": "tc1"}],
         )
         request = _make_request([message], model=_fireworks_model())
 
-        await SanitizeFireworksMessagesMiddleware().awrap_model_call(
-            request, _noop_handler
-        )
+        await SanitizeFireworksMessagesMiddleware().awrap_model_call(request, _noop_handler)
 
         assert "function_call" not in message.additional_kwargs
         assert len(message.tool_calls) == 1
@@ -89,9 +77,7 @@ class TestSanitizeFireworksMessagesMiddleware:
         )
         request = _make_request([message], model=_fireworks_model())
 
-        await SanitizeFireworksMessagesMiddleware().awrap_model_call(
-            request, _noop_handler
-        )
+        await SanitizeFireworksMessagesMiddleware().awrap_model_call(request, _noop_handler)
 
         assert "function_call" not in message.additional_kwargs
 
@@ -99,19 +85,13 @@ class TestSanitizeFireworksMessagesMiddleware:
     async def test_ignores_non_fireworks_models(self) -> None:
         message = AIMessage(
             content="",
-            tool_calls=[
-                {"name": "read_file", "args": {"file_path": "/x"}, "id": "tc1"}
-            ],
-            additional_kwargs={
-                "function_call": {"name": "read_file", "arguments": "{}"}
-            },
+            tool_calls=[{"name": "read_file", "args": {"file_path": "/x"}, "id": "tc1"}],
+            additional_kwargs={"function_call": {"name": "read_file", "arguments": "{}"}},
         )
         # Non-Fireworks model (plain MagicMock, no ChatFireworks in its spec chain)
         request = _make_request([message], model=MagicMock())
 
-        await SanitizeFireworksMessagesMiddleware().awrap_model_call(
-            request, _noop_handler
-        )
+        await SanitizeFireworksMessagesMiddleware().awrap_model_call(request, _noop_handler)
 
         # function_call preserved for non-Fireworks providers
         assert "function_call" in message.additional_kwargs
@@ -124,9 +104,7 @@ class TestSanitizeFireworksMessagesMiddleware:
         ]
         request = _make_request(messages, model=_fireworks_model())
 
-        await SanitizeFireworksMessagesMiddleware().awrap_model_call(
-            request, _noop_handler
-        )
+        await SanitizeFireworksMessagesMiddleware().awrap_model_call(request, _noop_handler)
 
         # No AIMessages to mutate — handler still called
         assert all(not isinstance(m, AIMessage) for m in messages)

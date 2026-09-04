@@ -29,8 +29,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--api-key",
-        default=os.environ.get("LANGSMITH_API_KEY")
-        or os.environ.get("LANGSMITH_API_KEY_PROD"),
+        default=os.environ.get("LANGSMITH_API_KEY") or os.environ.get("LANGSMITH_API_KEY_PROD"),
         help="LangSmith API key",
     )
     args = parser.parse_args()

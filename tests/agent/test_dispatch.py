@@ -14,14 +14,8 @@ def test_is_loopback_webhook_relative() -> None:
 
 
 def test_is_loopback_webhook_localhost() -> None:
-    assert (
-        dispatch._is_loopback_webhook("http://localhost:2024/webhooks/run-complete")
-        is True
-    )
-    assert (
-        dispatch._is_loopback_webhook("http://127.0.0.1:8000/webhooks/run-complete")
-        is True
-    )
+    assert dispatch._is_loopback_webhook("http://localhost:2024/webhooks/run-complete") is True
+    assert dispatch._is_loopback_webhook("http://127.0.0.1:8000/webhooks/run-complete") is True
 
 
 def test_is_loopback_webhook_absolute() -> None:
@@ -35,22 +29,16 @@ def test_resolve_no_secret_attaches_nothing() -> None:
 
 def test_resolve_relative_url_degrades_to_none() -> None:
     # Secret set but a loopback URL would 422 every run — attach nothing instead.
-    assert (
-        dispatch._resolve_completion_webhook_url("/webhooks/run-complete", "s3cret")
-        is None
-    )
+    assert dispatch._resolve_completion_webhook_url("/webhooks/run-complete", "s3cret") is None
 
 
 def test_resolve_localhost_url_degrades_to_none() -> None:
-    assert (
-        dispatch._resolve_completion_webhook_url("http://localhost/x", "s3cret") is None
-    )
+    assert dispatch._resolve_completion_webhook_url("http://localhost/x", "s3cret") is None
 
 
 def test_resolve_absolute_url_appends_token() -> None:
     assert (
-        dispatch._resolve_completion_webhook_url(_ABSOLUTE, "s3cret")
-        == f"{_ABSOLUTE}?token=s3cret"
+        dispatch._resolve_completion_webhook_url(_ABSOLUTE, "s3cret") == f"{_ABSOLUTE}?token=s3cret"
     )
 
 
@@ -64,12 +52,8 @@ class _FakeRuns:
         self.created: list[dict[str, Any]] = []
         self.fail_next = False
 
-    async def create(
-        self, thread_id: str, assistant_id: str, **kwargs: Any
-    ) -> dict[str, str]:
-        self.created.append(
-            {"thread_id": thread_id, "assistant_id": assistant_id, **kwargs}
-        )
+    async def create(self, thread_id: str, assistant_id: str, **kwargs: Any) -> dict[str, str]:
+        self.created.append({"thread_id": thread_id, "assistant_id": assistant_id, **kwargs})
         if self.fail_next:
             self.fail_next = False
             raise RuntimeError("dispatch failed")
@@ -102,9 +86,7 @@ async def test_create_durable_run_applies_defaults(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     client = _FakeClient()
-    monkeypatch.setattr(
-        dispatch, "COMPLETION_WEBHOOK_URL", "https://app/webhooks/run-complete"
-    )
+    monkeypatch.setattr(dispatch, "COMPLETION_WEBHOOK_URL", "https://app/webhooks/run-complete")
 
     run = await dispatch.create_durable_run(
         "thread-1",

@@ -311,9 +311,7 @@ async def test_push_event_idempotent_when_head_unchanged() -> None:
 @pytest.mark.asyncio
 async def test_reviewer_token_for_repo_public_scopes_by_id() -> None:
     get_token = AsyncMock(return_value=("scoped", "exp"))
-    with patch(
-        "agent.webhooks.common.get_github_app_installation_token_with_expiry", get_token
-    ):
+    with patch("agent.webhooks.common.get_github_app_installation_token_with_expiry", get_token):
         token, expires = await webhook_common._reviewer_token_for_repo(
             {"owner": "lc", "name": "repo"}, repo_private=False, repo_id=123
         )
@@ -324,9 +322,7 @@ async def test_reviewer_token_for_repo_public_scopes_by_id() -> None:
 @pytest.mark.asyncio
 async def test_reviewer_token_for_repo_public_scopes_by_name_without_id() -> None:
     get_token = AsyncMock(return_value=("scoped", "exp"))
-    with patch(
-        "agent.webhooks.common.get_github_app_installation_token_with_expiry", get_token
-    ):
+    with patch("agent.webhooks.common.get_github_app_installation_token_with_expiry", get_token):
         await webhook_common._reviewer_token_for_repo(
             {"owner": "lc", "name": "repo"}, repo_private=False, repo_id=None
         )
@@ -336,9 +332,7 @@ async def test_reviewer_token_for_repo_public_scopes_by_name_without_id() -> Non
 @pytest.mark.asyncio
 async def test_reviewer_token_for_repo_private_uses_full_token() -> None:
     get_token = AsyncMock(return_value=("full", "exp"))
-    with patch(
-        "agent.webhooks.common.get_github_app_installation_token_with_expiry", get_token
-    ):
+    with patch("agent.webhooks.common.get_github_app_installation_token_with_expiry", get_token):
         await webhook_common._reviewer_token_for_repo(
             {"owner": "lc", "name": "repo"}, repo_private=True, repo_id=123
         )
@@ -348,9 +342,7 @@ async def test_reviewer_token_for_repo_private_uses_full_token() -> None:
 @pytest.mark.asyncio
 async def test_reviewer_token_for_repo_unknown_privacy_uses_full_token() -> None:
     get_token = AsyncMock(return_value=("full", "exp"))
-    with patch(
-        "agent.webhooks.common.get_github_app_installation_token_with_expiry", get_token
-    ):
+    with patch("agent.webhooks.common.get_github_app_installation_token_with_expiry", get_token):
         await webhook_common._reviewer_token_for_repo(
             {"owner": "lc", "name": "repo"}, repo_private=None, repo_id=123
         )
@@ -359,9 +351,7 @@ async def test_reviewer_token_for_repo_unknown_privacy_uses_full_token() -> None
 
 @pytest.mark.asyncio
 async def test_push_event_public_repo_uses_scoped_token() -> None:
-    payload = _push_payload(
-        ref="refs/heads/feat-x", after="newsha", private=False, repo_id=123
-    )
+    payload = _push_payload(ref="refs/heads/feat-x", after="newsha", private=False, repo_id=123)
     pr = {
         "number": 7,
         "html_url": "https://github.com/lc/repo/pull/7",
@@ -409,9 +399,7 @@ async def test_push_event_public_repo_uses_scoped_token() -> None:
             "agent.webhooks.common.reconcile_findings_with_review_threads",
             new_callable=AsyncMock,
         ),
-        patch(
-            "agent.webhooks.common.set_reviewer_thread_metadata", new_callable=AsyncMock
-        ),
+        patch("agent.webhooks.common.set_reviewer_thread_metadata", new_callable=AsyncMock),
         patch("agent.webhooks.common.get_client", return_value=fake_client),
     ):
         await github_webhooks.process_github_push_event(payload)
@@ -476,9 +464,7 @@ async def test_push_event_rescopes_token_when_pr_metadata_reveals_public() -> No
             "agent.webhooks.common.reconcile_findings_with_review_threads",
             new_callable=AsyncMock,
         ),
-        patch(
-            "agent.webhooks.common.set_reviewer_thread_metadata", new_callable=AsyncMock
-        ),
+        patch("agent.webhooks.common.set_reviewer_thread_metadata", new_callable=AsyncMock),
         patch("agent.webhooks.common.get_client", return_value=fake_client),
     ):
         await github_webhooks.process_github_push_event(payload)
@@ -507,13 +493,9 @@ async def test_pr_close_disables_watch() -> None:
             new_callable=AsyncMock,
             return_value={"kind": "reviewer", "watch": True},
         ),
-        patch(
-            "agent.webhooks.common.set_reviewer_thread_metadata", side_effect=fake_set
-        ),
+        patch("agent.webhooks.common.set_reviewer_thread_metadata", side_effect=fake_set),
     ):
-        await github_webhooks.process_github_pr_close(
-            _pr_close_payload(action="closed")
-        )
+        await github_webhooks.process_github_pr_close(_pr_close_payload(action="closed"))
     auto_review_enabled.assert_not_awaited()
     assert captured and captured[0][1]["watch"] is False
 
@@ -531,13 +513,9 @@ async def test_pr_reopened_re_enables_watch() -> None:
             new_callable=AsyncMock,
             return_value={"kind": "reviewer", "watch": False},
         ),
-        patch(
-            "agent.webhooks.common.set_reviewer_thread_metadata", side_effect=fake_set
-        ),
+        patch("agent.webhooks.common.set_reviewer_thread_metadata", side_effect=fake_set),
     ):
-        await github_webhooks.process_github_pr_close(
-            _pr_close_payload(action="reopened")
-        )
+        await github_webhooks.process_github_pr_close(_pr_close_payload(action="reopened"))
     assert captured and captured[0][1]["watch"] is True
 
 
@@ -552,7 +530,5 @@ async def test_pr_close_skips_non_reviewer_threads() -> None:
         ),
         patch("agent.webhooks.common.set_reviewer_thread_metadata", new=fake_set),
     ):
-        await github_webhooks.process_github_pr_close(
-            _pr_close_payload(action="closed")
-        )
+        await github_webhooks.process_github_pr_close(_pr_close_payload(action="closed"))
     fake_set.assert_not_called()

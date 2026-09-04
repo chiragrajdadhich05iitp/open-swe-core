@@ -60,9 +60,7 @@ async def reconcile_stale_runs(*, max_age_seconds: int = 1800) -> dict[str, int]
                 offset=offset,
             )
         except Exception:
-            logger.exception(
-                "Reconcile sweep: thread search failed at offset %d", offset
-            )
+            logger.exception("Reconcile sweep: thread search failed at offset %d", offset)
             break
         if not threads:
             break
@@ -105,9 +103,7 @@ async def reconcile_stale_runs(*, max_age_seconds: int = 1800) -> dict[str, int]
                     thread_id,
                 )
             except Exception:
-                logger.exception(
-                    "Reconcile sweep: failed to reconcile thread %s", thread_id
-                )
+                logger.exception("Reconcile sweep: failed to reconcile thread %s", thread_id)
                 continue
 
         if len(threads) < _SEARCH_PAGE_SIZE:

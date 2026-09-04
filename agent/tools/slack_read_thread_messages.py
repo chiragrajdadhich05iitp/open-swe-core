@@ -15,16 +15,16 @@ async def _fetch_and_format(channel_id: str, message_ts: str) -> dict[str, Any]:
         return {"success": False, "messages": []}
 
     user_ids = [
-        user_id
-        for msg in messages
-        if isinstance(user_id := msg.get("user"), str) and user_id
+        user_id for msg in messages if isinstance(user_id := msg.get("user"), str) and user_id
     ]
     user_names = await get_slack_user_names(user_ids) if user_ids else {}
 
     truncated = len(messages) >= SLACK_THREAD_MAX_MESSAGES
     formatted = format_slack_messages_for_prompt(messages, user_names)
     if truncated:
-        formatted = f"[thread truncated — showing most recent {len(messages)} messages]\n{formatted}"
+        formatted = (
+            f"[thread truncated — showing most recent {len(messages)} messages]\n{formatted}"
+        )
     return {
         "success": True,
         "formatted": formatted,
@@ -33,9 +33,7 @@ async def _fetch_and_format(channel_id: str, message_ts: str) -> dict[str, Any]:
     }
 
 
-async def slack_read_thread_messages(
-    channel_id: str, message_ts: str
-) -> dict[str, Any]:
+async def slack_read_thread_messages(channel_id: str, message_ts: str) -> dict[str, Any]:
     """Read messages from a Slack thread.
 
     Use this tool to read messages from a Slack channel or thread.

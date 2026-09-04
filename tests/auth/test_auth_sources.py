@@ -38,9 +38,7 @@ def test_leave_failure_comment_posts_generic_token_free_slack_notice(
     )
 
     # Pass a message that embeds a per-user auth URL; it must NOT be echoed publicly.
-    asyncio.run(
-        auth.leave_failure_comment("slack", "Click https://auth.example/secret-token")
-    )
+    asyncio.run(auth.leave_failure_comment("slack", "Click https://auth.example/secret-token"))
 
     assert thread_called["channel_id"] == "C123"
     assert thread_called["thread_ts"] == "1.2"
@@ -263,8 +261,6 @@ def test_resolve_github_token_bot_only_mode_non_slack_uses_bot(
 
     monkeypatch.setattr(auth, "_resolve_bot_installation_token", fake_bot)
 
-    config = {
-        "configurable": {"source": source, "github_login": "octo", "thread_id": "t1"}
-    }
+    config = {"configurable": {"source": source, "github_login": "octo", "thread_id": "t1"}}
     token, _ = asyncio.run(auth.resolve_github_token(config, "t1"))
     assert token == "bot-tok"

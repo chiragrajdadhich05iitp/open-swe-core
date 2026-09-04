@@ -49,9 +49,7 @@ def _jsonable(value: Any) -> Any:
     if data is not None and data is not value:
         return _jsonable(data)
     return (
-        value
-        if isinstance(value, (dict, list, str, int, float, bool, type(None)))
-        else str(value)
+        value if isinstance(value, (dict, list, str, int, float, bool, type(None))) else str(value)
     )
 
 
@@ -67,9 +65,7 @@ def _result(value: Any) -> Any:
     return value
 
 
-async def _proxy_client(
-    reader: asyncio.StreamReader, writer: asyncio.StreamWriter
-) -> None:
+async def _proxy_client(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
     try:
         request = await reader.readuntil(b"\r\n\r\n")
         first = request.split(b"\r\n", 1)[0].decode()
@@ -87,16 +83,12 @@ async def _proxy_client(
             writer.write(b"HTTP/1.1 200 Connection Established\r\n\r\n")
             await writer.drain()
 
-            async def pipe(
-                source: asyncio.StreamReader, destination: asyncio.StreamWriter
-            ) -> None:
+            async def pipe(source: asyncio.StreamReader, destination: asyncio.StreamWriter) -> None:
                 while chunk := await source.read(65536):
                     destination.write(chunk)
                     await destination.drain()
 
-            await asyncio.gather(
-                pipe(reader, remote_writer), pipe(remote_reader, writer)
-            )
+            await asyncio.gather(pipe(reader, remote_writer), pipe(remote_reader, writer))
         else:
             path = parsed.path or "/"
             if parsed.query:
@@ -154,9 +146,7 @@ async def _session(request: dict[str, Any]) -> Any:
             server="local",
             model_api_key=os.environ.get("MODEL_API_KEY", "proxy-injected"),
             local_headless=request.get("headless", True),
-            local_chrome_path=os.environ.get(
-                "STAGEHAND_LOCAL_CHROME_PATH", "/usr/bin/chromium"
-            ),
+            local_chrome_path=os.environ.get("STAGEHAND_LOCAL_CHROME_PATH", "/usr/bin/chromium"),
         )
         _SESSION = await _CLIENT.sessions.start(
             model_name=request["model_name"],
@@ -241,7 +231,5 @@ async def _request(path: str, encoded: str) -> None:
 
 if __name__ == "__main__":
     asyncio.run(
-        _serve(sys.argv[2])
-        if sys.argv[1] == "serve"
-        else _request(sys.argv[2], sys.argv[3])
+        _serve(sys.argv[2]) if sys.argv[1] == "serve" else _request(sys.argv[2], sys.argv[3])
     )

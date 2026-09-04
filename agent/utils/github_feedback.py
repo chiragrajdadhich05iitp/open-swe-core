@@ -80,9 +80,7 @@ async def _event_was_processed(
 ) -> bool:
     if not event_id:
         return False
-    item = await langgraph_client.store.get_item(
-        (_REACTION_EVENT_NAMESPACE, repo_key), event_id
-    )
+    item = await langgraph_client.store.get_item((_REACTION_EVENT_NAMESPACE, repo_key), event_id)
     return bool(item)
 
 
@@ -171,11 +169,7 @@ async def process_github_reaction(
     thread_id = reviewer_thread_id(owner, repo_name, pr_number)
     findings = await list_findings(thread_id)
     finding = next(
-        (
-            candidate
-            for candidate in findings
-            if comment_id in comment_ids_for_finding(candidate)
-        ),
+        (candidate for candidate in findings if comment_id in comment_ids_for_finding(candidate)),
         None,
     )
     if finding is None:
@@ -184,9 +178,7 @@ async def process_github_reaction(
 
     run_id = finding.get("github_review_run_id")
     if not isinstance(run_id, str) or not run_id:
-        logger.debug(
-            "Finding %s has no LangSmith run id for feedback", finding.get("id")
-        )
+        logger.debug("Finding %s has no LangSmith run id for feedback", finding.get("id"))
         return
 
     active_reactions = await _update_reaction_state(
@@ -239,13 +231,9 @@ async def process_github_reaction(
         await _mark_event_processed(langgraph_client, repo_key, delivery_id)
 
 
-async def process_github_reaction_added(
-    payload: dict[str, Any], delivery_id: str = ""
-) -> None:
+async def process_github_reaction_added(payload: dict[str, Any], delivery_id: str = "") -> None:
     await process_github_reaction(payload, delivery_id=delivery_id, added=True)
 
 
-async def process_github_reaction_removed(
-    payload: dict[str, Any], delivery_id: str = ""
-) -> None:
+async def process_github_reaction_removed(payload: dict[str, Any], delivery_id: str = "") -> None:
     await process_github_reaction(payload, delivery_id=delivery_id, added=False)

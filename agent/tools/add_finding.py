@@ -192,16 +192,12 @@ async def _resolve_diff_context(
         state_line_set = state.get("diff_line_set")
         state_diff_text = state.get("diff_text")
         if isinstance(state_line_set, dict):
-            return state_line_set, (
-                state_diff_text if isinstance(state_diff_text, str) else ""
-            )
+            return state_line_set, (state_diff_text if isinstance(state_diff_text, str) else "")
     if isinstance(configurable, dict):
         config_line_set = configurable.get("diff_line_set")
         config_diff_text = configurable.get("diff_text")
         if isinstance(config_line_set, dict):
-            return config_line_set, (
-                config_diff_text if isinstance(config_diff_text, str) else ""
-            )
+            return config_line_set, (config_diff_text if isinstance(config_diff_text, str) else "")
         repo_config = configurable.get("repo")
         pr_number = configurable.get("pr_number")
         token = get_github_token()

@@ -86,15 +86,9 @@ def slack_channels() -> list[str]:
     return list(dict.fromkeys(channel for channel, _thread_ts in SLACK_MESSAGES))
 
 
-def slack_message(
-    channel: str, thread_ts: str, message_ts: str
-) -> dict[str, Any] | None:
+def slack_message(channel: str, thread_ts: str, message_ts: str) -> dict[str, Any] | None:
     return next(
-        (
-            message
-            for message in slack_thread(channel, thread_ts)
-            if message["ts"] == message_ts
-        ),
+        (message for message in slack_thread(channel, thread_ts) if message["ts"] == message_ts),
         None,
     )
 
@@ -290,9 +284,7 @@ def find_pull_by_sha(owner: str, repo: str, sha: str) -> dict[str, Any] | None:
         (
             pull
             for pull in PULLS
-            if pull["owner"] == owner
-            and pull["repo"] == repo
-            and pull["head_sha"] == sha
+            if pull["owner"] == owner and pull["repo"] == repo and pull["head_sha"] == sha
         ),
         None,
     )
@@ -410,9 +402,7 @@ _snapshot_seq = [0]
 def record_snapshot_capture(sandbox_id: str, name: str) -> str:
     _snapshot_seq[0] += 1
     snapshot_id = f"snap-{_snapshot_seq[0]}"
-    SNAPSHOTS.append(
-        {"snapshot_id": snapshot_id, "name": name, "sandbox_id": sandbox_id}
-    )
+    SNAPSHOTS.append({"snapshot_id": snapshot_id, "name": name, "sandbox_id": sandbox_id})
     return snapshot_id
 
 

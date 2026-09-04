@@ -172,18 +172,14 @@ class ModelFallbackMiddleware(AgentMiddleware):
             # provider recovers first (or only one is down), we find it.
             use_fallback = attempt % 2 == 1
             attempt_request = (
-                request.override(model=self._fallback_model)
-                if use_fallback
-                else request
+                request.override(model=self._fallback_model) if use_fallback else request
             )
             try:
                 return await handler(attempt_request)
             except Exception as exc:
                 access_error_message = _provider_access_error_message(exc)
                 if access_error_message is not None:
-                    logger.warning(
-                        "Model access error surfaced to user: %s", type(exc).__name__
-                    )
+                    logger.warning("Model access error surfaced to user: %s", type(exc).__name__)
                     return AIMessage(content=access_error_message)
                 if not _should_fallback(exc):
                     raise
@@ -200,11 +196,7 @@ class ModelFallbackMiddleware(AgentMiddleware):
                     "fallback" if use_fallback else "primary",
                     attempt + 1,
                     total_attempts,
-                    (
-                        "primary"
-                        if use_fallback
-                        else f"fallback ({self._fallback_name()})"
-                    ),
+                    ("primary" if use_fallback else f"fallback ({self._fallback_name()})"),
                     delay,
                 )
                 if delay > 0:

@@ -174,9 +174,7 @@ async def review_pr(inputs: dict[str, Any]) -> dict[str, Any]:
         score_mode = get_score_mode()
         publish_completed = True
         if score_mode == "surfaced_findings":
-            comments, publish_completed = await _extract_surfaced_comments(
-                client, thread_id
-            )
+            comments, publish_completed = await _extract_surfaced_comments(client, thread_id)
         else:
             comments = _extract_comments(result)
         logger.info(
@@ -251,9 +249,7 @@ async def _extract_surfaced_comments(
     findings_value = metadata.get("findings") if isinstance(metadata, dict) else None
     findings = _coerce_findings(findings_value)
     publication_value = (
-        metadata.get(REVIEWER_EVAL_PUBLICATION_KEY)
-        if isinstance(metadata, dict)
-        else None
+        metadata.get(REVIEWER_EVAL_PUBLICATION_KEY) if isinstance(metadata, dict) else None
     )
     if not isinstance(publication_value, dict):
         logger.warning("Reviewer eval thread %s has no publication snapshot", thread_id)
@@ -262,9 +258,7 @@ async def _extract_surfaced_comments(
     if not isinstance(finding_ids, list) or not all(
         isinstance(finding_id, str) for finding_id in finding_ids
     ):
-        logger.warning(
-            "Reviewer eval thread %s has an invalid publication snapshot", thread_id
-        )
+        logger.warning("Reviewer eval thread %s has an invalid publication snapshot", thread_id)
         return [], False
     by_id = {finding.get("id"): finding for finding in findings}
     surfaced = [by_id[finding_id] for finding_id in finding_ids if finding_id in by_id]

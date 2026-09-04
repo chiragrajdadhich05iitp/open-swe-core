@@ -51,13 +51,7 @@ class DatadogCredentialsUpdate(BaseModel):
             return DEFAULT_DD_SITE
         if not isinstance(v, str):
             raise ValueError("site must be a string")
-        site = (
-            v.strip()
-            .lower()
-            .removeprefix("https://")
-            .removeprefix("http://")
-            .strip("/")
-        )
+        site = v.strip().lower().removeprefix("https://").removeprefix("http://").strip("/")
         site = site.removeprefix("app.")
         if not site:
             return DEFAULT_DD_SITE

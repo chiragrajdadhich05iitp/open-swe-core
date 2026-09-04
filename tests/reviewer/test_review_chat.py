@@ -45,9 +45,7 @@ def _fake_async_client(handler):
 
 def test_derive_title_from_first_user_message() -> None:
     params = {
-        "input": {
-            "messages": [{"type": "human", "content": "  Why did we drop\nstructs?  "}]
-        }
+        "input": {"messages": [{"type": "human", "content": "  Why did we drop\nstructs?  "}]}
     }
     assert review_chat_api._derive_title(params) == "Why did we drop structs?"
 
@@ -58,9 +56,7 @@ def test_derive_title_defaults_when_no_message() -> None:
 
 def test_derive_title_truncates() -> None:
     params = {"input": {"messages": [{"type": "human", "content": "x" * 200}]}}
-    assert (
-        len(review_chat_api._derive_title(params)) == review_chat_api._TITLE_MAX_CHARS
-    )
+    assert len(review_chat_api._derive_title(params)) == review_chat_api._TITLE_MAX_CHARS
 
 
 @pytest.mark.asyncio
@@ -81,9 +77,7 @@ async def test_list_review_chat_threads_scopes_and_maps(monkeypatch) -> None:
     client = SimpleNamespace(threads=SimpleNamespace(search=search))
     monkeypatch.setattr(review_chat_api, "langgraph_client", lambda: client)
 
-    threads = await review_chat_api.list_review_chat_threads(
-        "acme", "repo", 7, "octocat"
-    )
+    threads = await review_chat_api.list_review_chat_threads("acme", "repo", 7, "octocat")
     assert captured["metadata"] == {
         "kind": "review_chat",
         "github_login": "octocat",
@@ -140,9 +134,7 @@ async def test_delete_review_chat_thread_rejects_other_user(monkeypatch) -> None
     monkeypatch.setattr(review_chat_api, "langgraph_client", lambda: client)
 
     with pytest.raises(Exception):  # noqa: B017,PT011 - HTTPException(404)
-        await review_chat_api.delete_review_chat_thread(
-            "acme", "repo", 7, "octocat", "c1"
-        )
+        await review_chat_api.delete_review_chat_thread("acme", "repo", 7, "octocat", "c1")
 
 
 def _patch_thread_metadata(monkeypatch, metadata: dict[str, Any] | None) -> None:
@@ -167,9 +159,7 @@ async def test_assert_chat_thread_access_allows_owner(monkeypatch) -> None:
             "pr_number": 7,
         },
     )
-    meta = await review_chat_api.assert_chat_thread_access(
-        "ct-1", "acme", "repo", 7, "octocat"
-    )
+    meta = await review_chat_api.assert_chat_thread_access("ct-1", "acme", "repo", 7, "octocat")
     assert meta is not None
 
 
@@ -179,9 +169,7 @@ async def test_assert_chat_thread_access_missing_thread_returns_none(
 ) -> None:
     _patch_thread_metadata(monkeypatch, None)
     assert (
-        await review_chat_api.assert_chat_thread_access(
-            "ct-1", "acme", "repo", 7, "octocat"
-        )
+        await review_chat_api.assert_chat_thread_access("ct-1", "acme", "repo", 7, "octocat")
         is None
     )
 
@@ -213,14 +201,10 @@ async def test_assert_chat_thread_access_missing_thread_returns_none(
         },
     ],
 )
-async def test_assert_chat_thread_access_rejects_unauthorized(
-    monkeypatch, metadata
-) -> None:
+async def test_assert_chat_thread_access_rejects_unauthorized(monkeypatch, metadata) -> None:
     _patch_thread_metadata(monkeypatch, metadata)
     with pytest.raises(Exception):  # noqa: B017,PT011 - HTTPException(404)
-        await review_chat_api.assert_chat_thread_access(
-            "ct-1", "acme", "repo", 7, "octocat"
-        )
+        await review_chat_api.assert_chat_thread_access("ct-1", "acme", "repo", 7, "octocat")
 
 
 # --- tools -------------------------------------------------------------------
@@ -264,9 +248,7 @@ async def test_list_review_findings_compacts_and_filters(monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_list_review_findings_requires_reviewer_thread(monkeypatch) -> None:
-    monkeypatch.setattr(
-        list_review_findings, "get_config", lambda: {"configurable": {}}
-    )
+    monkeypatch.setattr(list_review_findings, "get_config", lambda: {"configurable": {}})
     result = await list_review_findings.list_review_findings()
     assert result["count"] == 0
     assert "reviewer thread" in result["error"]
@@ -302,9 +284,7 @@ async def test_read_repo_file_decodes_file(monkeypatch) -> None:
             },
         )
 
-    monkeypatch.setattr(
-        read_repo_file.httpx, "AsyncClient", _fake_async_client(fake_get)
-    )
+    monkeypatch.setattr(read_repo_file.httpx, "AsyncClient", _fake_async_client(fake_get))
 
     result = await read_repo_file.read_repo_file("src/app.py")
     assert result["success"] is True
@@ -336,9 +316,7 @@ async def test_read_repo_file_lists_directory(monkeypatch) -> None:
             ],
         )
 
-    monkeypatch.setattr(
-        read_repo_file.httpx, "AsyncClient", _fake_async_client(fake_get)
-    )
+    monkeypatch.setattr(read_repo_file.httpx, "AsyncClient", _fake_async_client(fake_get))
     result = await read_repo_file.read_repo_file("src")
     assert result["success"] is True
     assert {e["name"] for e in result["entries"]} == {"a.py", "sub"}
@@ -357,10 +335,7 @@ async def test_repo_tools_require_context_and_token(monkeypatch) -> None:
     ):
         monkeypatch.setattr(module, "get_config", lambda: config)
         result = await tool(*args)
-        assert (
-            result["error"]
-            == "GitHub credentials unavailable; repository source was not read"
-        )
+        assert result["error"] == "GitHub credentials unavailable; repository source was not read"
 
 
 @pytest.mark.asyncio
@@ -384,15 +359,11 @@ async def test_search_repo_code_scopes_to_repo(monkeypatch) -> None:
             status_code=200,
             json=lambda: {
                 "total_count": 1,
-                "items": [
-                    {"path": "src/a.py", "text_matches": [{"fragment": "def foo()"}]}
-                ],
+                "items": [{"path": "src/a.py", "text_matches": [{"fragment": "def foo()"}]}],
             },
         )
 
-    monkeypatch.setattr(
-        search_repo_code.httpx, "AsyncClient", _fake_async_client(fake_get)
-    )
+    monkeypatch.setattr(search_repo_code.httpx, "AsyncClient", _fake_async_client(fake_get))
     result = await search_repo_code.search_repo_code("foo")
     assert result["success"] is True
     assert "repo:acme/repo" in captured["params"]["q"]
@@ -436,9 +407,7 @@ def _fake_review() -> dict[str, Any]:
     }
 
 
-def _client_for_enrich(
-    existing_metadata: dict[str, Any] | None
-) -> tuple[Any, dict[str, Any]]:
+def _client_for_enrich(existing_metadata: dict[str, Any] | None) -> tuple[Any, dict[str, Any]]:
     captured: dict[str, Any] = {"created": False, "updated": []}
 
     async def get(thread_id: str) -> dict[str, Any]:
@@ -452,9 +421,7 @@ def _client_for_enrich(
     async def update(**kwargs: Any) -> None:
         captured["updated"].append(kwargs.get("metadata"))
 
-    client = SimpleNamespace(
-        threads=SimpleNamespace(get=get, create=create, update=update)
-    )
+    client = SimpleNamespace(threads=SimpleNamespace(get=get, create=create, update=update))
     return client, captured
 
 
@@ -479,9 +446,7 @@ def _patch_enrich_deps(
 
     monkeypatch.setattr(review_chat_api, "get_review", fake_get_review)
     monkeypatch.setattr(review_chat_api, "fetch_pr_diff", fake_diff)
-    monkeypatch.setattr(
-        review_chat_api, "get_github_app_installation_token", fake_token
-    )
+    monkeypatch.setattr(review_chat_api, "get_github_app_installation_token", fake_token)
     monkeypatch.setattr(review_chat_api, "get_pr_head_sha", fake_head)
     return captured
 
@@ -649,13 +614,9 @@ async def test_enrich_chat_command_uses_passed_metadata_without_refetch(
         thread_metadata={"kind": "review_chat", "chat_head_sha": "abc123def456"},
     )
 
-    assert (
-        enriched["params"]["config"]["configurable"]["chat_head_sha"] == "abc123def456"
-    )
+    assert enriched["params"]["config"]["configurable"]["chat_head_sha"] == "abc123def456"
     assert "files" not in enriched["params"]["input"]
-    assert (
-        captured.get("head_calls") == 1
-    )  # lightweight head lookup, no full get_review
+    assert captured.get("head_calls") == 1  # lightweight head lookup, no full get_review
 
 
 @pytest.mark.asyncio
@@ -725,9 +686,7 @@ async def test_proxy_state_rejects_foreign_thread(monkeypatch) -> None:
     monkeypatch.setattr(review_chat_api, "_get_chat_thread_metadata", other_owner)
     monkeypatch.setattr(review_chat_api, "_proxy_passthrough", fake_passthrough)
     with pytest.raises(Exception):  # noqa: B017,PT011 - HTTPException(404)
-        await review_chat_api.proxy_review_chat_state(
-            "acme", "repo", 7, "octocat", "ct-1"
-        )
+        await review_chat_api.proxy_review_chat_state("acme", "repo", 7, "octocat", "ct-1")
 
 
 # --- graph factory guard -----------------------------------------------------
@@ -745,9 +704,7 @@ def test_chat_general_purpose_subagent_is_read_only() -> None:
     spec = _chat_general_purpose_subagent()
 
     assert spec["name"] == "general-purpose"
-    fs_middleware = [
-        m for m in spec.get("middleware", []) if isinstance(m, FilesystemMiddleware)
-    ]
+    fs_middleware = [m for m in spec.get("middleware", []) if isinstance(m, FilesystemMiddleware)]
     assert len(fs_middleware) == 1
     enabled = fs_middleware[0]._enabled_tools
     assert enabled is not None

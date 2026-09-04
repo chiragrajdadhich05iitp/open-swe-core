@@ -24,9 +24,7 @@ class _FakeSandboxBackend:
     def id(self) -> str:
         return "fake-sandbox"
 
-    async def aexecute(
-        self, command: str, *, timeout: int | None = None
-    ) -> ExecuteResponse:
+    async def aexecute(self, command: str, *, timeout: int | None = None) -> ExecuteResponse:
         del timeout
         if self._raise:
             raise RuntimeError("sandbox unreachable")
@@ -34,9 +32,7 @@ class _FakeSandboxBackend:
         output = self._output
         if self._outputs is not None:
             output = self._outputs[len(self.commands) - 1]
-        return ExecuteResponse(
-            output=output, exit_code=self._exit_code, truncated=False
-        )
+        return ExecuteResponse(output=output, exit_code=self._exit_code, truncated=False)
 
 
 async def test_prepare_review_repo_clones_and_checks_out_head() -> None:

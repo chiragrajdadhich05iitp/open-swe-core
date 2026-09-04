@@ -15,9 +15,7 @@ from agent.sandboxes.state import get_or_create_sandbox_backend_proxy
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(
-    "failing_step", ["_create_sandbox_with_proxy", "client.threads.update"]
-)
+@pytest.mark.parametrize("failing_step", ["_create_sandbox_with_proxy", "client.threads.update"])
 async def test_initialization_failure_publishes_nothing(failing_step: str) -> None:
     thread_id = "thread-init-fails"
     SANDBOX_BACKENDS.clear()
@@ -61,9 +59,7 @@ async def test_new_sandbox_persists_its_base_proxy_config() -> None:
     thread_id = "thread-proxy-config"
     SANDBOX_BACKENDS.clear()
     created = MagicMock(id="sandbox-new")
-    base_proxy_config = {
-        "rules": [{"name": "public-api", "match_hosts": ["example.com"]}]
-    }
+    base_proxy_config = {"rules": [{"name": "public-api", "match_hosts": ["example.com"]}]}
     update = AsyncMock()
 
     with (
@@ -81,9 +77,7 @@ async def test_new_sandbox_persists_its_base_proxy_config() -> None:
             "agent.sandboxes.lifecycle.get_recorded_proxy_base_config",
             return_value=base_proxy_config,
         ),
-        patch(
-            "agent.sandboxes.lifecycle.configure_git_identity", new_callable=AsyncMock
-        ),
+        patch("agent.sandboxes.lifecycle.configure_git_identity", new_callable=AsyncMock),
         patch("agent.sandboxes.lifecycle.client.threads.update", update),
     ):
         await ensure_sandbox_for_thread(thread_id)

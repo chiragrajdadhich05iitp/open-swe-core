@@ -101,9 +101,7 @@ async def slack_thread_reply(
             usage=usage,
             post_thread_ts=post_thread_ts,
             agent_thread_id=(
-                None
-                if is_code_channel_session(str(thread_ts))
-                else str(thread_id or "") or None
+                None if is_code_channel_session(str(thread_ts)) else str(thread_id or "") or None
             ),
             langgraph_client=client,
             run_id=run_id,
@@ -138,9 +136,7 @@ def _triggering_user_id(configurable: object) -> str | None:
     return user_id if isinstance(user_id, str) and user_id else None
 
 
-def _build_option_blocks(
-    message: str, options: list[str] | None
-) -> list[dict[str, Any]] | None:
+def _build_option_blocks(message: str, options: list[str] | None) -> list[dict[str, Any]] | None:
     if not options:
         return None
     clean_options = [option.strip() for option in options if option.strip()]
@@ -157,11 +153,7 @@ def _build_option_blocks(
                     "value": json.dumps(
                         {
                             "type": "plan_approval",
-                            "action": (
-                                "approve"
-                                if option == "Approve & implement"
-                                else "revise"
-                            ),
+                            "action": ("approve" if option == "Approve & implement" else "revise"),
                         }
                         if option in {"Approve & implement", "Request changes"}
                         else {"type": "open_swe_option", "response": option}
@@ -174,9 +166,7 @@ def _build_option_blocks(
     ]
 
 
-def build_workflow_approval_blocks(
-    message: str, fingerprint: str
-) -> list[dict[str, Any]]:
+def build_workflow_approval_blocks(message: str, fingerprint: str) -> list[dict[str, Any]]:
     return [
         {"type": "section", "text": {"type": "mrkdwn", "text": message}},
         {

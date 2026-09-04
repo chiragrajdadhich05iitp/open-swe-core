@@ -74,9 +74,7 @@ def _message_content(message: object) -> tuple[object, str | None]:
         return message.content, message.id
     if isinstance(message, dict):
         message_id = message.get("id")
-        return message.get("content"), (
-            message_id if isinstance(message_id, str) else None
-        )
+        return message.get("content"), (message_id if isinstance(message_id, str) else None)
     return None, None
 
 
@@ -90,9 +88,7 @@ def _input_message_kind(content: object) -> str | None:
             root = ElementTree.fromstring(text)
         except ElementTree.ParseError:
             continue
-        messages = (
-            [root] if root.tag == "input-message" else root.findall(".//input-message")
-        )
+        messages = [root] if root.tag == "input-message" else root.findall(".//input-message")
         for message in messages:
             kind = message.get("kind")
             if kind in {"human", "system"}:
@@ -135,9 +131,7 @@ async def _wakeup_budget(client: Any, thread_id: str) -> tuple[str, int]:
     return generation, count if isinstance(count, int) and count >= 0 else 0
 
 
-async def _record_wakeup(
-    client: Any, thread_id: str, generation: str, count: int
-) -> None:
+async def _record_wakeup(client: Any, thread_id: str, generation: str, count: int) -> None:
     await client.threads.update(
         thread_id=thread_id,
         metadata={
@@ -169,12 +163,7 @@ async def find_expired_wakeup_cron_ids(client: Any, *, now: datetime) -> list[st
                 continue
             end_time = _parse_iso(cron.get("end_time"))
             cron_id = cron.get("cron_id")
-            if (
-                end_time is not None
-                and end_time < now
-                and isinstance(cron_id, str)
-                and cron_id
-            ):
+            if end_time is not None and end_time < now and isinstance(cron_id, str) and cron_id:
                 expired_ids.append(cron_id)
         if len(page) < _PURGE_PAGE_SIZE:
             break
@@ -252,11 +241,7 @@ async def _create_wakeup_cron(
         _AGENT_ASSISTANT_ID,
         **kwargs,
     )
-    cron_id = (
-        cron.get("cron_id")
-        if isinstance(cron, dict)
-        else getattr(cron, "cron_id", None)
-    )
+    cron_id = cron.get("cron_id") if isinstance(cron, dict) else getattr(cron, "cron_id", None)
     return {
         "success": True,
         "cron_id": cron_id,
@@ -265,9 +250,7 @@ async def _create_wakeup_cron(
     }
 
 
-async def schedule_thread_wakeup(
-    delay_minutes: int, prompt: str | None = None
-) -> dict[str, Any]:
+async def schedule_thread_wakeup(delay_minutes: int, prompt: str | None = None) -> dict[str, Any]:
     """Schedule a one-shot re-trigger of the current thread after a delay.
 
     Use this when you need to poll or check back on something later — e.g.
@@ -305,13 +288,9 @@ async def schedule_thread_wakeup(
         return {"success": False, "error": "No thread_id in current run config"}
 
     client = get_client(url=langgraph_url())
-    fire_time = _ceil_to_next_minute(
-        datetime.now(UTC) + timedelta(seconds=delay_seconds)
-    )
+    fire_time = _ceil_to_next_minute(datetime.now(UTC) + timedelta(seconds=delay_seconds))
     wakeup_prompt = (
-        prompt.strip()
-        if isinstance(prompt, str) and prompt.strip()
-        else _DEFAULT_WAKEUP_PROMPT
+        prompt.strip() if isinstance(prompt, str) and prompt.strip() else _DEFAULT_WAKEUP_PROMPT
     )
 
     passthrough_keys = (

@@ -17,9 +17,7 @@ from agent.webhooks import slack_routes
 class _FakeRequest:
     def __init__(self, payload: dict[str, Any] | bytes) -> None:
         self.headers: dict[str, str] = {}
-        self._body = (
-            payload if isinstance(payload, bytes) else json.dumps(payload).encode()
-        )
+        self._body = payload if isinstance(payload, bytes) else json.dumps(payload).encode()
 
     async def body(self) -> bytes:
         return self._body
@@ -28,17 +26,13 @@ class _FakeRequest:
 @pytest.fixture
 def code_channel_route(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
     process = AsyncMock()
-    monkeypatch.setattr(
-        webhook_common, "verify_slack_signature", lambda **_kwargs: True
-    )
+    monkeypatch.setattr(webhook_common, "verify_slack_signature", lambda **_kwargs: True)
     monkeypatch.setattr(webhook_common, "is_code_channel", AsyncMock(return_value=True))
     monkeypatch.setattr(slack_routes, "get_langgraph_client", lambda: object())
     monkeypatch.setattr(
         webhook_common, "lookup_slack_thread_id", AsyncMock(return_value="thread-1")
     )
-    monkeypatch.setattr(
-        webhook_common, "claim_slack_event", AsyncMock(return_value=True)
-    )
+    monkeypatch.setattr(webhook_common, "claim_slack_event", AsyncMock(return_value=True))
     monkeypatch.setattr(
         webhook_common,
         "_get_slack_channel_context",
@@ -57,9 +51,7 @@ def code_channel_route(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
     )
     monkeypatch.setattr(webhook_common, "SLACK_BOT_USER_ID", "BOT")
     monkeypatch.setattr(slack_routes.service, "process_slack_mention", process)
-    monkeypatch.setattr(
-        slack_routes, "_synthetic_slack_ts", lambda: "1786574000.000001"
-    )
+    monkeypatch.setattr(slack_routes, "_synthetic_slack_ts", lambda: "1786574000.000001")
     return process
 
 
@@ -204,26 +196,16 @@ async def test_untagged_code_channel_message_routes_to_the_channel_session(
 ) -> None:
     slack_events.reset_slack_event_claims()
 
-    async def channel_context(
-        _channel_id: str, *, use_cache: bool = True
-    ) -> dict[str, Any]:
+    async def channel_context(_channel_id: str, *, use_cache: bool = True) -> dict[str, Any]:
         return {"is_ext_shared": False, "is_pending_ext_shared": False}
 
-    monkeypatch.setattr(
-        webhook_common, "verify_slack_signature", lambda **_kwargs: True
-    )
-    monkeypatch.setattr(
-        webhook_common, "claim_slack_event", AsyncMock(return_value=True)
-    )
+    monkeypatch.setattr(webhook_common, "verify_slack_signature", lambda **_kwargs: True)
+    monkeypatch.setattr(webhook_common, "claim_slack_event", AsyncMock(return_value=True))
     monkeypatch.setattr(webhook_common, "is_code_channel", AsyncMock(return_value=True))
-    monkeypatch.setattr(
-        webhook_common, "resolve_slack_thread_id", AsyncMock(return_value="t1")
-    )
+    monkeypatch.setattr(webhook_common, "resolve_slack_thread_id", AsyncMock(return_value="t1"))
     monkeypatch.setattr(webhook_common, "_thread_exists", AsyncMock(return_value=True))
     monkeypatch.setattr(webhook_common, "_get_slack_channel_context", channel_context)
-    monkeypatch.setattr(
-        webhook_common, "_is_docs_plz_slack_channel", AsyncMock(return_value=False)
-    )
+    monkeypatch.setattr(webhook_common, "_is_docs_plz_slack_channel", AsyncMock(return_value=False))
     monkeypatch.setattr(
         webhook_common,
         "get_slack_repo_config",

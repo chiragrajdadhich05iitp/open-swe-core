@@ -186,9 +186,7 @@ async def test_installation_token_can_be_scoped_to_repository_ids(
     assert token == "token"
     assert expires_at == "expires"
     assert _FakeAsyncClient.last_post is not None
-    assert _FakeAsyncClient.last_post["url"].endswith(
-        "/app/installations/3/access_tokens"
-    )
+    assert _FakeAsyncClient.last_post["url"].endswith("/app/installations/3/access_tokens")
     assert _FakeAsyncClient.last_post["json"] == {"repository_ids": [123]}
 
 

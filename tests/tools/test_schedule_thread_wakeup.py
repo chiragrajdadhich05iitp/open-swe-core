@@ -55,9 +55,7 @@ class _FakeCrons:
         offset: int = 0,
         **_: Any,
     ) -> list[dict[str, Any]]:
-        self.search_calls.append(
-            {"metadata": metadata, "limit": limit, "offset": offset}
-        )
+        self.search_calls.append({"metadata": metadata, "limit": limit, "offset": offset})
         items = [
             c
             for c in self._crons
@@ -248,9 +246,7 @@ async def test_wakeup_cron_includes_trace_correlation_and_completion_webhook(
 
     client = type("Client", (), {"crons": _Crons()})()
     monkeypatch.setattr(wakeup_tool, "get_client", lambda url: client)
-    monkeypatch.setattr(
-        wakeup_tool, "COMPLETION_WEBHOOK_URL", "https://app/webhooks/run-complete"
-    )
+    monkeypatch.setattr(wakeup_tool, "COMPLETION_WEBHOOK_URL", "https://app/webhooks/run-complete")
 
     result = await wakeup_tool._create_wakeup_cron(
         thread_id="thread-1",
@@ -374,10 +370,7 @@ async def test_new_human_message_resets_wakeup_limit(
 
     assert result["success"] is True
     assert client.threads.metadata[wakeup_tool._WAKEUP_COUNT_METADATA_KEY] == 1
-    assert (
-        client.threads.metadata[wakeup_tool._WAKEUP_GENERATION_METADATA_KEY]
-        != generation
-    )
+    assert client.threads.metadata[wakeup_tool._WAKEUP_GENERATION_METADATA_KEY] != generation
 
 
 async def test_system_wakeup_does_not_reset_wakeup_limit(
@@ -517,9 +510,7 @@ async def test_purge_deletes_only_expired_wakeups() -> None:
 async def test_purge_paginates(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(wakeup_tool, "_PURGE_PAGE_SIZE", 2)
     now = datetime(2026, 6, 30, 22, 0, tzinfo=UTC)
-    client = _FakeClient(
-        [_wakeup_cron(f"expired-{i}", now - timedelta(hours=1)) for i in range(3)]
-    )
+    client = _FakeClient([_wakeup_cron(f"expired-{i}", now - timedelta(hours=1)) for i in range(3)])
 
     deleted = await wakeup_tool.purge_expired_wakeup_crons(client, now=now)
 

@@ -58,9 +58,7 @@ async def build_pr_diff_files(
     for binary/oversized blobs, flagged via ``unrenderable``). ``client`` must
     already be configured with auth headers.
     """
-    pull_response = await client.get(
-        f"{_GITHUB_API}/repos/{full_name}/pulls/{pr_number}"
-    )
+    pull_response = await client.get(f"{_GITHUB_API}/repos/{full_name}/pulls/{pr_number}")
     if pull_response.status_code == 404:
         raise HTTPException(404, "pull request not found")
     if pull_response.status_code != 200:
@@ -69,9 +67,7 @@ async def build_pr_diff_files(
     base_sha = pull.get("base", {}).get("sha")
     head_sha = pull.get("head", {}).get("sha")
     if not isinstance(base_sha, str) or not isinstance(head_sha, str):
-        raise HTTPException(
-            502, "github API returned an unexpected pull request payload"
-        )
+        raise HTTPException(502, "github API returned an unexpected pull request payload")
 
     files_response = await client.get(
         f"{_GITHUB_API}/repos/{full_name}/pulls/{pr_number}/files",
@@ -105,9 +101,7 @@ async def build_compare_diff_files(
     """
     base = quote(base_ref, safe="")
     head = quote(head_ref, safe="")
-    response = await client.get(
-        f"{_GITHUB_API}/repos/{full_name}/compare/{base}...{head}"
-    )
+    response = await client.get(f"{_GITHUB_API}/repos/{full_name}/compare/{base}...{head}")
     if response.status_code == 404:
         raise HTTPException(404, "branch not found on GitHub")
     if response.status_code != 200:
@@ -159,20 +153,14 @@ async def _build_diff_files(
                 client, semaphore, full_name, original_path, base_ref
             )
         if status != "removed":
-            modified = await _fetch_file_at_ref(
-                client, semaphore, full_name, path, head_ref
-            )
+            modified = await _fetch_file_at_ref(client, semaphore, full_name, path, head_ref)
 
         return {
             "path": path,
             "previousPath": previous if isinstance(previous, str) else None,
             "status": status,
-            "additions": (
-                raw.get("additions") if isinstance(raw.get("additions"), int) else 0
-            ),
-            "deletions": (
-                raw.get("deletions") if isinstance(raw.get("deletions"), int) else 0
-            ),
+            "additions": (raw.get("additions") if isinstance(raw.get("additions"), int) else 0),
+            "deletions": (raw.get("deletions") if isinstance(raw.get("deletions"), int) else 0),
             "originalContent": original,
             "modifiedContent": modified,
             # GitHub includes a bounded textual patch even when the complete blob

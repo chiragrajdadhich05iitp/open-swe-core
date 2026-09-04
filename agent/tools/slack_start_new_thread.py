@@ -72,9 +72,7 @@ def _validate_text(value: str, *, field: str, max_chars: int) -> str | dict[str,
     return text
 
 
-def _resolve_repo(
-    configurable: dict[str, Any], default_repo: str | None
-) -> dict[str, str] | None:
+def _resolve_repo(configurable: dict[str, Any], default_repo: str | None) -> dict[str, str] | None:
     if default_repo and default_repo.strip():
         candidate = default_repo.strip()
         if not _REPO_RE.fullmatch(candidate):
@@ -86,12 +84,7 @@ def _resolve_repo(
     if isinstance(repo, dict):
         owner = repo.get("owner")
         name = repo.get("name")
-        if (
-            isinstance(owner, str)
-            and owner.strip()
-            and isinstance(name, str)
-            and name.strip()
-        ):
+        if isinstance(owner, str) and owner.strip() and isinstance(name, str) and name.strip():
             return {"owner": owner.strip(), "name": name.strip()}
     return None
 
@@ -133,9 +126,7 @@ async def _run_prompt(
     original_slack_thread: dict[str, Any],
     thread_id: str,
 ) -> str:
-    repo_text = (
-        f"{repo['owner']}/{repo['name']}" if repo else "(no repository specified)"
-    )
+    repo_text = f"{repo['owner']}/{repo['name']}" if repo else "(no repository specified)"
     channel_id = original_slack_thread.get("channel_id", "")
     thread_ts = original_slack_thread.get("thread_ts", "")
     return (
@@ -332,16 +323,12 @@ async def slack_start_new_thread(
         if value:
             new_configurable[key] = value
 
-    await client.threads.create(
-        thread_id=thread_id, if_exists="do_nothing", metadata=metadata
-    )
+    await client.threads.create(thread_id=thread_id, if_exists="do_nothing", metadata=metadata)
     await client.threads.update(thread_id=thread_id, metadata=metadata)
 
     run = await dispatch_agent_run(
         thread_id,
-        await _run_prompt(
-            clean_title, clean_instructions, repo, current_slack_thread, thread_id
-        ),
+        await _run_prompt(clean_title, clean_instructions, repo, current_slack_thread, thread_id),
         new_configurable,
         source="slack",
         client=client,

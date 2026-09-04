@@ -53,18 +53,12 @@ def _normalize_slack_channel_id(value: str | None) -> str | None:
     if not channel_id:
         return None
     if not _SLACK_CHANNEL_ID_RE.fullmatch(channel_id):
-        raise ValueError(
-            "slack_channel_id must be a Slack channel ID starting with C or G"
-        )
+        raise ValueError("slack_channel_id must be a Slack channel ID starting with C or G")
     return channel_id
 
 
 def _slack_notification_mode(record: dict[str, Any]) -> SlackNotificationMode:
-    return (
-        "on_action"
-        if record.get("slack_notification_mode") == "on_action"
-        else "always"
-    )
+    return "on_action" if record.get("slack_notification_mode") == "on_action" else "always"
 
 
 class ScheduleCreateBody(BaseModel):
@@ -116,9 +110,7 @@ def _validate_cron_value(value: str, low: int, high: int) -> None:
     try:
         n = int(value)
     except ValueError as exc:
-        raise ValueError(
-            "cron fields must use numbers, *, ranges, steps, or lists"
-        ) from exc
+        raise ValueError("cron fields must use numbers, *, ranges, steps, or lists") from exc
     if n < low or n > high:
         raise ValueError(f"cron value {n} outside allowed range {low}-{high}")
 
@@ -255,9 +247,7 @@ async def list_agent_schedules() -> list[dict[str, Any]]:
         schedule_id = record.get("id")
         if isinstance(schedule_id, str):
             records.append(
-                await _migrate_workspace_record(
-                    SCHEDULES_NAMESPACE, schedule_id, record
-                )
+                await _migrate_workspace_record(SCHEDULES_NAMESPACE, schedule_id, record)
             )
     run_states: dict[str, dict[str, Any]] = {}
     for state in await search_all_values(SCHEDULE_RUN_STATE_NAMESPACE):
@@ -267,9 +257,7 @@ async def list_agent_schedules() -> list[dict[str, Any]]:
                 SCHEDULE_RUN_STATE_NAMESPACE, schedule_id, state
             )
     records.sort(key=lambda item: item.get("updated_at", ""), reverse=True)
-    return [
-        _schedule_summary(record, run_states.get(record["id"])) for record in records
-    ]
+    return [_schedule_summary(record, run_states.get(record["id"])) for record in records]
 
 
 async def _ensure_dashboard_github_token(login: str) -> None:
@@ -299,11 +287,7 @@ async def _create_cron(record: dict[str, Any]) -> str:
             **_agent_version_metadata(),
         },
     )
-    cron_id = (
-        cron.get("cron_id")
-        if isinstance(cron, dict)
-        else getattr(cron, "cron_id", None)
-    )
+    cron_id = cron.get("cron_id") if isinstance(cron, dict) else getattr(cron, "cron_id", None)
     if not isinstance(cron_id, str) or not cron_id:
         raise RuntimeError("cron creation did not return a cron_id")
     return cron_id
@@ -356,9 +340,7 @@ async def create_agent_schedule(
         "scope": "workspace",
         "created_by": login,
         "updated_by": login,
-        "user_email": (await _resolve_run_email(login, profile) or email or "")
-        .strip()
-        .lower(),
+        "user_email": (await _resolve_run_email(login, profile) or email or "").strip().lower(),
         "created_at": now,
         "updated_at": now,
     }
@@ -397,9 +379,7 @@ async def update_agent_schedule(
     if body.schedule is not None:
         patch["schedule"] = body.schedule
     if body.name is not None:
-        patch["name"] = body.name.strip() or _derive_name(
-            patch.get("prompt", existing["prompt"])
-        )
+        patch["name"] = body.name.strip() or _derive_name(patch.get("prompt", existing["prompt"]))
     if body.repo is not None:
         patch["repo"] = await repo_config_for_user(existing["created_by"], body.repo)
     if body.model_id is not None or body.effort is not None:
@@ -421,9 +401,7 @@ async def update_agent_schedule(
     updated = {**existing, **patch}
     schedule_changed = updated.get("schedule") != existing.get("schedule")
     enabled_changed = updated.get("enabled") != existing.get("enabled")
-    needs_new_cron = bool(updated.get("enabled")) and (
-        schedule_changed or enabled_changed
-    )
+    needs_new_cron = bool(updated.get("enabled")) and (schedule_changed or enabled_changed)
 
     if needs_new_cron:
         try:
@@ -451,9 +429,7 @@ async def delete_agent_schedule(schedule_id: str) -> None:
 
 
 def _slack_root_message(record: dict[str, Any], *, test_run: bool = False) -> str:
-    repo = _repo_full_name(
-        record.get("repo") if isinstance(record.get("repo"), dict) else None
-    )
+    repo = _repo_full_name(record.get("repo") if isinstance(record.get("repo"), dict) else None)
     repo_line = f"\n*Repository:* `{repo}`" if repo else ""
     run_kind = "test" if test_run else "scheduled"
     return (
@@ -462,9 +438,7 @@ def _slack_root_message(record: dict[str, Any], *, test_run: bool = False) -> st
     )
 
 
-def _scheduled_prompt(
-    record: dict[str, Any], slack_thread: dict[str, Any] | None
-) -> str:
+def _scheduled_prompt(record: dict[str, Any], slack_thread: dict[str, Any] | None) -> str:
     prompt = str(record["prompt"])
     if slack_thread:
         return (
@@ -532,9 +506,7 @@ def _agent_run_metadata(
         metadata["repo_owner"] = repo["owner"]
         metadata["repo_name"] = repo["name"]
     if slack_thread:
-        metadata["source_context"] = SourceContext.parse(
-            {"slack_thread": slack_thread}
-        ).dump()
+        metadata["source_context"] = SourceContext.parse({"slack_thread": slack_thread}).dump()
     if admin_thread:
         metadata["admin_thread"] = True
     return metadata
@@ -654,9 +626,7 @@ async def _launch_agent_schedule_record(
             "thread_ts": message_ts,
             "triggering_event_ts": message_ts,
             "triggering_user_id": await slack_id_for_login(
-                record.get("created_by")
-                if isinstance(record.get("created_by"), str)
-                else None
+                record.get("created_by") if isinstance(record.get("created_by"), str) else None
             )
             or "",
             "triggering_user_email": record.get("user_email") or "",
@@ -671,9 +641,7 @@ async def _launch_agent_schedule_record(
         test_run=test_run,
         admin_thread=admin_thread,
     )
-    await client.threads.create(
-        thread_id=thread_id, metadata=metadata, if_exists="do_nothing"
-    )
+    await client.threads.create(thread_id=thread_id, metadata=metadata, if_exists="do_nothing")
     await client.threads.update(thread_id=thread_id, metadata=metadata)
     input_context: InputMessageContext = {
         "sender_id": f"system:schedule:{schedule_id}",
@@ -712,9 +680,7 @@ async def _launch_agent_schedule_record(
         client=client,
         stream_resumable=True,
     )
-    run_id = (
-        run.get("run_id") if isinstance(run, dict) else getattr(run, "run_id", None)
-    )
+    run_id = run.get("run_id") if isinstance(run, dict) else getattr(run, "run_id", None)
     if slack_thread and isinstance(run_id, str) and run_id:
         await store_slack_run_mapping(
             client,

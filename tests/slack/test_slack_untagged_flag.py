@@ -98,9 +98,7 @@ def _message_update_payload(*, bot_message: bool = False) -> dict[str, Any]:
 def _patch(monkeypatch: pytest.MonkeyPatch) -> None:
     slack_events.reset_slack_event_claims()
 
-    async def channel_context(
-        _channel_id: str, *, use_cache: bool = True
-    ) -> dict[str, Any]:
+    async def channel_context(_channel_id: str, *, use_cache: bool = True) -> dict[str, Any]:
         return {"is_ext_shared": False, "is_pending_ext_shared": False}
 
     async def not_docs_plz(_channel_id: str, _context: dict[str, Any]) -> bool:
@@ -110,15 +108,9 @@ def _patch(monkeypatch: pytest.MonkeyPatch) -> None:
         return {"owner": "langchain-ai", "name": "open-swe"}
 
     monkeypatch.setattr(slack_events, "get_client", lambda url: _FakeClient())
-    monkeypatch.setattr(
-        webhook_common, "verify_slack_signature", lambda **_kwargs: True
-    )
-    monkeypatch.setattr(
-        webhook_common, "resolve_slack_thread_id", AsyncMock(return_value="t1")
-    )
-    monkeypatch.setattr(
-        webhook_common, "lookup_slack_thread_id", AsyncMock(return_value="t1")
-    )
+    monkeypatch.setattr(webhook_common, "verify_slack_signature", lambda **_kwargs: True)
+    monkeypatch.setattr(webhook_common, "resolve_slack_thread_id", AsyncMock(return_value="t1"))
+    monkeypatch.setattr(webhook_common, "lookup_slack_thread_id", AsyncMock(return_value="t1"))
     monkeypatch.setattr(
         webhook_common,
         "lookup_slack_run_mapping",
@@ -315,9 +307,7 @@ async def test_message_update_retries_until_delivery_mapping_exists(
 async def test_unassociated_message_update_does_not_trigger_docs_gate(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        webhook_common, "lookup_slack_run_mapping", AsyncMock(return_value=None)
-    )
+    monkeypatch.setattr(webhook_common, "lookup_slack_run_mapping", AsyncMock(return_value=None))
     monkeypatch.setattr(slack_routes, "_MESSAGE_UPDATE_RETRY_DELAYS", ())
     is_docs_plz = AsyncMock(return_value=True)
     post_reply = AsyncMock()

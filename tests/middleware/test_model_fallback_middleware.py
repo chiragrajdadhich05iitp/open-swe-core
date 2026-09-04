@@ -33,9 +33,7 @@ def _anthropic_overloaded() -> anthropic.APIStatusError:
 
 def _openai_5xx() -> openai.APIStatusError:
     request = httpx.Request("POST", "https://api.openai.com/v1/chat/completions")
-    response = httpx.Response(
-        503, request=request, json={"error": {"message": "unavailable"}}
-    )
+    response = httpx.Response(503, request=request, json={"error": {"message": "unavailable"}})
     return openai.APIStatusError("unavailable", response=response, body=response.json())
 
 
@@ -173,9 +171,7 @@ class TestModelFallbackMiddleware:
     async def test_async_retries_primary_after_fallback_failure(self) -> None:
         """If the fallback also fails transiently, retry the primary instead of crashing."""
         fallback_model = MagicMock(name="fallback_model")
-        middleware = ModelFallbackMiddleware(
-            fallback_model, backoff_schedule=(0.0, 0.0, 0.0)
-        )
+        middleware = ModelFallbackMiddleware(fallback_model, backoff_schedule=(0.0, 0.0, 0.0))
         calls: list[object] = []
         good_response = MagicMock(result=[AIMessage(content="ok from primary retry")])
 

@@ -68,11 +68,6 @@ class TestModelCallTimeoutMiddleware:
                 for middleware in spec.get("middleware", [])
             ), f"{spec['name']} subagent has no model-call deadline"
 
-    def test_timeout_falls_back_on_invalid_env(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_timeout_falls_back_on_invalid_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("OPEN_SWE_MODEL_CALL_TIMEOUT_SECONDS", "soon")
-        assert (
-            ModelCallTimeoutMiddleware()._timeout_seconds
-            == DEFAULT_MODEL_CALL_TIMEOUT_SECONDS
-        )
+        assert ModelCallTimeoutMiddleware()._timeout_seconds == DEFAULT_MODEL_CALL_TIMEOUT_SECONDS

@@ -90,9 +90,7 @@ _SENSITIVE_CREATE_PARAM_PREFIXES = (
     "secret_",
     "token_",
 )
-_SENSITIVE_HEADER_NAMES = frozenset(
-    {"authorization", "cookie", "proxy_authorization", "x_api_key"}
-)
+_SENSITIVE_HEADER_NAMES = frozenset({"authorization", "cookie", "proxy_authorization", "x_api_key"})
 # `env:my-box` anywhere in a message, as a whole word.
 _ENV_TAG_RE = re.compile(r"(?:(?<=\s)|^)env:([A-Za-z0-9][A-Za-z0-9._-]*)(?=\s|$)")
 
@@ -182,9 +180,8 @@ def _has_sensitive_create_param(value: JsonValue) -> bool:
         header_name = value.get("name")
         if isinstance(header_name, str):
             normalized_header = _normalize_create_param_name(header_name)
-            if (
-                normalized_header in _SENSITIVE_HEADER_NAMES
-                or _is_sensitive_create_param_name(normalized_header)
+            if normalized_header in _SENSITIVE_HEADER_NAMES or _is_sensitive_create_param_name(
+                normalized_header
             ):
                 return True
         for key, nested in value.items():
@@ -210,13 +207,9 @@ def _validate_create_params(value: dict[str, JsonValue] | None) -> dict[str, Jso
     except (TypeError, ValueError) as exc:
         raise ValueError("create_params must contain only valid JSON values") from exc
     if len(serialized) > CREATE_PARAMS_MAX_CHARS:
-        raise ValueError(
-            f"create_params must be at most {CREATE_PARAMS_MAX_CHARS} JSON characters"
-        )
+        raise ValueError(f"create_params must be at most {CREATE_PARAMS_MAX_CHARS} JSON characters")
     if _has_sensitive_create_param(params):
-        raise ValueError(
-            "create_params must not contain secrets or authentication credentials"
-        )
+        raise ValueError("create_params must not contain secrets or authentication credentials")
     return params
 
 
@@ -278,9 +271,7 @@ class EnvironmentUpdate(BaseModel):
 
     @field_validator("create_params")
     @classmethod
-    def _check_create_params(
-        cls, v: dict[str, JsonValue] | None
-    ) -> dict[str, JsonValue] | None:
+    def _check_create_params(cls, v: dict[str, JsonValue] | None) -> dict[str, JsonValue] | None:
         return None if v is None else _validate_create_params(v)
 
 
@@ -361,9 +352,7 @@ class Environment(BaseModel):
         try:
             return _validate_create_params(self.create_params)
         except ValueError:
-            logger.warning(
-                "Ignoring invalid sandbox create params for environment %s", self.slug
-            )
+            logger.warning("Ignoring invalid sandbox create params for environment %s", self.slug)
             return {}
 
     def option(self) -> dict[str, Any]:
@@ -486,9 +475,7 @@ async def resolve_environment(slug: str | None) -> Environment | None:
         logger.warning("environment resolution failed for %s", slug, exc_info=True)
         record = None
     if record is None:
-        logger.info(
-            "Environment %s is not configured; falling back to the default", slug
-        )
+        logger.info("Environment %s is not configured; falling back to the default", slug)
         return await resolve_default_environment()
     return record
 
@@ -517,9 +504,7 @@ def parse_environment_tag(text: str) -> tuple[str | None, str]:
     except ValueError:
         return None, text
     before, after = text[: match.start()].rstrip(), text[match.end() :].lstrip()
-    return slug, (
-        f"{before} {after}".strip() if before and after else f"{before}{after}".strip()
-    )
+    return slug, (f"{before} {after}".strip() if before and after else f"{before}{after}".strip())
 
 
 def _require_capture_support() -> None:
@@ -541,9 +526,7 @@ async def _delete_snapshot(snapshot_id: object) -> None:
         async with get_async_sandbox_client() as client:
             await client.delete_snapshot(snapshot_id)
     except Exception:  # noqa: BLE001
-        logger.warning(
-            "failed to delete superseded snapshot %s", snapshot_id, exc_info=True
-        )
+        logger.warning("failed to delete superseded snapshot %s", snapshot_id, exc_info=True)
 
 
 def _is_name_conflict(exc: BaseException) -> bool:
@@ -553,9 +536,7 @@ def _is_name_conflict(exc: BaseException) -> bool:
     }:
         return True
     response = getattr(exc, "response", None)
-    status_code = getattr(response, "status_code", None) or getattr(
-        exc, "status_code", None
-    )
+    status_code = getattr(response, "status_code", None) or getattr(exc, "status_code", None)
     return status_code == 409
 
 
@@ -566,9 +547,7 @@ async def _capture_with_name_retry(
     for attempt in range(1, CAPTURE_NAME_ATTEMPTS + 1):
         snapshot_name = snapshot_name_for(slug, attempt)
         try:
-            snapshot = await client.capture_snapshot(
-                sandbox_id, snapshot_name, timeout=timeout
-            )
+            snapshot = await client.capture_snapshot(sandbox_id, snapshot_name, timeout=timeout)
         except Exception as exc:
             if attempt == CAPTURE_NAME_ATTEMPTS or not _is_name_conflict(exc):
                 raise
@@ -614,9 +593,7 @@ async def capture_environment_snapshot(
                 client, sandbox_id, slug, timeout
             )
     except Exception as exc:
-        logger.warning(
-            "snapshot capture failed for environment %s", slug, exc_info=True
-        )
+        logger.warning("snapshot capture failed for environment %s", slug, exc_info=True)
         await ENVIRONMENTS.mark_capture_settled(
             slug,
             "ready" if previous_was_ready else "failed",
@@ -632,7 +609,5 @@ async def capture_environment_snapshot(
     )
     if previous_snapshot_id != snapshot.id:
         await _delete_snapshot(previous_snapshot_id)
-    logger.info(
-        "Captured snapshot %s (%s) for environment %s", snapshot.id, snapshot_name, slug
-    )
+    logger.info("Captured snapshot %s (%s) for environment %s", snapshot.id, snapshot_name, slug)
     return updated or record

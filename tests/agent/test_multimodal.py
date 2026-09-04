@@ -36,9 +36,7 @@ def test_extract_image_urls_ignores_non_images() -> None:
 
 
 def test_extract_image_urls_markdown_syntax() -> None:
-    text = (
-        "Check out this screenshot: ![Screenshot](https://example.com/screenshot.png)"
-    )
+    text = "Check out this screenshot: ![Screenshot](https://example.com/screenshot.png)"
 
     assert extract_image_urls(text) == ["https://example.com/screenshot.png"]
 
@@ -76,15 +74,11 @@ def test_extract_image_urls_various_formats() -> None:
 def test_extract_image_urls_with_query_params() -> None:
     text = "Image with params: https://cdn.example.com/image.png?width=800&height=600"
 
-    assert extract_image_urls(text) == [
-        "https://cdn.example.com/image.png?width=800&height=600"
-    ]
+    assert extract_image_urls(text) == ["https://cdn.example.com/image.png?width=800&height=600"]
 
 
 def test_extract_image_urls_case_insensitive() -> None:
-    text = (
-        "Mixed case: https://example.com/Image.PNG and https://example.com/photo.JpEg"
-    )
+    text = "Mixed case: https://example.com/Image.PNG and https://example.com/photo.JpEg"
 
     assert extract_image_urls(text) == [
         "https://example.com/Image.PNG",
@@ -155,9 +149,7 @@ class FakeImageResponse:
             raise httpx.HTTPStatusError(
                 f"{self.status_code} error",
                 request=httpx.Request("GET", self.url),
-                response=httpx.Response(
-                    self.status_code, request=httpx.Request("GET", self.url)
-                ),
+                response=httpx.Response(self.status_code, request=httpx.Request("GET", self.url)),
             )
 
 
@@ -172,9 +164,7 @@ class FakeImageClient:
 
 
 def _patch_image_dns(monkeypatch: Any) -> None:
-    def fake_getaddrinfo(
-        host: str, port: int | None, *args: Any, **kwargs: Any
-    ) -> list[tuple]:
+    def fake_getaddrinfo(host: str, port: int | None, *args: Any, **kwargs: Any) -> list[tuple]:
         public_hosts = {
             "cdn.example.com",
             "example.com",
@@ -390,6 +380,5 @@ async def test_fetch_image_block_keeps_auth_within_slack_host_family(
     assert result == {"base64": "cG5n", "mime_type": "image/png"}
     assert len(client.calls) == 2
     assert all(
-        call["headers"]["Authorization"] == "Bearer test-slack-token"
-        for call in client.calls
+        call["headers"]["Authorization"] == "Bearer test-slack-token" for call in client.calls
     )

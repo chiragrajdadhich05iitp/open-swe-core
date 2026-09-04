@@ -267,9 +267,7 @@ async def _execute(backend: Any, command: str, *, timeout: int = 15) -> Any:
     output = getattr(response, "output", "")
     exit_code = getattr(response, "exit_code", None)
     if exit_code not in (0, None):
-        raise RuntimeError(
-            output.strip() or f"sandbox command failed with exit code {exit_code}"
-        )
+        raise RuntimeError(output.strip() or f"sandbox command failed with exit code {exit_code}")
     return json.loads(output.strip().splitlines()[-1])
 
 
@@ -307,16 +305,12 @@ async def background_execute(
         current = await _execute(
             backend, f"printf %s {shlex.quote(_encoded(script))} | base64 -d | python3"
         )
-        active = sum(
-            task.get("status") == "running" for task in current.get("tasks", [])
-        )
+        active = sum(task.get("status") == "running" for task in current.get("tasks", []))
         if active >= MAX_ACTIVE_TASKS:
             return {"success": False, "error": "active task limit reached"}
         from ..background_tasks import MONITOR_LOCK, ensure_background_task_cron
 
-        wait_for_monitor = (
-            f"while [ -d {shlex.quote(MONITOR_LOCK)} ]; do sleep .1; done"
-        )
+        wait_for_monitor = f"while [ -d {shlex.quote(MONITOR_LOCK)} ]; do sleep .1; done"
         wait = await backend.aexecute(wait_for_monitor, timeout=15)
         if getattr(wait, "exit_code", None) != 0:
             raise RuntimeError("background-task monitor is busy")

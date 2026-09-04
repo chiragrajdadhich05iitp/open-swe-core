@@ -89,9 +89,7 @@ async def test_record_dashboard_thread_ttft_emits_histogram_and_log(
     monkeypatch,
     caplog,
 ) -> None:
-    observation = ttft.AssistantTextObservation(
-        run_id="run-1", event_timestamp_ms=2_250
-    )
+    observation = ttft.AssistantTextObservation(run_id="run-1", event_timestamp_ms=2_250)
     histogram_values: list[float] = []
     monkeypatch.setattr(ttft, "_record_ttft_histogram", histogram_values.append)
 

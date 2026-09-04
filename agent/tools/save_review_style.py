@@ -11,9 +11,7 @@ from ..dashboard.review_styles import REVIEW_STYLES, ReviewStyle
 logger = logging.getLogger(__name__)
 
 
-async def _complete_and_register(
-    full_name: str, **completed_kwargs: Any
-) -> ReviewStyle:
+async def _complete_and_register(full_name: str, **completed_kwargs: Any) -> ReviewStyle:
     """Persist the prompt, then ensure the repo's nightly continual cron exists.
 
     Cron registration is idempotent, so continual runs completing later don't
@@ -51,9 +49,7 @@ async def save_review_style_prompt(
         list(reviewers_from_config) if isinstance(reviewers_from_config, list) else []
     )
     prs_count = prs_sampled or int(configurable.get("review_style_prs_sampled") or 0)
-    reviews_count = reviews_sampled or int(
-        configurable.get("review_style_reviews_sampled") or 0
-    )
+    reviews_count = reviews_sampled or int(configurable.get("review_style_reviews_sampled") or 0)
 
     if not custom_prompt.strip():
         await REVIEW_STYLES.mark_failed(full_name, "custom_prompt was empty")

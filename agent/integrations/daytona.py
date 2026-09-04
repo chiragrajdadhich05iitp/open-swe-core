@@ -8,9 +8,7 @@ DAYTONA_SANDBOX_SNAPSHOT_ENV = "DAYTONA_SANDBOX_SNAPSHOT"
 
 
 def _get_daytona_sandbox_params() -> CreateSandboxFromSnapshotParams:
-    snapshot = os.getenv(
-        DAYTONA_SANDBOX_SNAPSHOT_ENV, DEFAULT_DAYTONA_SANDBOX_SNAPSHOT
-    ).strip()
+    snapshot = os.getenv(DAYTONA_SANDBOX_SNAPSHOT_ENV, DEFAULT_DAYTONA_SANDBOX_SNAPSHOT).strip()
     if not snapshot:
         raise ValueError(f"{DAYTONA_SANDBOX_SNAPSHOT_ENV} must not be empty")
     return CreateSandboxFromSnapshotParams(snapshot=snapshot)

@@ -62,29 +62,19 @@ def test_get_github_token_returns_fresh_cached_token() -> None:
     github_token.cache_github_token_for_thread(
         "tid", "ghp_secret", expires_at=future, is_bot_token=True
     )
-    assert (
-        github_token.get_github_token({"configurable": {"thread_id": "tid"}})
-        == "ghp_secret"
-    )
+    assert github_token.get_github_token({"configurable": {"thread_id": "tid"}}) == "ghp_secret"
 
 
 def test_get_github_token_returns_cached_token_when_no_expires_at() -> None:
     github_token.cache_github_token_for_thread("tid", "ghp_secret", is_bot_token=True)
-    assert (
-        github_token.get_github_token({"configurable": {"thread_id": "tid"}})
-        == "ghp_secret"
-    )
+    assert github_token.get_github_token({"configurable": {"thread_id": "tid"}}) == "ghp_secret"
 
 
 def test_user_token_cache_is_bound_to_github_login() -> None:
     principal = github_token.github_token_principal(login=" Alice ")
-    github_token.cache_github_token_for_thread(
-        "shared-thread", "alice-token", principal=principal
-    )
+    github_token.cache_github_token_for_thread("shared-thread", "alice-token", principal=principal)
 
-    alice_config = {
-        "configurable": {"thread_id": "shared-thread", "github_login": "ALICE"}
-    }
+    alice_config = {"configurable": {"thread_id": "shared-thread", "github_login": "ALICE"}}
     bob_config = {"configurable": {"thread_id": "shared-thread", "github_login": "bob"}}
 
     assert github_token.get_github_token(alice_config) == "alice-token"
@@ -307,25 +297,15 @@ def test_process_github_pr_comment_invalidates_and_reauths_on_401(
         return None
 
     monkeypatch.setattr(webhook_common, "extract_pr_context", fake_extract_pr_context)
-    monkeypatch.setattr(
-        webhook_common, "_get_or_resolve_thread_github_token", fake_get_or_resolve
-    )
-    monkeypatch.setattr(
-        webhook_common, "invalidate_cached_github_token", fake_invalidate
-    )
+    monkeypatch.setattr(webhook_common, "_get_or_resolve_thread_github_token", fake_get_or_resolve)
+    monkeypatch.setattr(webhook_common, "invalidate_cached_github_token", fake_invalidate)
     monkeypatch.setattr(webhook_common, "react_to_github_comment", fake_react)
-    monkeypatch.setattr(
-        webhook_common, "fetch_pr_comments_since_last_tag", fake_fetch_pr_comments
-    )
-    monkeypatch.setattr(
-        webhook_common, "_trigger_or_queue_run", fake_trigger_or_queue_run
-    )
+    monkeypatch.setattr(webhook_common, "fetch_pr_comments_since_last_tag", fake_fetch_pr_comments)
+    monkeypatch.setattr(webhook_common, "_trigger_or_queue_run", fake_trigger_or_queue_run)
     monkeypatch.setattr(
         webhook_common,
         "email_for_login",
-        lambda login: asyncio.sleep(
-            0, result="octo@example.com" if login == "octo" else None
-        ),
+        lambda login: asyncio.sleep(0, result="octo@example.com" if login == "octo" else None),
     )
 
     asyncio.run(
@@ -369,16 +349,10 @@ async def test_publish_review_invalidates_cached_token_on_401(
             },
         },
     )
-    monkeypatch.setattr(
-        publish_review_module, "get_github_token", lambda: "revoked-token"
-    )
-    monkeypatch.setattr(
-        publish_review_module, "invalidate_cached_github_token", fake_invalidate
-    )
+    monkeypatch.setattr(publish_review_module, "get_github_token", lambda: "revoked-token")
+    monkeypatch.setattr(publish_review_module, "invalidate_cached_github_token", fake_invalidate)
     monkeypatch.setattr(publish_review_module, "_publish_review_async", fake_publish)
-    monkeypatch.setattr(
-        publish_review_module, "get_thread_id_from_runtime", lambda: "thread-xyz"
-    )
+    monkeypatch.setattr(publish_review_module, "get_thread_id_from_runtime", lambda: "thread-xyz")
 
     result = await publish_review_module.publish_review()
     assert result["success"] is False

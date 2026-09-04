@@ -108,9 +108,7 @@ class BabySitWatch(BaseModel):
             self.settled_check_at = _now().isoformat()
             return False
         try:
-            first_seen = datetime.fromisoformat(
-                self.settled_check_at.replace("Z", "+00:00")
-            )
+            first_seen = datetime.fromisoformat(self.settled_check_at.replace("Z", "+00:00"))
         except ValueError:
             self.settled_check_at = _now().isoformat()
             return False
@@ -190,11 +188,7 @@ async def _create_watch_cron(key: str) -> str:
         metadata={"kind": WATCH_CRON_KIND, "watch_key": key},
         timezone="UTC",
     )
-    cron_id = (
-        cron.get("cron_id")
-        if isinstance(cron, dict)
-        else getattr(cron, "cron_id", None)
-    )
+    cron_id = cron.get("cron_id") if isinstance(cron, dict) else getattr(cron, "cron_id", None)
     if not isinstance(cron_id, str) or not cron_id:
         raise RuntimeError("baby-sit cron creation did not return a cron_id")
     return cron_id
@@ -208,9 +202,7 @@ async def _ensure_watch_cron(key: str) -> str:
     cron_ids = [
         cron_id
         for cron in crons or []
-        if isinstance(cron, dict)
-        and isinstance((cron_id := cron.get("cron_id")), str)
-        and cron_id
+        if isinstance(cron, dict) and isinstance((cron_id := cron.get("cron_id")), str) and cron_id
     ]
     if cron_ids:
         for duplicate in cron_ids[1:]:
@@ -235,14 +227,10 @@ async def start_watch(
     key = watch_key(pr_ref.owner, pr_ref.repo, pr_ref.number)
     existing = await WATCHES.get(key)
     if existing and existing.active and existing.thread_id != thread_id:
-        raise ValueError(
-            "This pull request is already monitored from another agent thread"
-        )
+        raise ValueError("This pull request is already monitored from another agent thread")
 
     now = now_iso()
-    carried = (
-        existing if existing is not None and existing.head_sha == head_sha else None
-    )
+    carried = existing if existing is not None and existing.head_sha == head_sha else None
     watch = BabySitWatch(
         key=key,
         active=True,
@@ -277,9 +265,7 @@ async def start_watch(
                 try:
                     await get_client().crons.delete(watch.cron_id)
                 except Exception:
-                    logger.warning(
-                        "Failed to roll back baby-sit cron %s", watch.cron_id
-                    )
+                    logger.warning("Failed to roll back baby-sit cron %s", watch.cron_id)
             await WATCHES.delete(key)
         raise
 
@@ -292,9 +278,7 @@ async def stop_watch(key: str) -> bool:
         try:
             await get_client().crons.delete(watch.cron_id)
         except Exception:
-            logger.warning(
-                "Failed to delete baby-sit cron %s", watch.cron_id, exc_info=True
-            )
+            logger.warning("Failed to delete baby-sit cron %s", watch.cron_id, exc_info=True)
             watch.active = False
             await WATCHES.save(watch)
             return True
@@ -305,9 +289,7 @@ async def stop_watch(key: str) -> bool:
 async def _watch_token(watch: BabySitWatch) -> str | None:
     if watch.installation_id is None:
         return None
-    return await get_github_app_installation_token(
-        installation_id=watch.installation_id
-    )
+    return await get_github_app_installation_token(installation_id=watch.installation_id)
 
 
 async def _notify_watch(watch: BabySitWatch, message: str) -> bool:
@@ -315,17 +297,13 @@ async def _notify_watch(watch: BabySitWatch, message: str) -> bool:
     try:
         destination = context.slack_location
         if destination is not None:
-            return await post_slack_thread_reply(
-                destination[0], destination[1], message
-            )
+            return await post_slack_thread_reply(destination[0], destination[1], message)
         if context.linear_issue and context.linear_issue.id:
             return await comment_on_linear_issue(context.linear_issue.id, message)
         issue_number = context.github_issue.number if context.github_issue else None
         if issue_number is None:
             configured_number = watch.run_config.get("pr_number")
-            issue_number = (
-                configured_number if isinstance(configured_number, int) else None
-            )
+            issue_number = configured_number if isinstance(configured_number, int) else None
         token = await _watch_token(watch)
         if issue_number is not None and token:
             return await post_github_comment(
@@ -354,9 +332,7 @@ async def _finish_watch(watch: BabySitWatch, message: str) -> str:
                 multitask_strategy="enqueue",
             )
         except Exception:
-            logger.warning(
-                "Failed to dispatch terminal baby-sit update for %s", watch.key
-            )
+            logger.warning("Failed to dispatch terminal baby-sit update for %s", watch.key)
     await stop_watch(watch.key)
     return "stopped"
 
@@ -371,8 +347,7 @@ def _failure_signals(
             "url": run.get("details_url") or run.get("html_url") or "",
         }
         for run in check_runs
-        if run.get("status") == "completed"
-        and run.get("conclusion") in FAILING_CONCLUSIONS
+        if run.get("status") == "completed" and run.get("conclusion") in FAILING_CONCLUSIONS
     ]
     failures.extend(
         {
@@ -390,9 +365,7 @@ def _failure_key(head_sha: str, retry_count: int) -> str:
     return hashlib.sha256(f"{head_sha}|retry:{retry_count}".encode()).hexdigest()
 
 
-def _check_set_key(
-    check_runs: list[dict[str, Any]], statuses: list[dict[str, Any]]
-) -> str:
+def _check_set_key(check_runs: list[dict[str, Any]], statuses: list[dict[str, Any]]) -> str:
     checks = sorted(
         f"check:{run.get('id')}:{run.get('name')}:{run.get('status')}:{run.get('conclusion')}"
         for run in check_runs
@@ -419,13 +392,9 @@ def _aggregate_state(
     if not check_runs and not statuses:
         return "pending", []
     blocked_checks = [
-        run
-        for run in check_runs
-        if run.get("conclusion") not in {"success", "neutral", "skipped"}
+        run for run in check_runs if run.get("conclusion") not in {"success", "neutral", "skipped"}
     ]
-    blocked_statuses = [
-        status for status in statuses if status.get("state") not in {"success"}
-    ]
+    blocked_statuses = [status for status in statuses if status.get("state") not in {"success"}]
     if blocked_checks or blocked_statuses:
         return "blocked", []
     return "success", []
@@ -552,9 +521,7 @@ async def _evaluate_watch(key: str, *, token: str | None = None) -> str:
         )
     except Exception:
         latest = await WATCHES.get(key) or watch
-        latest.dispatch_keys = [
-            item for item in latest.dispatch_keys if item != fingerprint
-        ]
+        latest.dispatch_keys = [item for item in latest.dispatch_keys if item != fingerprint]
         await WATCHES.save(latest)
         logger.warning("Failed to dispatch baby-sit failure for %s", key, exc_info=True)
         return "error"
@@ -599,10 +566,7 @@ async def handle_ci_webhook(
             current = await WATCHES.get(watch.key)
             if not current or not current.active:
                 continue
-            if (
-                isinstance(installation_id, int)
-                and installation_id != current.installation_id
-            ):
+            if isinstance(installation_id, int) and installation_id != current.installation_id:
                 current.installation_id = installation_id
             if delivery_id:
                 delivery_ids = list(current.delivery_ids)
@@ -617,12 +581,7 @@ async def handle_ci_webhook(
 
 
 def _escape_slack(value: str) -> str:
-    return (
-        value.replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-        .replace("`", "'")
-    )
+    return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("`", "'")
 
 
 def _safe_check_link(value: str) -> str:
@@ -682,13 +641,9 @@ async def _record_retry(
 
     retries += 1
     clean_name = check_name.strip()[:200] or "CI check"
-    clean_evidence = (
-        " ".join(evidence.strip().split())[:500] or "transient failure evidence"
-    )
+    clean_evidence = " ".join(evidence.strip().split())[:500] or "transient failure evidence"
     safe_url = _safe_check_link(details_url.strip())
-    alert_key = hashlib.sha256(
-        f"{watch.head_sha}|{clean_name}|{safe_url}".encode()
-    ).hexdigest()
+    alert_key = hashlib.sha256(f"{watch.head_sha}|{clean_name}|{safe_url}".encode()).hexdigest()
     alert_keys = list(watch.alert_keys)
     first_alert = alert_key not in alert_keys
     watch.retry_count = retries
@@ -697,9 +652,7 @@ async def _record_retry(
     await WATCHES.save(watch)
 
     if first_alert:
-        check_text = (
-            f"<{safe_url}|check details>" if safe_url else "check details unavailable"
-        )
+        check_text = f"<{safe_url}|check details>" if safe_url else "check details unavailable"
         await _notify_watch(
             watch,
             f"*Flaky CI detected:* `{_escape_slack(clean_name)}`\n"

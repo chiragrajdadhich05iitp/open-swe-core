@@ -61,9 +61,7 @@ def _image_provider(image_url: str) -> str | None:
     return None
 
 
-def _image_auth_headers_for_url(
-    original_url: str, current_url: str
-) -> dict[str, str] | None:
+def _image_auth_headers_for_url(original_url: str, current_url: str) -> dict[str, str] | None:
     provider = _image_provider(original_url)
     if provider is None or _image_provider(current_url) != provider:
         return None

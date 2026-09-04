@@ -18,9 +18,7 @@ from agent.dashboard.pull_request_context import (  # noqa: E402
 )
 
 
-def _graphql(
-    query: str, owner: str, repo: str, number: int, cursor: str | None
-) -> dict[str, Any]:
+def _graphql(query: str, owner: str, repo: str, number: int, cursor: str | None) -> dict[str, Any]:
     command = [
         "gh",
         "api",
@@ -104,9 +102,7 @@ def _scan(owner: str, repo: str, number: int) -> dict[str, Any]:
             break
         connection = rollup["contexts"]
         checks.extend(
-            check
-            for node in connection["nodes"]
-            if (check := _actionable_check(node)) is not None
+            check for node in connection["nodes"] if (check := _actionable_check(node)) is not None
         )
         if not connection["pageInfo"]["hasNextPage"]:
             break
@@ -127,9 +123,7 @@ def _scan(owner: str, repo: str, number: int) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "pr_url", help="canonical https://github.com/OWNER/REPO/pull/NUMBER URL"
-    )
+    parser.add_argument("pr_url", help="canonical https://github.com/OWNER/REPO/pull/NUMBER URL")
     args = parser.parse_args()
     parsed = parse_pull_request_url(args.pr_url)
     if parsed is None:

@@ -103,9 +103,7 @@ def _origin(url: str) -> tuple[str, str, int]:
 def _is_sensitive_header(name: str) -> bool:
     normalized = name.lower()
     return (
-        normalized in _SENSITIVE_HEADERS
-        or "api-key" in normalized
-        or normalized.endswith("-token")
+        normalized in _SENSITIVE_HEADERS or "api-key" in normalized or normalized.endswith("-token")
     )
 
 
@@ -146,9 +144,7 @@ async def request_with_safe_redirects(
             return None, _blocked_response(current_url, reason)
 
         parsed = urlparse(current_url)
-        per_hop_headers = (
-            dict(headers_for_url(url, current_url) or {}) if headers_for_url else {}
-        )
+        per_hop_headers = dict(headers_for_url(url, current_url) or {}) if headers_for_url else {}
         headers = {**caller_headers, **per_hop_headers, "Host": parsed.netloc}
         extensions = {**caller_extensions, "sni_hostname": hostname}
 

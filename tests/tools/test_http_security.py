@@ -248,9 +248,9 @@ async def test_http_request_pins_connection_to_validated_public_ip(monkeypatch) 
     assert client is not None
     assert len(client.calls) == 1
     call = client.calls[0]
-    assert (
-        urlparse(call["url"]).hostname == public_addr
-    ), f"connection must target pinned public IP, got {call['url']}"
+    assert urlparse(call["url"]).hostname == public_addr, (
+        f"connection must target pinned public IP, got {call['url']}"
+    )
     assert call["headers"]["Host"] == hostname
     assert call["extensions"]["sni_hostname"] == hostname
     assert result["status_code"] == 200
@@ -478,9 +478,7 @@ async def test_http_request_offloads_oversized_response(monkeypatch) -> None:
 
     result = await http_request_tool.http_request("https://example.com/data")
 
-    saved_response = "".join(
-        json.loads(line)["text"] for line in writes[0][1].splitlines()
-    )
+    saved_response = "".join(json.loads(line)["text"] for line in writes[0][1].splitlines())
     assert result["success"] is True
     assert result["response_path"] == "/workspace/http-response-result.jsonl"
     assert result["response_chars"] == len(saved_response)

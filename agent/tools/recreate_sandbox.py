@@ -26,9 +26,7 @@ async def recreate_sandbox() -> dict[str, Any]:
         }
 
     configurable = config.get("configurable", {}) if isinstance(config, dict) else {}
-    thread_id = (
-        configurable.get("thread_id") if isinstance(configurable, dict) else None
-    )
+    thread_id = configurable.get("thread_id") if isinstance(configurable, dict) else None
     if not isinstance(thread_id, str) or not thread_id:
         return {"success": False, "error": "No thread_id in current run config"}
 

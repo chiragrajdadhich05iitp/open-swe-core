@@ -42,9 +42,7 @@ def test_detects_pr_creation_fallback_commands() -> None:
         "/usr/bin/curl -X POST https://api.github.com/repos/langchain-ai/open-swe/pulls -d '{}'"
     )
     assert is_pr_creation_fallback_command("bash -c 'gh pr create --draft'")
-    assert is_pr_creation_fallback_command(
-        "GH_TOKEN=dummy sh -c 'gh pr create --draft'"
-    )
+    assert is_pr_creation_fallback_command("GH_TOKEN=dummy sh -c 'gh pr create --draft'")
     assert is_pr_creation_fallback_command(
         "zsh -lc 'gh api repos/langchain-ai/open-swe/pulls -X POST -f title=x'"
     )

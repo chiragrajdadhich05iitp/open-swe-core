@@ -97,17 +97,9 @@ async def _actor(state: Mapping[str, Any] | None = None) -> _Actor | None:
     config = _config()
     configurable = as_json_object(config.get("configurable"))
     email_value = configurable.get("user_email")
-    email = (
-        email_value.strip()
-        if isinstance(email_value, str) and email_value.strip()
-        else None
-    )
+    email = email_value.strip() if isinstance(email_value, str) and email_value.strip() else None
     login_value = configurable.get("github_login")
-    login = (
-        login_value.strip()
-        if isinstance(login_value, str) and login_value.strip()
-        else None
-    )
+    login = login_value.strip() if isinstance(login_value, str) and login_value.strip() else None
     if not login:
         login = await resolve_login_from_email_async(email)
     if not login:
@@ -167,9 +159,7 @@ async def list_threads(
     if actor is None:
         return _failure("No verified triggering user is available")
     requested = (
-        participant.strip()
-        if isinstance(participant, str) and participant.strip()
-        else None
+        participant.strip() if isinstance(participant, str) and participant.strip() else None
     )
     if requested and all_users:
         return _failure("participant and all_users cannot be used together")
@@ -212,9 +202,7 @@ async def list_threads(
 
 
 def _value(record: Any, key: str) -> Any:
-    return (
-        record.get(key) if isinstance(record, Mapping) else getattr(record, key, None)
-    )
+    return record.get(key) if isinstance(record, Mapping) else getattr(record, key, None)
 
 
 def _message_content(message: Any) -> Any:
@@ -249,9 +237,7 @@ def _plain_message_text(content: Any) -> str | None:
         if not isinstance(text, str):
             continue
         stripped = text.strip()
-        if not stripped or stripped.startswith(
-            ("<dynamic-context", "<system-instructions")
-        ):
+        if not stripped or stripped.startswith(("<dynamic-context", "<system-instructions")):
             continue
         if stripped.startswith("<input-message"):
             continue
@@ -353,16 +339,12 @@ async def _queued_message_count(client: Any, thread_id: str) -> int:
     return len(messages) if isinstance(messages, list) else 0
 
 
-def _compact_plan(
-    content: Mapping[str, Any], comments: list[dict[str, Any]]
-) -> dict[str, Any]:
+def _compact_plan(content: Mapping[str, Any], comments: list[dict[str, Any]]) -> dict[str, Any]:
     approved_by = content.get("approved_by")
     return {
         "status": content.get("status"),
         "format": (
-            "html"
-            if content.get("html")
-            else "markdown" if content.get("markdown") else None
+            "html" if content.get("html") else "markdown" if content.get("markdown") else None
         ),
         "comment_count": len(comments),
         "approved_by": dict(approved_by) if isinstance(approved_by, Mapping) else None,
@@ -370,9 +352,7 @@ def _compact_plan(
     }
 
 
-def _compact_approvals(
-    approvals: Mapping[str, Mapping[str, Any]]
-) -> list[dict[str, Any]]:
+def _compact_approvals(approvals: Mapping[str, Mapping[str, Any]]) -> list[dict[str, Any]]:
     return [
         {
             "fingerprint": item.get("fingerprint"),
@@ -412,10 +392,7 @@ def _available_actions(
         actions.append("cancel")
     if plan_status and plan_status not in {"approved", "cancelled", "shared"}:
         actions.append("update_plan")
-    if any(
-        record.get("status") == WORKFLOW_APPROVAL_PENDING
-        for record in approvals.values()
-    ):
+    if any(record.get("status") == WORKFLOW_APPROVAL_PENDING for record in approvals.values()):
         actions.extend(["approve_workflow_push", "reject_workflow_push"])
     if admin and running:
         actions.append("admin_cancel")
@@ -448,9 +425,7 @@ async def get_thread(
             plan_content_task = tasks.create_task(get_plan_content(thread_id))
             plan_comments_task = tasks.create_task(list_plan_comments(thread_id))
             approvals_task = tasks.create_task(get_workflow_push_approvals(thread_id))
-            queued_count_task = tasks.create_task(
-                _queued_message_count(client, thread_id)
-            )
+            queued_count_task = tasks.create_task(_queued_message_count(client, thread_id))
         thread = thread_task.result()
         thread_state = state_task.result()
         runs = runs_task.result()
@@ -526,8 +501,7 @@ async def _send_message(
     if model_id and effort:
         normalized = (
             (model_id, effort)
-            if model_id in SUPPORTED_MODEL_IDS
-            and model_supports_effort(model_id, effort)
+            if model_id in SUPPORTED_MODEL_IDS and model_supports_effort(model_id, effort)
             else canonical_model_pair(model_id, effort)
         )
         if normalized is None:
@@ -540,9 +514,7 @@ async def _send_message(
         email=actor.email,
         mark_viewed=False,
     )
-    resolved_plan_mode = (
-        summary.get("planMode") is True if plan_mode is None else plan_mode
-    )
+    resolved_plan_mode = summary.get("planMode") is True if plan_mode is None else plan_mode
     body = ThreadMessageBody(
         content=message,
         model_id=model_id,
@@ -698,15 +670,11 @@ async def manage_thread(
                 plan_mode=plan_mode,
             )
         if action == "cancel":
-            thread = await cancel_dashboard_thread(
-                thread_id, actor.login, email=actor.email
-            )
+            thread = await cancel_dashboard_thread(thread_id, actor.login, email=actor.email)
             return {"success": True, "thread": _list_item(thread)}
         if action == "admin_cancel":
             if not actor.admin:
-                return _failure(
-                    "Only workspace admins can cancel another user's thread"
-                )
+                return _failure("Only workspace admins can cancel another user's thread")
             thread = await admin_cancel_dashboard_thread(thread_id)
             return {"success": True, "thread": _list_item(thread)}
         if action in {"resolve", "unresolve"}:
@@ -726,9 +694,7 @@ async def manage_thread(
             if error := _required(comment, "comment", action):
                 return error
             if len(comment or "") > _MAX_COMMENT_CHARS:
-                return _failure(
-                    f"comment must be at most {_MAX_COMMENT_CHARS} characters"
-                )
+                return _failure(f"comment must be at most {_MAX_COMMENT_CHARS} characters")
             result = await plan_api.post_plan_comment(
                 thread_id,
                 plan_api.CommentBody(body=comment or ""),
@@ -752,16 +718,13 @@ async def manage_thread(
             existing = await get_plan_content(thread_id, raise_on_error=True) or {}
             existing_format = (
                 "markdown"
-                if isinstance(existing.get("markdown"), str)
-                and not existing.get("html")
+                if isinstance(existing.get("markdown"), str) and not existing.get("html")
                 else "html"
             )
             if content_format != existing_format:
                 return _failure(f"existing plan format is {existing_format}")
             update = plan_api.PlanUpdate(**{content_format: content})
-            result = await plan_api.update_plan(
-                thread_id, update, session=actor.session
-            )
+            result = await plan_api.update_plan(thread_id, update, session=actor.session)
             return {
                 "success": True,
                 "status": result.get("status"),
@@ -774,9 +737,7 @@ async def manage_thread(
             return {"success": True, **result}
         if action == "request_plan_changes":
             if len(comment or "") > _MAX_COMMENT_CHARS:
-                return _failure(
-                    f"comment must be at most {_MAX_COMMENT_CHARS} characters"
-                )
+                return _failure(f"comment must be at most {_MAX_COMMENT_CHARS} characters")
             if comment and comment.strip():
                 await plan_api.post_plan_comment(
                     thread_id,

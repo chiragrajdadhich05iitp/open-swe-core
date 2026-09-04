@@ -149,14 +149,10 @@ async def start_bootstrap_analysis(
                 files=build_skill_files(),
             ),
             source="review-style-bootstrap",
-            config={
-                "configurable": {**configurable, "prepare_run_id": str(uuid.uuid4())}
-            },
+            config={"configurable": {**configurable, "prepare_run_id": str(uuid.uuid4())}},
             client=client,
         )
-        run_id = (
-            run.get("run_id") if isinstance(run, dict) else getattr(run, "run_id", None)
-        )
+        run_id = run.get("run_id") if isinstance(run, dict) else getattr(run, "run_id", None)
         return await REVIEW_STYLES.record_run_started(
             full_name, run_id=run_id, created_by=created_by
         )
@@ -182,14 +178,10 @@ async def start_continual_run(
             _ASSISTANT_ID,
             input=build_continual_run_input(full_name),
             source="review-style-continual",
-            config={
-                "configurable": {**configurable, "prepare_run_id": str(uuid.uuid4())}
-            },
+            config={"configurable": {**configurable, "prepare_run_id": str(uuid.uuid4())}},
             client=client,
         )
-        run_id = (
-            run.get("run_id") if isinstance(run, dict) else getattr(run, "run_id", None)
-        )
+        run_id = run.get("run_id") if isinstance(run, dict) else getattr(run, "run_id", None)
         return await REVIEW_STYLES.record_run_started(
             full_name, run_id=run_id, created_by=created_by
         )
@@ -222,11 +214,7 @@ async def sync_review_style_run_status(full_name: str) -> ReviewStyle:
         if not run:
             run_missing = True
         else:
-            raw = (
-                run.get("status")
-                if isinstance(run, dict)
-                else getattr(run, "status", None)
-            )
+            raw = run.get("status") if isinstance(run, dict) else getattr(run, "status", None)
             run_status = raw.lower() if isinstance(raw, str) else None
     except Exception:
         logger.debug("Could not sync run status for %s", full_name, exc_info=True)
@@ -249,9 +237,7 @@ async def cancel_review_style_analysis(full_name: str) -> ReviewStyle:
                 record.analysis_thread_id, record.analysis_run_id, wait=False
             )
         except Exception:
-            logger.debug(
-                "Could not cancel review style run for %s", full_name, exc_info=True
-            )
+            logger.debug("Could not cancel review style run for %s", full_name, exc_info=True)
 
     if record.has_saved_prompt:
         return await REVIEW_STYLES.mark_completed(full_name)

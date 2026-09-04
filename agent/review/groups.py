@@ -116,9 +116,7 @@ def _build_prompt(diff_text: str, files: list[str]) -> str:
             segments.append(f"```diff\n{body}\n```")
         block = f"### {file_diff.file}\n" + "\n".join(segments) + "\n"
         if budget - len(block) < 0:
-            parts.append(
-                f"### {file_diff.file}\n(diff omitted — prompt budget reached)\n"
-            )
+            parts.append(f"### {file_diff.file}\n(diff omitted — prompt budget reached)\n")
             continue
         budget -= len(block)
         parts.append(block)
@@ -229,6 +227,4 @@ async def maybe_generate_and_store_diff_groups(
             head_sha[:7] if head_sha else "?",
         )
     except Exception:  # noqa: BLE001 — best-effort; never break the review
-        logger.exception(
-            "Failed to generate/store diff groups for thread %s", thread_id
-        )
+        logger.exception("Failed to generate/store diff groups for thread %s", thread_id)

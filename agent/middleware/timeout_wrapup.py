@@ -67,9 +67,7 @@ class TimeoutWrapupMiddleware(AgentMiddleware):
                 request.system_message.content, additions=[_WRAPUP_INSTRUCTION.strip()]
             )
         else:
-            content = _content_with_instruction(
-                request.system_message, _WRAPUP_INSTRUCTION
-            )
+            content = _content_with_instruction(request.system_message, _WRAPUP_INSTRUCTION)
         return request.override(system_message=SystemMessage(content=content))
 
     async def awrap_model_call(

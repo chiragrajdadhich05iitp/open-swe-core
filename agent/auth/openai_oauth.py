@@ -22,11 +22,7 @@ def _broker_config() -> tuple[str, str] | None:
     if not url or not token:
         return None
     parsed = urlparse(url)
-    if (
-        parsed.scheme != "http"
-        or parsed.hostname != "127.0.0.1"
-        or parsed.path != "/token"
-    ):
+    if parsed.scheme != "http" or parsed.hostname != "127.0.0.1" or parsed.path != "/token":
         return None
     return url, token
 
@@ -43,9 +39,7 @@ class _DesktopOpenAIOAuthTokenProvider(_ChatGPTOAuthTokenProvider):
 
     def get_token(self) -> _ChatGPTToken:
         if self._current_token is None:
-            raise RuntimeError(
-                "Local OpenAI credentials have not been fetched asynchronously"
-            )
+            raise RuntimeError("Local OpenAI credentials have not been fetched asynchronously")
         return self._current_token
 
     async def aget_token(self) -> _ChatGPTToken:
@@ -56,9 +50,7 @@ class _DesktopOpenAIOAuthTokenProvider(_ChatGPTOAuthTokenProvider):
             )
         response.raise_for_status()
         payload = response.json()
-        access_token = (
-            payload.get("access_token") if isinstance(payload, dict) else None
-        )
+        access_token = payload.get("access_token") if isinstance(payload, dict) else None
         account_id = payload.get("account_id") if isinstance(payload, dict) else None
         if not isinstance(access_token, str) or not access_token:
             raise ValueError("Local OpenAI credential broker returned no access token")

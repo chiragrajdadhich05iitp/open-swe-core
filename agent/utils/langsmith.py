@@ -43,9 +43,7 @@ def async_langsmith_client(api_key: str, api_url: str) -> AsyncLangSmithClient:
     key = (api_key, api_url)
     client = _ASYNC_CLIENTS.get(key)
     if client is None:
-        client = _ASYNC_CLIENTS[key] = AsyncLangSmithClient(
-            api_key=api_key, api_url=api_url
-        )
+        client = _ASYNC_CLIENTS[key] = AsyncLangSmithClient(api_key=api_key, api_url=api_url)
     return client
 
 
@@ -86,9 +84,7 @@ async def _resolve_project_id_by_name(project_name: str) -> str | None:
         _PROJECT_ID_CACHE[project_name] = ""
         return None
     except Exception:  # noqa: BLE001
-        logger.debug(
-            "Could not resolve LangSmith project id for %s", project_name, exc_info=True
-        )
+        logger.debug("Could not resolve LangSmith project id for %s", project_name, exc_info=True)
         return None
     project_id = getattr(project, "id", None)
     resolved = str(project_id) if project_id else ""
@@ -141,9 +137,7 @@ def _parse_langsmith_time(value: Any) -> datetime | None:
 def _langsmith_metadata_filter(key: str, value: str) -> str:
     escaped_key = key.replace("\\", "\\\\").replace('"', '\\"')
     escaped_value = value.replace("\\", "\\\\").replace('"', '\\"')
-    return (
-        f'and(eq(metadata_key, "{escaped_key}"), eq(metadata_value, "{escaped_value}"))'
-    )
+    return f'and(eq(metadata_key, "{escaped_key}"), eq(metadata_value, "{escaped_value}"))'
 
 
 async def get_langsmith_thread_cost(
@@ -171,8 +165,7 @@ async def get_langsmith_thread_cost(
         target_times = [
             parsed
             async for run in roots
-            if (parsed := _parse_langsmith_time(_langsmith_value(run, "end_time")))
-            is not None
+            if (parsed := _parse_langsmith_time(_langsmith_value(run, "end_time"))) is not None
         ]
         if not target_times:
             return None
@@ -182,22 +175,12 @@ async def get_langsmith_thread_cost(
             selects=["TOTAL_COST", "LAST_END_TIME"],
         )
     except LangSmithNotFoundError as exc:
-        raise LangSmithCostUnavailable(
-            "LangSmith thread stats are unsupported"
-        ) from exc
+        raise LangSmithCostUnavailable("LangSmith thread stats are unsupported") from exc
     except Exception as exc:  # noqa: BLE001
         status_code = getattr(exc, "status_code", None)
-        if (
-            isinstance(status_code, int)
-            and 400 <= status_code < 500
-            and status_code != 429
-        ):
-            raise LangSmithCostUnavailable(
-                "LangSmith thread stats are unsupported"
-            ) from exc
-        logger.debug(
-            "Could not load LangSmith cost for thread %s", thread_id, exc_info=True
-        )
+        if isinstance(status_code, int) and 400 <= status_code < 500 and status_code != 429:
+            raise LangSmithCostUnavailable("LangSmith thread stats are unsupported") from exc
+        logger.debug("Could not load LangSmith cost for thread %s", thread_id, exc_info=True)
         return None
 
     raw_cost = _langsmith_value(stats, "total_cost")
@@ -229,9 +212,7 @@ def _build_langsmith_feedback_clients() -> tuple[tuple[str, str], ...]:
     configs: list[tuple[str, str]] = []
     seen: set[tuple[str, str]] = set()
 
-    api_endpoint = os.environ.get(
-        "LANGSMITH_ENDPOINT", "https://api.smith.langchain.com"
-    )
+    api_endpoint = os.environ.get("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
     client_configs = (
         (
             os.environ.get("LANGSMITH_API_KEY") or os.environ.get("LANGCHAIN_API_KEY"),
@@ -269,9 +250,7 @@ async def _update_feedback(
 ) -> None:
     # AsyncClient exposes no update_feedback; the sync one runs off-loop.
     client = sync_langsmith_client(api_key, api_url)
-    await asyncio.to_thread(
-        client.update_feedback, feedback_id, score=score, comment=comment
-    )
+    await asyncio.to_thread(client.update_feedback, feedback_id, score=score, comment=comment)
 
 
 async def create_langsmith_feedback(
@@ -306,14 +285,10 @@ async def create_langsmith_feedback(
         except Exception:  # noqa: BLE001 - feedback already exists; update in place
             pass
         try:
-            await _update_feedback(
-                api_key, api_url, feedback_id, score=score, comment=comment
-            )
+            await _update_feedback(api_key, api_url, feedback_id, score=score, comment=comment)
             any_success = True
         except Exception:
-            logger.exception(
-                "Failed to create or update LangSmith feedback for run %s", run_id
-            )
+            logger.exception("Failed to create or update LangSmith feedback for run %s", run_id)
     return any_success
 
 

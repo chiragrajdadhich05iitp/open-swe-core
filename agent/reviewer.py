@@ -501,8 +501,7 @@ def _reviewer_system_prompt(
             "them, that is a finding.\n\n"
             "Each scoped `AGENTS.md` applies only to changed files under its "
             "listed directory. When instructions conflict, the most deeply "
-            "nested applicable file takes precedence.\n\n"
-            + "\n\n".join(instruction_sections)
+            "nested applicable file takes precedence.\n\n" + "\n\n".join(instruction_sections)
         )
     if api_standards_skill:
         prompt = (
@@ -700,9 +699,7 @@ def _build_finding_reply_context(
 # GitHub login regex: alphanumerics or single hyphens, max 39 chars, optional
 # trailing "[bot]" suffix. Logins that don't match are surfaced as "unknown"
 # so we never let unexpected text leak through this field as a header.
-_GITHUB_LOGIN_RE = re.compile(
-    r"^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}(?:\[bot\])?$"
-)
+_GITHUB_LOGIN_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}(?:\[bot\])?$")
 
 
 def _safe_login(value: object) -> str:
@@ -784,9 +781,7 @@ def _format_pr_review_threads(threads: list[dict]) -> str:
     out: list[str] = ["<pr_review_threads>"]
     for t in visible:
         path = t.get("path") or "<unknown>"
-        line = (
-            t.get("line") if isinstance(t.get("line"), int) else t.get("original_line")
-        )
+        line = t.get("line") if isinstance(t.get("line"), int) else t.get("original_line")
         location = f"{path}:{line}" if isinstance(line, int) else path
         status: str
         if t.get("is_resolved"):
@@ -859,9 +854,7 @@ def _make_model_or_defer(
     try:
         return make_model(model_id, use_gateway=use_gateway, **kwargs)
     except Exception as e:  # noqa: BLE001
-        logger.warning(
-            "Deferring reviewer model setup failure for %s", model_id, exc_info=True
-        )
+        logger.warning("Deferring reviewer model setup failure for %s", model_id, exc_info=True)
         return make_deferred_error_model(e, model_id=model_id)
 
 
@@ -963,9 +956,7 @@ async def _ensure_reviewer_sandbox_for_thread(
         await ensure_sandbox_for_thread(
             thread_id,
             github_proxy_token=github_token,
-            github_proxy_repositories=(
-                [repo_name_for_scope] if repo_name_for_scope else None
-            ),
+            github_proxy_repositories=([repo_name_for_scope] if repo_name_for_scope else None),
             # A reviewer sandbox holds nothing but a checkout `prepare_review_repo`
             # re-derives every run, and reviewer threads outlive their sandbox: one
             # thread per PR, re-triggered on every push. Refusing to replace an
@@ -992,56 +983,34 @@ class PrepareReviewerRunMiddleware(BasePrepareRunMiddleware):
 
     def _prepare_config_fingerprint(self) -> Any:
         configurable = self._config.get("configurable", {})
-        repo_config = (
-            configurable.get("repo") if isinstance(configurable, dict) else None
-        )
+        repo_config = configurable.get("repo") if isinstance(configurable, dict) else None
         return {
             "prepare_run_id": (
-                configurable.get("prepare_run_id")
-                if isinstance(configurable, dict)
-                else None
+                configurable.get("prepare_run_id") if isinstance(configurable, dict) else None
             ),
             "thread_id": self._thread_id,
             "repo": repo_config,
             "pr_number": (
-                configurable.get("pr_number")
-                if isinstance(configurable, dict)
-                else None
+                configurable.get("pr_number") if isinstance(configurable, dict) else None
             ),
-            "base_sha": (
-                configurable.get("base_sha") if isinstance(configurable, dict) else None
-            ),
-            "head_sha": (
-                configurable.get("head_sha") if isinstance(configurable, dict) else None
-            ),
+            "base_sha": (configurable.get("base_sha") if isinstance(configurable, dict) else None),
+            "head_sha": (configurable.get("head_sha") if isinstance(configurable, dict) else None),
             "last_reviewed_sha": (
-                configurable.get("last_reviewed_sha")
-                if isinstance(configurable, dict)
-                else None
+                configurable.get("last_reviewed_sha") if isinstance(configurable, dict) else None
             ),
             "reviewer_event": (
-                configurable.get("reviewer_event")
-                if isinstance(configurable, dict)
-                else None
+                configurable.get("reviewer_event") if isinstance(configurable, dict) else None
             ),
             "reviewer_eval": (
-                configurable.get("reviewer_eval")
-                if isinstance(configurable, dict)
-                else None
+                configurable.get("reviewer_eval") if isinstance(configurable, dict) else None
             ),
-            "eval": (
-                configurable.get("eval") if isinstance(configurable, dict) else None
-            ),
+            "eval": (configurable.get("eval") if isinstance(configurable, dict) else None),
             "finding_reply_id": (
-                configurable.get("finding_reply_id")
-                if isinstance(configurable, dict)
-                else None
+                configurable.get("finding_reply_id") if isinstance(configurable, dict) else None
             ),
         }
 
-    async def _prepare(
-        self, state: PrepareRunState, runtime: Runtime
-    ) -> dict[str, Any]:
+    async def _prepare(self, state: PrepareRunState, runtime: Runtime) -> dict[str, Any]:
         configurable = self._config.get("configurable") or {}
         repo_config = configurable.get("repo") or {}
         try:
@@ -1087,8 +1056,7 @@ class PrepareReviewerRunMiddleware(BasePrepareRunMiddleware):
         is_re_review = bool(configurable.get("re_review"))
         reviewer_event = str(configurable.get("reviewer_event", "") or "")
         reviewer_eval = (
-            configurable.get("reviewer_eval") is True
-            or configurable.get("eval") is True
+            configurable.get("reviewer_eval") is True or configurable.get("eval") is True
         )
         can_fetch_pr = (
             pr_number is not None
@@ -1098,14 +1066,8 @@ class PrepareReviewerRunMiddleware(BasePrepareRunMiddleware):
             and bool(github_token)
         )
 
-        async def _fetch_diff_context() -> (
-            tuple[str, dict[str, dict[str, set[int]]] | None]
-        ):
-            if (
-                not can_fetch_pr
-                or github_token is None
-                or not isinstance(pr_number, int)
-            ):
+        async def _fetch_diff_context() -> tuple[str, dict[str, dict[str, set[int]]] | None]:
+            if not can_fetch_pr or github_token is None or not isinstance(pr_number, int):
                 return "", None
             fetched_diff: str | None = None
             if not (is_re_review and last_reviewed_sha):
@@ -1141,11 +1103,7 @@ class PrepareReviewerRunMiddleware(BasePrepareRunMiddleware):
             return diff_text, compute_diff_line_set(diff_text)
 
         async def _fetch_pr_overview() -> tuple[str, str]:
-            if (
-                not can_fetch_pr
-                or github_token is None
-                or not isinstance(pr_number, int)
-            ):
+            if not can_fetch_pr or github_token is None or not isinstance(pr_number, int):
                 return "", ""
             metadata = await fetch_pr_metadata(
                 owner=repo_owner,
@@ -1200,9 +1158,7 @@ class PrepareReviewerRunMiddleware(BasePrepareRunMiddleware):
         async def _fetch_agents_md_context() -> str | None:
             if not repo_owner or not repo_name or not base_sha:
                 return None
-            content = await fetch_agents_md(
-                repo_owner, repo_name, base_sha, token=github_token
-            )
+            content = await fetch_agents_md(repo_owner, repo_name, base_sha, token=github_token)
             if content:
                 logger.info(
                     "Loaded AGENTS.md (%d chars) from %s/%s@%s into reviewer prompt",
@@ -1221,9 +1177,7 @@ class PrepareReviewerRunMiddleware(BasePrepareRunMiddleware):
                     work_dir=work_dir,
                 )
             except Exception:
-                logger.exception(
-                    "Failed to prepare PR trace context; continuing without it"
-                )
+                logger.exception("Failed to prepare PR trace context; continuing without it")
                 return None
 
         diff_context_task = asyncio.create_task(_fetch_diff_context())
@@ -1265,13 +1219,9 @@ class PrepareReviewerRunMiddleware(BasePrepareRunMiddleware):
                     repo_name=repo_name,
                     pr_number=pr_number,
                     finding_id=str(configurable.get("finding_reply_id", "") or ""),
-                    reply_author=str(
-                        configurable.get("finding_reply_author", "") or ""
-                    ),
+                    reply_author=str(configurable.get("finding_reply_author", "") or ""),
                     reply_body=str(configurable.get("finding_reply_body", "") or ""),
-                    existing_findings_block=_format_existing_findings(
-                        existing_findings
-                    ),
+                    existing_findings_block=_format_existing_findings(existing_findings),
                     pr_title=pr_title,
                     pr_body=pr_body,
                     existing_threads_block=existing_threads_block,
@@ -1285,9 +1235,7 @@ class PrepareReviewerRunMiddleware(BasePrepareRunMiddleware):
                     pr_number=pr_number,
                     last_reviewed_sha=last_reviewed_sha,
                     head_sha=head_sha,
-                    existing_findings_block=_format_existing_findings(
-                        existing_findings
-                    ),
+                    existing_findings_block=_format_existing_findings(existing_findings),
                     pr_title=pr_title,
                     pr_body=pr_body,
                     existing_threads_block=existing_threads_block,
@@ -1326,9 +1274,7 @@ class PrepareReviewerRunMiddleware(BasePrepareRunMiddleware):
         if review_context:
             system_prompt = f"{system_prompt}\n\n{review_context}"
         if skill_sources:
-            skill_middleware = SkillsMiddleware(
-                backend=sandbox_backend, sources=skill_sources
-            )
+            skill_middleware = SkillsMiddleware(backend=sandbox_backend, sources=skill_sources)
             skill_update = (
                 await skill_middleware.abefore_agent(
                     cast(SkillsState, {}),
@@ -1390,18 +1336,14 @@ async def get_reviewer_agent(config: RunnableConfig) -> Pregel:
     thread_id = configurable.get("thread_id")
 
     if thread_id is None or not graph_loaded_for_execution(config):
-        logger.info(
-            "No thread_id or not for execution, returning reviewer agent without sandbox"
-        )
+        logger.info("No thread_id or not for execution, returning reviewer agent without sandbox")
         return create_deep_agent(system_prompt="", tools=[]).with_config(config)
 
     configured_model_id = configurable.get("reviewer_model_id")
     configured_effort = configurable.get("reviewer_reasoning_effort")
     if isinstance(configured_model_id, str) and configured_model_id:
         model_id = configured_model_id
-        reasoning_effort = (
-            configured_effort if isinstance(configured_effort, str) else None
-        )
+        reasoning_effort = configured_effort if isinstance(configured_effort, str) else None
         subagent_model_id = model_id
         subagent_effort = reasoning_effort
     else:
@@ -1424,9 +1366,7 @@ async def get_reviewer_agent(config: RunnableConfig) -> Pregel:
     if isinstance(configured_subagent_model_id, str) and configured_subagent_model_id:
         subagent_model_id = configured_subagent_model_id
         subagent_effort = (
-            configured_subagent_effort
-            if isinstance(configured_subagent_effort, str)
-            else None
+            configured_subagent_effort if isinstance(configured_subagent_effort, str) else None
         )
     fable_enabled = await get_team_fable_enabled()
     model_id, reasoning_effort = gate_fable_model(
@@ -1449,9 +1389,7 @@ async def get_reviewer_agent(config: RunnableConfig) -> Pregel:
     )
 
     use_gateway = await _cached_gateway_enabled()
-    reviewer_model = _make_model_or_defer(
-        model_id, use_gateway=use_gateway, **model_kwargs
-    )
+    reviewer_model = _make_model_or_defer(model_id, use_gateway=use_gateway, **model_kwargs)
     reviewer_subagent_model = _make_model_or_defer(
         subagent_model_id, use_gateway=use_gateway, **subagent_model_kwargs
     )
@@ -1493,9 +1431,7 @@ async def get_reviewer_agent(config: RunnableConfig) -> Pregel:
                     use_gateway=use_gateway,
                 ),
                 SanitizeToolInputsMiddleware(),
-                ModelCallLimitMiddleware(
-                    run_limit=MODEL_CALL_RECURSION_LIMIT, exit_behavior="end"
-                ),
+                ModelCallLimitMiddleware(run_limit=MODEL_CALL_RECURSION_LIMIT, exit_behavior="end"),
                 ToolErrorMiddleware(),
                 refresh_github_proxy_before_model,
                 check_message_queue_before_model,

@@ -67,9 +67,7 @@ async def slack_attach_html(
                 "success": False,
                 "error": "initial_comment contains control characters",
             }
-        display_title = (
-            title.strip() if isinstance(title, str) and title.strip() else None
-        )
+        display_title = title.strip() if isinstance(title, str) and title.strip() else None
         if display_title and len(display_title) > 255:
             return {"success": False, "error": "title exceeds 255 characters"}
         if display_title and _has_control_chars(display_title):

@@ -114,9 +114,7 @@ def _pull_request_state(node: object) -> PullRequestState:
     return {"checks": _checks_state(commit, rollup), "state": _pr_state(pull)}
 
 
-def _build_query(
-    identities: Sequence[tuple[str, str, int]]
-) -> tuple[str, dict[str, Any]]:
+def _build_query(identities: Sequence[tuple[str, str, int]]) -> tuple[str, dict[str, Any]]:
     declarations: list[str] = []
     selections: list[str] = []
     variables: dict[str, Any] = {}
