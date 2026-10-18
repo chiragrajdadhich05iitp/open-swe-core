@@ -1,5 +1,7 @@
 # Customization Guide
 
+For web search provider selection and disabling search, see [Web search](WEB_SEARCH.md).
+
 Open SWE is designed to be forked and customized for your org. The core agent is assembled in a single function — `get_agent()` in `agent/server.py` — where you can swap out the sandbox, model, tools, and triggers.
 
 ```python
